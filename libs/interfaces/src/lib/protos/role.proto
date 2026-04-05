@@ -1,0 +1,120 @@
+syntax = "proto3";
+
+package ROLE_SERVICE;
+
+service RoleService {
+  rpc GetRole(GetRoleRequest) returns (RoleResponse);
+  rpc GetManyRoles(GetManyRolesRequest) returns (GetManyRolesResponse);
+  rpc CreateRole(CreateRoleRequest) returns (RoleResponse);
+  rpc UpdateRole(UpdateRoleRequest) returns (RoleResponse);
+  rpc DeleteRole(DeleteRoleRequest) returns (RoleResponse);
+
+  rpc GetManyUniquePermissions(GetManyUniquePermissionsRequest) returns (GetManyUniquePermissionsResponse);
+  rpc CreatePermission(CreatePermissionRequest) returns (Permissions);
+  rpc CreateManyPermissions(CreateManyPermissionsRequest) returns (CountResponse);
+  rpc DeleteManyPermissions(DeleteManyPermissionsRequest) returns (CountResponse);
+}
+
+//==================== GetRole ====================//
+message GetRoleRequest {
+  optional string processId = 1;
+  optional string id = 2;
+  optional string name = 3;
+  bool withInheritance = 4;
+}
+
+message Permissions {
+  string id = 1;
+  string path = 2;
+  string method = 3;
+}
+
+message RoleResponse {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  repeated string userIds = 4;
+  string createdById = 5;
+  string updatedById = 6;
+  string deletedById = 7;
+  string deletedAt = 8;
+  string createdAt = 9;
+  string updatedAt = 10;
+  repeated Permissions permissions = 11;
+}
+
+//==================== GetManyRoles ====================//
+message GetManyRolesRequest {
+  optional string processId = 1;
+  optional int32 page = 2;
+  optional int32 limit = 3;
+}
+
+message GetManyRolesResponse {
+  repeated RoleResponse roles = 1;
+  int32 page = 2;
+  int32 limit = 3;
+  int32 totalItems = 4;
+  int32 totalPages = 5;
+}
+
+//==================== CreateRole ====================//
+message CreateRoleRequest {
+  optional string processId = 1;
+  string name = 2;
+  string description = 3;
+  optional string createdById = 4;
+}
+
+//==================== UpdateRole ====================//
+message UpdateRoleRequest {
+  optional string processId = 1;
+  string id = 2;
+  optional string name = 3;
+  optional string description = 4;
+  optional string updatedById = 5;
+  repeated string permissionIds = 6;
+}
+
+//==================== DeleteRole ====================//
+message DeleteRoleRequest {
+  optional string processId = 1;
+  string id = 2;
+  string deletedById = 3;
+}
+
+//============================================== Permission ==============================================//
+
+//==================== GetManyUniquePermissions ====================//
+message GetManyUniquePermissionsRequest {
+  repeated string names = 1;
+}
+
+message GetManyUniquePermissionsResponse {
+  repeated Permissions permissions = 1;
+}
+
+//==================== CreatePermission ====================//
+message CreatePermissionRequest {
+  optional string processId = 1;
+  string name = 2;
+  optional string description = 3;
+  string module = 4;
+  string path = 5;
+  string method = 6;
+  optional string createdById = 7;
+}
+
+//==================== CreateManyPermissions ====================//
+message CreateManyPermissionsRequest {
+  repeated CreatePermissionRequest permissions = 1;
+}
+
+//==================== DeleteManyPermissions ====================//
+message DeleteManyPermissionsRequest {
+  repeated string ids = 1;
+}
+
+message CountResponse {
+  int32 count = 1;
+}

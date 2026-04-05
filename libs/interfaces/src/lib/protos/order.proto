@@ -1,0 +1,114 @@
+syntax = "proto3";
+
+option csharp_namespace = "Order";
+package ORDER_SERVICE;
+
+service OrderService {
+  rpc CreateOrder(CreateOrderRequest) returns (CreateOrderResponse);
+  rpc UpdateStatusOrder(UpdateStatusOrderRequest) returns (Order);
+  rpc CancelOrder(CancelOrderRequest) returns (Order);
+
+  rpc DashboardSeller(DashboardSellerRequest) returns (DashboardSellerResponse);
+}
+
+message CreateOrderRequest {
+  optional string processId = 1;
+  string userId = 2;
+  int32 shippingFee = 3;
+  optional string discountCode = 4;
+  string paymentMethod = 5;
+  Receiver receiver = 6;
+  repeated OrderGroup orders = 7;
+}
+
+message Receiver {
+  string name = 1;
+  string phone = 2;
+  string address = 3;
+}
+
+message OrderGroup {
+  string shopId = 1;
+  repeated string cartItemIds = 2;
+}
+
+message CreateOrderResponse {
+  repeated Order orders = 1;
+}
+
+message OrderItem {
+  string id = 1;
+  string orderId = 2;
+  string productId = 3;
+  string skuId = 4;
+  string shopId = 5;
+  string productName = 6;
+  string skuValue = 7;
+  int32 quantity = 8;
+  double price = 9;
+  double total = 10;
+  string productImage = 11;
+  string createdAt = 12;
+  string updatedAt = 13;
+}
+
+message Timeline {
+  string status = 1;
+  string at = 2;
+}
+
+message Order {
+  string id = 1;
+  string code = 2;
+  string userId = 3;
+  string shopId = 4;
+  string status = 5;
+  double itemTotal = 6;
+  double shippingFee = 7;
+  double discount = 8;
+  double grandTotal = 9;
+  Receiver receiver = 10;
+  string paymentMethod = 11;
+  string paymentStatus = 12;
+  string paymentId = 13;
+  repeated Timeline timeline = 14;
+  repeated OrderItem items = 15;
+  optional string createdById = 16;
+  optional string updatedById = 17;
+  optional string deletedById = 18;
+  optional string deletedAt = 19;
+  string createdAt = 20;
+  string updatedAt = 21;
+}
+
+// ================================= Update status order ===================================
+message UpdateStatusOrderRequest {
+  optional string processId = 1;
+  string id = 2;
+  optional string userId = 3;
+  optional string shopId = 4;
+  string status = 5;
+}
+
+// ================================= Cancel order ===================================
+message CancelOrderRequest {
+  optional string processId = 1;
+  string orderId = 2;
+  optional string userId = 3;
+  optional string shopId = 4;
+}
+
+// ================================= Dashboard seller ===================================
+message DashboardSellerRequest {
+  optional string processId = 1;
+  string userId = 2;
+  string shopId = 3;
+}
+
+message DashboardSellerResponse {
+  int32 totalOrders = 1;
+  int32 completedOrders = 2;
+  int32 pendingOrders = 3;
+  int32 confirmedOrders = 4;
+  int32 totalRevenue = 5;
+}

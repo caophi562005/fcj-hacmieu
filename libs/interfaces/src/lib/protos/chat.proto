@@ -1,0 +1,114 @@
+syntax = "proto3";
+
+package CHAT_SERVICE;
+
+service ChatService {
+  rpc CreateConversation(CreateConversationRequest) returns (ConversationResponse);
+  rpc GetManyConversations(GetManyConversationsRequest) returns (GetManyConversationsResponse);
+
+  rpc CreateMessage(CreateMessageRequest) returns (MessageResponse);
+  rpc GetManyMessages(GetManyMessagesRequest) returns (GetManyMessagesResponse);
+}
+
+//============================================= Conversation =============================================//
+
+message Participant {
+  string id = 1;
+  string username = 2;
+  string avatar = 3;
+}
+
+message ReadStatusItem {
+  bool isRead = 1;
+  string lastSeenMessageId = 2;
+  string deletedAt = 3;
+}
+
+message ConversationResponse {
+  string id = 1;
+  repeated string participantIds = 2;
+  optional string lastMessageId = 3;
+  optional string lastMessageContent = 4;
+  optional string lastMessageAt = 5;
+  optional string lastSenderId = 6;
+  map<string, ReadStatusItem> readStatus = 7;
+  string createdAt = 8;
+  string updatedAt = 9;
+  repeated Participant participants = 10;
+}
+
+// ============================== CreateConversation ================================= //
+message CreateConversationRequest {
+  optional string processId = 1;
+  repeated string participantIds = 2;
+}
+
+// ============================== GetManyConversations ================================= //
+message GetManyConversationsRequest {
+  optional string processId = 1;
+  int32 page = 2;
+  int32 limit = 3;
+  string userId = 4;
+}
+
+message ConversationItem {
+  string id = 1;
+  repeated string participantIds = 2;
+  optional string lastMessageId = 3;
+  optional string lastMessageContent = 4;
+  optional string lastMessageAt = 5;
+  optional string lastSenderId = 6;
+  map<string, ReadStatusItem> readStatus = 7;
+  repeated Participant participants = 10;
+}
+
+message GetManyConversationsResponse {
+  repeated ConversationItem conversations = 1;
+  int32 page = 2;
+  int32 limit = 3;
+  int32 totalItems = 4;
+  int32 totalPages = 5;
+}
+
+//============================================= Message =============================================//
+
+message MessageResponse {
+  string id = 1;
+  string conversationId = 2;
+  string senderId = 3;
+  string content = 4;
+  string type = 5;
+  string metadata = 6;
+  string createdAt = 7;
+}
+
+// ============================== CreateMessage ================================= //
+
+message CreateMessageRequest {
+  optional string processId = 1;
+  string conversationId = 2;
+  string senderId = 3;
+  string content = 4;
+  string type = 5;
+  string metadata = 6;
+}
+
+// ============================== GetManyMessages ================================= //
+
+message GetManyMessagesRequest {
+  optional string processId = 1;
+  int32 page = 2;
+  int32 limit = 3;
+  string conversationId = 4;
+  string senderId = 5;
+}
+
+message GetManyMessagesResponse {
+  repeated MessageResponse messages = 1;
+  int32 page = 2;
+  int32 limit = 3;
+  int32 totalItems = 4;
+  int32 totalPages = 5;
+}
+
+

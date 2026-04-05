@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+package NOTIFICATION_SERVICE;
+
+service NotificationService {
+  rpc CreateNotification(CreateNotificationRequest) returns (NotificationResponse);
+  rpc ReadNotification(ReadNotificationRequest) returns (NotificationResponse);
+  rpc DeleteNotification(DeleteNotificationRequest) returns (NotificationResponse);
+}
+
+//==================== Metadata ====================//
+message Metadata {
+  optional string orderId = 1;
+  optional string articleId = 2;
+}
+
+//==================== CreateNotificationRequest ====================//
+message CreateNotificationRequest {
+  optional string processId = 1;
+  string title = 2;
+  string description = 3;
+  string userId = 4;
+  optional string link = 5;
+  optional string image = 6;
+  string type = 7;
+  optional Metadata metadata = 8;
+  optional string createdById = 9;
+}
+
+//==================== ReadNotificationRequest ====================//
+message ReadNotificationRequest {
+  optional string processId = 1;
+  string id = 2;
+  optional string updatedById = 3;
+}
+
+//==================== DeleteNotificationRequest ====================//
+message DeleteNotificationRequest {
+  optional string processId = 1;
+  string id = 2;
+  optional string deletedById = 3;
+}
+
+//==================== NotificationResponse ====================//
+message NotificationResponse {
+  string id = 1;
+  string userId = 2;
+  string type = 3;
+  string title = 4;
+  string description = 5;
+  optional string link = 6;
+  optional string image = 7;
+  bool isRead = 8;
+  optional Metadata metadata = 9;
+  string createdById = 10;
+  string updatedById = 11;
+  string deletedById = 12;
+  string deletedAt = 13;
+  string createdAt = 14;
+  string updatedAt = 15;
+}
+

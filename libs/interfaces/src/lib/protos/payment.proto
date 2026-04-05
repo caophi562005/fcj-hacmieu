@@ -1,0 +1,114 @@
+syntax = "proto3";
+
+package PAYMENT_SERVICE;
+
+service PaymentService {
+  rpc Receiver(WebhookTransactionRequest) returns (WebhookTransactionResponse);
+
+  rpc GetManyPayments(GetManyPaymentsRequest) returns (GetManyPaymentsResponse);
+  rpc GetPayment(GetPaymentRequest) returns (PaymentResponse);
+  rpc CreatePayment(CreatePaymentRequest) returns (PaymentResponse);
+  rpc UpdatePaymentStatus(UpdatePaymentStatusRequest) returns (PaymentResponse);
+  rpc DashboardPayment(DashboardPaymentRequest) returns (DashboardPaymentResponse);
+}
+
+
+//=========================================== Receiver ===========================================//
+message WebhookTransactionRequest {
+  int32 id = 1;
+  string gateway = 2;
+  string transactionDate = 3;
+  optional string accountNumber = 4;
+  optional string code = 5;
+  optional string content = 6;
+  string transferType = 7;
+  double transferAmount = 8;
+  double accumulated = 9;
+  optional string subAccount = 10;
+  optional string referenceCode = 11;
+  string description = 12;
+}
+
+message WebhookTransactionResponse {
+  string message = 1;
+  string paymentCode = 2;
+  string userId = 3;
+  string paymentId = 4;
+} 
+
+//==================== GetPayment ====================//
+message GetPaymentRequest {
+  optional string processId = 1;
+  string id = 2;
+  string userId = 3;
+}
+
+//==================== CreatePayment ====================//
+message CreatePaymentRequest {
+  optional string processId = 1;
+  string id = 2;
+  string code = 3;
+  string userId = 4;
+  repeated string orderId = 5;
+  string method = 6;
+  string status = 7;
+  int32 amount = 8;
+}
+
+message PaymentResponse {
+  string id = 1;
+  string code = 2;
+  string userId = 3;
+  string orderId = 4;
+  string method = 5;
+  string status = 6;
+  int32 amount = 7;
+  string createdById = 8;
+  string updatedById = 9;
+  string deletedById = 10;
+  string deletedAt = 11;
+  string createdAt = 12;
+  string updatedAt = 13;
+  optional string qrCode = 14;
+}
+
+//==================== GetManyPayments ====================//
+message GetManyPaymentsRequest {
+  optional string processId = 1;
+  int32 page = 2;
+  int32 limit = 3;
+  optional string createdAt = 4;
+  optional string code = 5;
+  optional string userId = 6;
+  optional string method = 7;
+  optional string status = 8;
+  optional int32 amount = 9;
+}
+
+//==================== GetManyPaymentsResponse ====================//
+message GetManyPaymentsResponse {
+  repeated PaymentResponse payments = 1;
+  int32 page = 2;
+  int32 limit = 3;
+  int32 totalItems = 4;
+  int32 totalPages = 5;
+}
+
+//==================== UpdatePaymentStatus ====================//
+message UpdatePaymentStatusRequest {
+  optional string processId = 1;
+  string id = 2;
+  string status = 3;
+  string updatedById = 4;
+}
+
+//==================== DashboardPayment ====================
+message DashboardPaymentRequest {
+  optional string processId = 1;
+}
+
+message DashboardPaymentResponse {
+  int32 totalAmount = 1;
+}
+
+

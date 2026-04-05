@@ -1,0 +1,129 @@
+syntax = "proto3";
+
+package PROMOTION_SERVICE;
+
+service PromotionService {
+  rpc GetManyPromotions(GetManyPromotionsRequest) returns (GetManyPromotionsResponse);
+  rpc GetPromotion(GetPromotionRequest) returns (PromotionResponse);
+  rpc CreatePromotion(CreatePromotionRequest) returns (PromotionResponse);
+  rpc UpdatePromotion(UpdatePromotionRequest) returns (PromotionResponse);
+  rpc DeletePromotion(DeletePromotionRequest) returns (PromotionResponse);
+
+  rpc CheckPromotion(CheckPromotionRequest) returns (PromotionResponse);
+}
+
+// Request Messages
+message GetManyPromotionsRequest {
+  optional string processId = 1;
+  optional string code = 2;
+  optional string name = 3;
+  optional string status = 4;
+  optional string startsAt = 5;
+  optional string endsAt = 6;
+  optional string scope = 7;
+  optional string discountType = 8;
+  int32 page = 9;
+  int32 limit = 10;
+  optional bool includeUsed = 11;
+  optional string userId = 12;
+}
+
+message GetPromotionRequest {
+  optional string processId = 1;
+  optional string id = 2;
+  optional string code = 3;
+}
+
+message CreatePromotionRequest {
+  optional string processId = 1;
+  string code = 2;
+  string name = 3;
+  optional string description = 4;
+  string status = 5;
+  string startsAt = 6;
+  string endsAt = 7;
+  string scope = 8;
+  int32 minOrderSubtotal = 9;
+  string discountType = 10;
+  int32 discountValue = 11;
+  optional int32 maxDiscount = 12;
+  optional int32 totalLimit = 13;
+  string createdById = 14;
+}
+
+message UpdatePromotionRequest {
+  optional string processId = 1;
+  string id = 2;
+  optional string code = 3;
+  optional string name = 4;
+  optional string description = 5;
+  optional string status = 6;
+  optional string startsAt = 7;
+  optional string endsAt = 8;
+  optional string scope = 9;
+  optional int32 minOrderSubtotal = 10;
+  optional string discountType = 11;
+  optional int32 discountValue = 12;
+  optional int32 maxDiscount = 13;
+  optional int32 totalLimit = 14;
+  string updatedById = 15;
+}
+
+message DeletePromotionRequest {
+  string id = 1;
+  string deletedById = 2;
+  optional string processId = 3;
+}
+
+// Response Messages
+message PromotionResponse {
+  string id = 1;
+  string code = 2;
+  string name = 3;
+  optional string description = 4;
+  string status = 5;
+  string startsAt = 6;
+  string endsAt = 7;
+  string scope = 8;
+  int32 minOrderSubtotal = 9;
+  string discountType = 10;
+  int32 discountValue = 11;
+  optional int32 maxDiscount = 12;
+  optional int32 totalLimit = 13;
+  int32 usedCount = 14;
+  optional string createdById = 15;
+  optional string updatedById = 16;
+  optional string deletedById = 17;
+  optional string deletedAt = 18;
+  string createdAt = 19;
+  string updatedAt = 20;
+}
+
+message PromotionListItem {
+  string id = 1;
+  string code = 2;
+  string name = 3;
+  string startsAt = 4;
+  string endsAt = 5;
+  string status = 6;
+  string scope = 7;
+  string discountType = 8;
+  optional int32 totalLimit = 9;
+}
+
+message GetManyPromotionsResponse {
+  int32 page = 1;
+  int32 limit = 2;
+  int32 totalItems = 3;
+  int32 totalPages = 4;
+  repeated PromotionListItem promotions = 5;
+}
+
+// Check Promotion Request
+message CheckPromotionRequest {
+  optional string processId = 1;
+  string code = 2;
+  string userId = 3;
+}
+
+//============================================ Redemption Messages ===================================//

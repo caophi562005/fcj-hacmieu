@@ -1,0 +1,83 @@
+syntax = "proto3";
+
+package MEDIA_SERVICE;
+
+service MediaService {
+  rpc CreatePresignedUrl(CreatePresignedUrlRequest) returns (CreatePresignedUrlResponse);
+
+  rpc CreateVideo(CreateVideoRequest) returns (VideoResponse);
+  rpc UpdateVideo(UpdateVideoRequest) returns (VideoResponse);
+  rpc DeleteVideo(DeleteVideoRequest) returns (VideoResponse);
+
+  rpc GetPlayback(GetPlaybackRequest) returns (PlaybackResponse);
+}
+
+//==================== CreatePresignedUrl ====================//
+message CreatePresignedUrlRequest {
+  optional string processId = 1;
+  string filename = 2;
+}
+
+message CreatePresignedUrlResponse {
+  string presignedUrl = 1;
+  string url = 2;
+}
+
+//==================== CreateVideo ====================//
+message CreateVideoRequest {
+  optional string processId = 1;
+  string id = 2;
+  string storageBucket = 3;
+  string storageKey = 4;
+  int32 size = 5;
+  string userId = 6;
+  string filetype = 7;
+  string title = 8;
+  string productId = 9;
+}
+
+message VideoResponse {
+  string id = 1;
+  string storageBucket = 2;
+  string storageKey = 3;
+  int32 size = 4;
+  string userId = 5;
+  string filename = 6;
+  string filetype = 7;
+  string status = 8;
+  string createdById = 9;
+  string updatedById = 10;
+  string deletedById = 11;
+  string deletedAt = 12;
+  string createdAt = 13;
+  string updatedAt = 14;
+}
+
+//==================== UpdateVideo ====================//
+message UpdateVideoRequest {
+  optional string processId = 1;
+  string id = 2;
+  optional string status = 3;
+  optional string updatedById = 4;
+}
+
+//==================== DeleteVideo ====================//
+message DeleteVideoRequest {
+  optional string processId = 1;
+  string id = 2;
+  optional string deletedById = 3;
+}
+
+
+//============================================= GetPlayback =============================================
+message GetPlaybackRequest {
+  optional string processId = 1;
+  string videoId = 2;
+}
+
+message PlaybackResponse {
+  string manifestUrl = 1;
+  string thumbnailUrl = 2;
+  string playbackToken = 3;
+  int32 expiresAt = 4;
+}
