@@ -5,6 +5,8 @@ export const AppConfigurationSchema = z.object({
   // BFF_SELLER_SERVICE_PORT: z.coerce.number(),
   // BFF_ADMIN_SERVICE_PORT: z.coerce.number(),
   CATALOG_SERVICE_PORT: z.coerce.number(),
+  ORDER_SERVICE_PORT: z.coerce.number(),
+  PROMOTION_SERVICE_PORT: z.coerce.number(),
 });
 
 const configServer = AppConfigurationSchema.safeParse(process.env);

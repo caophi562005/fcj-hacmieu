@@ -1,0 +1,95 @@
+generator client {
+    provider      = "prisma-client"
+    output        = "../src/generated/prisma-client"
+    moduleFormat  = "cjs"
+    binaryTargets = ["native", "debian-openssl-1.1.x"]
+}
+
+generator json {
+    provider = "prisma-json-types-generator"
+}
+
+datasource db {
+    provider = "postgresql"
+}
+
+enum PromotionStatus {
+    DRAFT
+    ACTIVE
+    PAUSED
+    ENDED
+}
+
+enum DiscountType {
+    PERCENT // 10% off
+    AMOUNT // -50k
+}
+
+enum PromotionScope {
+    ORDER // giảm trên tổng đơn
+    SHIPPING // giảm phí ship
+}
+
+model Promotion {
+    id          String  @id @default(uuid())
+    code        String
+    name        String
+    description String?
+
+    status   PromotionStatus @default(DRAFT)
+    startsAt DateTime?
+    endsAt   DateTime?
+
+    scope PromotionScope @default(ORDER)
+
+    // Điều kiện
+    minOrderSubtotal Int @default(0) // VND, subtotal trước giảm (không tính ship)
+
+    // Discount
+    discountType  DiscountType
+    discountValue Int // PERCENT: 100 = 1%, 10000 = 100%.
+    maxDiscount   Int? // trần giảm (hữu ích cho percent)
+
+    // Giới hạn số lượng
+    totalLimit Int? // tổng số lượt dùng (null = unlimited)
+    usedCount  Int  @default(0)
+
+    createdById String?
+    updatedById String?
+    deletedById String?
+
+    deletedAt DateTime?
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+
+    redemptions Redemption[]
+
+    @@unique([code])
+    @@index([deletedAt])
+    @@index([scope])
+    @@index([discountType])
+}
+
+model Redemption {
+    id String @id @default(uuid())
+
+    promotionId String
+    promotion   Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+
+    userId   String
+    orderIds String[]
+
+    code             String
+    discountType     DiscountType
+    discountValue    Int
+    minOrderSubtotal Int
+    maxDiscount      Int?
+
+    // trạng thái redemption
+    usedAt      DateTime? // lúc order paid/confirmed
+    cancelledAt DateTime?
+    createdAt   DateTime  @default(now())
+
+    @@unique([promotionId, userId])
+    @@unique([code, userId])
+}

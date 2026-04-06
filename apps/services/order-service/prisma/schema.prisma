@@ -1,0 +1,144 @@
+generator client {
+    provider      = "prisma-client"
+    output        = "../src/generated/prisma-client"
+    moduleFormat  = "cjs"
+    binaryTargets = ["native", "debian-openssl-1.1.x"]
+}
+
+generator json {
+    provider = "prisma-json-types-generator"
+}
+
+datasource db {
+    provider = "postgresql"
+}
+
+enum OrderStatus {
+    CREATING // đang tạo đơn
+    PENDING // chờ xác nhận
+    CONFIRMED // đã xác nhận, đang chuẩn bị
+    SHIPPING // đang giao
+    COMPLETED // đã giao
+    CANCELLED // đã hủy
+    REFUNDED // đã hoàn tiền
+}
+
+enum PaymentMethod {
+    COD
+    WALLET
+    ONLINE
+}
+
+enum PaymentStatus {
+    PENDING
+    SUCCESS
+    FAILED
+    REFUNDED
+}
+
+model OrderItem {
+    id String @id @default(uuid())
+
+    orderId String
+    order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+    productId String
+    skuId     String
+    shopId    String
+
+    productName String
+    skuValue    String
+    quantity    Int
+    price       Float
+    total       Float
+
+    productImage String
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([orderId])
+    @@index([shopId])
+}
+
+model Order {
+    id   String @id @default(uuid())
+    code String @unique
+
+    userId String
+    shopId String
+    status OrderStatus
+
+    itemTotal   Int @default(0) // tổng tiền hàng
+    shippingFee Int @default(0)
+    discount    Int @default(0)
+    grandTotal  Int @default(0) // phải trả
+
+    // Snapshot user nhận hàng
+    /// [Receiver]
+    receiver Json
+
+    paymentMethod PaymentMethod
+    paymentStatus PaymentStatus @default(PENDING)
+    paymentId     String
+
+    // log timeline (optional)
+    // [{ status: 'PENDING', at: '...' }, { status: 'CONFIRMED', at: '...' }]
+    /// [Timeline]
+    timeline Json?
+
+    items OrderItem[]
+
+    createdById String?
+    updatedById String?
+    deletedById String?
+
+    deletedAt DateTime?
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+
+    @@index([userId])
+    @@index([shopId])
+    @@index([status, deletedAt])
+    @@index([deletedAt])
+}
+
+model Cart {
+    id     String @id @default(uuid())
+    userId String
+
+    // Tổng số item
+    itemCount Int @default(0)
+
+    items CartItem[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@unique([userId])
+    @@index([userId])
+}
+
+model CartItem {
+    id     String @id @default(uuid())
+    cartId String
+    cart   Cart   @relation(fields: [cartId], references: [id], onDelete: Cascade)
+
+    productId String
+    skuId     String
+
+    shopId   String
+    quantity Int    @default(1)
+
+    // snapshot thông tin hiển thị (thumbnail, tên…)
+    productName  String
+    skuValue     String // “Đỏ - Size L”
+    productImage String
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@unique([cartId, productId, skuId])
+    @@index([cartId])
+    @@index([shopId])
+}

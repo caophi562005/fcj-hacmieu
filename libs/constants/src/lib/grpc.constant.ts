@@ -38,4 +38,14 @@ export const GrpcModuleName = {
     BRAND: 'BrandModule',
     SKU: 'SkuModule',
   },
+
+  ORDER: {
+    ORDER: 'OrderModule',
+    CART: 'CartModule',
+  },
+
+  PROMOTION: {
+    PROMOTION: 'PromotionModule',
+    REDEMPTION: 'RedemptionModule',
+  },
 } as const;

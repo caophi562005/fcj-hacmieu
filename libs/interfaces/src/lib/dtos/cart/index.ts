@@ -1,3 +1,4 @@
+import { ResponseSchema } from '@common/interfaces/models/common/response.model';
 import {
   AddCartItemRequestSchema,
   AddCartItemResponseSchema,
@@ -6,35 +7,34 @@ import {
   GetManyCartItemsRequestSchema,
   GetManyCartItemsResponseSchema,
   UpdateCartItemRequestSchema,
-} from '@common/interfaces/models/cart';
-import { ResponseSchema } from '@common/interfaces/models/common/response.model';
+} from '@common/interfaces/models/order';
 import { createZodDto } from 'nestjs-zod';
 
 export class AddCartItemRequestDto extends createZodDto(
-  AddCartItemRequestSchema
+  AddCartItemRequestSchema,
 ) {}
 
 export class UpdateCartItemRequestDto extends createZodDto(
-  UpdateCartItemRequestSchema
+  UpdateCartItemRequestSchema,
 ) {}
 
 export class DeleteCartItemRequestDto extends createZodDto(
-  DeleteCartItemRequestSchema
+  DeleteCartItemRequestSchema,
 ) {}
 
 export class GetManyCartItemsRequestDto extends createZodDto(
-  GetManyCartItemsRequestSchema
+  GetManyCartItemsRequestSchema,
 ) {}
 
 //====================================================================================
 export class AddCartItemResponseDto extends createZodDto(
-  ResponseSchema(AddCartItemResponseSchema)
+  ResponseSchema(AddCartItemResponseSchema),
 ) {}
 
 export class DeleteCartItemResponseDto extends createZodDto(
-  ResponseSchema(DeleteCartItemResponseSchema)
+  ResponseSchema(DeleteCartItemResponseSchema),
 ) {}
 
 export class GetManyCartItemsResponseDto extends createZodDto(
-  ResponseSchema(GetManyCartItemsResponseSchema)
+  ResponseSchema(GetManyCartItemsResponseSchema),
 ) {}
