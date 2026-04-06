@@ -54,4 +54,8 @@ export const GrpcModuleName = {
     TRANSACTION: 'TransactionModule',
     REFUND: 'RefundModule',
   },
+
+  UTILITY: {
+    NOTIFICATION: 'NotificationModule',
+  },
 } as const;

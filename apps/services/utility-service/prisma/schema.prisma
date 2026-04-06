@@ -1,0 +1,50 @@
+generator client {
+    provider      = "prisma-client"
+    output        = "../src/generated/prisma-client"
+    moduleFormat  = "cjs"
+    binaryTargets = ["native", "debian-openssl-1.1.x"]
+}
+
+generator json {
+    provider = "prisma-json-types-generator"
+}
+
+datasource db {
+    provider = "postgresql"
+}
+
+enum NotificationType {
+    ORDER_UPDATE
+    PROMOTION
+    WALLET_UPDATE
+    TRUST_ME_BRO_UPDATE
+}
+
+model Notification {
+    id     String @id @default(uuid())
+    userId String
+
+    type        NotificationType
+    title       String           @db.VarChar(255)
+    description String           @db.Text
+    link        String?          @db.VarChar(1000) // Deep link (app) hoặc URL (web)
+    image       String?          @db.VarChar(1000) // Ảnh thumbnail (nếu có)
+
+    isRead Boolean @default(false)
+
+    // Metadata: Lưu ID đơn hàng, mã voucher... để xử lý logic khi click vào
+    // VD: { "orderId": "123", "trackingCode": "VN..." }
+    /// [Metadata]
+    metadata Json?
+
+    createdById String?
+    updatedById String?
+    deletedById String?
+
+    deletedAt DateTime?
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+
+    @@index([userId])
+    @@index([deletedAt])
+}
