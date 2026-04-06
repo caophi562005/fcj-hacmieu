@@ -1,0 +1,94 @@
+generator client {
+    provider      = "prisma-client"
+    output        = "../src/generated/prisma-client"
+    moduleFormat  = "cjs"
+    binaryTargets = ["native", "debian-openssl-1.1.x"]
+}
+
+generator json {
+    provider = "prisma-json-types-generator"
+}
+
+datasource db {
+    provider = "postgresql"
+}
+
+enum PaymentStatus {
+    PENDING
+    SUCCESS
+    FAILED
+    CANCELLED
+}
+
+enum PaymentMethod {
+    COD
+    ONLINE
+    WALLET
+}
+
+enum RefundStatus {
+    PENDING
+    APPROVED
+    REJECTED
+}
+
+model Payment {
+    id      String        @id @default(uuid())
+    code    String        @unique
+    userId  String
+    orderId String[]
+    method  PaymentMethod
+    status  PaymentStatus @default(PENDING)
+
+    amount Int
+
+    createdById String?
+    updatedById String?
+    deletedById String?
+
+    deletedAt DateTime?
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+
+    @@index([code])
+    @@index([userId])
+    @@index([orderId])
+    @@index([status])
+}
+
+model Transaction {
+    id                 Int      @id @default(autoincrement())
+    gateway            String   @db.VarChar(100)
+    transactionDate    DateTime @default(now())
+    accountNumber      String?  @db.VarChar(100)
+    subAccount         String?  @db.VarChar(250)
+    amountIn           Int      @default(0)
+    amountOut          Int      @default(0)
+    accumulated        Int      @default(0)
+    code               String?  @db.VarChar(250)
+    transactionContent String?  @db.Text
+    referenceNumber    String?  @db.VarChar(255)
+    body               String?  @db.Text
+    createdAt          DateTime @default(now())
+}
+
+model Refund {
+    id      String       @id @default(uuid())
+    userId  String
+    orderId String
+    amount  Int // Số tiền hoàn trả
+    status  RefundStatus @default(PENDING)
+    reason  String?      @db.Text
+
+    createdById String?
+    updatedById String?
+    deletedById String?
+
+    deletedAt DateTime?
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+
+    @@index([userId])
+    @@index([orderId])
+    @@index([status])
+}

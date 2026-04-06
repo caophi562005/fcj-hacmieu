@@ -48,4 +48,10 @@ export const GrpcModuleName = {
     PROMOTION: 'PromotionModule',
     REDEMPTION: 'RedemptionModule',
   },
+
+  PAYMENT: {
+    PAYMENT: 'PaymentModule',
+    TRANSACTION: 'TransactionModule',
+    REFUND: 'RefundModule',
+  },
 } as const;

@@ -4,6 +4,7 @@ export const DatabaseConfigurationSchema = z.object({
   CATALOG_SERVICE_DATABASE_URL: z.string(),
   ORDER_SERVICE_DATABASE_URL: z.string(),
   PROMOTION_SERVICE_DATABASE_URL: z.string(),
+  PAYMENT_SERVICE_DATABASE_URL: z.string(),
 });
 
 const configServer = DatabaseConfigurationSchema.safeParse(process.env);
