@@ -58,4 +58,11 @@ export const GrpcModuleName = {
   UTILITY: {
     NOTIFICATION: 'NotificationModule',
   },
+
+  IAM: {
+    USER: 'UserModule',
+    PERMISSION: 'PermissionModule',
+    ADDRESS: 'AddressModule',
+    AUTH: 'AuthModule',
+  },
 } as const;
