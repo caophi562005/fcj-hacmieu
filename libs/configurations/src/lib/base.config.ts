@@ -7,6 +7,7 @@ export const BaseConfigurationSchema = z
     // AVATAR_DEFAULT_URL: z.string(),
     OTP_EXPIRES: z.string().default('10m'),
     SOFT_DELETE_TTL: z.string().default('30d'),
+    AWS_REGION: z.string().default('ap-southeast-1'),
   })
   .transform((data) => ({
     ...data,

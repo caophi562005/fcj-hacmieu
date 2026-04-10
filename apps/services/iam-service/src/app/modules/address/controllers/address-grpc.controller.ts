@@ -6,7 +6,7 @@ import {
   GetAddressRequest,
   GetManyAddressesRequest,
   UpdateAddressRequest,
-} from '@common/interfaces/models/user-access';
+} from '@common/interfaces/models/iam';
 import { Controller, UseInterceptors } from '@nestjs/common';
 import { GrpcMethod } from '@nestjs/microservices';
 import { AddressService } from '../services/address.service';

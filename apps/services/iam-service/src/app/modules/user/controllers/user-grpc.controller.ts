@@ -1,13 +1,11 @@
 import { GrpcModuleName } from '@common/constants/grpc.constant';
 import { GrpcLoggingInterceptor } from '@common/interceptors/grpcLogging.interceptor';
 import {
-  CheckParticipantExistsRequest,
   CreateUserRequest,
-  GetManyInformationUsersRequest,
   GetManyUsersRequest,
   GetUserRequest,
   UpdateUserRequest,
-} from '@common/interfaces/models/user-access';
+} from '@common/interfaces/models/iam';
 import { Controller, NotFoundException, UseInterceptors } from '@nestjs/common';
 import { GrpcMethod } from '@nestjs/microservices';
 import { UserService } from '../services/user.service';
@@ -39,15 +37,5 @@ export class UserGrpcController {
   @GrpcMethod(GrpcModuleName.IAM.USER, 'UpdateUser')
   updateUser(data: UpdateUserRequest) {
     return this.userService.update(data);
-  }
-
-  @GrpcMethod(GrpcModuleName.IAM.USER, 'CheckParticipantExists')
-  checkParticipantExists(data: CheckParticipantExistsRequest) {
-    return this.userService.checkParticipantExists(data);
-  }
-
-  @GrpcMethod(GrpcModuleName.IAM.USER, 'GetManyInformationUsers')
-  getManyInformationUsers(data: GetManyInformationUsersRequest) {
-    return this.userService.getManyInformationUsers(data);
   }
 }

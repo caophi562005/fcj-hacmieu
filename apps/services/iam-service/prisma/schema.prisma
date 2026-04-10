@@ -21,27 +21,17 @@ enum GENDER {
     OTHER
 }
 
-enum ROLE_NAME {
-    CUSTOMER
-    SELLER
-    MANAGER
-    ADMIN
-}
-
 model User {
     id          String      @id @default(uuid())
-    firstName   String
-    lastName    String
     email       String      @unique
     username    String      @unique
-    phoneNumber String      @db.VarChar(20)
-    avatar      String      @db.VarChar(1000)
+    phoneNumber String?     @db.VarChar(20)
+    avatar      String?     @db.VarChar(1000)
     birthday    DateTime?
-    gender      GENDER
+    gender      GENDER?
     status      USER_STATUS @default(ACTIVE)
 
-    roleId   String
-    roleName String
+    group GROUP
 
     updatedById String?
     deletedById String?
@@ -53,7 +43,6 @@ model User {
 
     @@unique([email, deletedAt])
     @@unique([username, deletedAt])
-    @@unique([phoneNumber])
     @@index([deletedAt])
     @@index([email])
     @@index([username])
@@ -61,39 +50,20 @@ model User {
 }
 
 model Address {
-    id        String  @id @default(uuid())
-    userId    String
-    user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-    name      String
-    address   String
-    ward      String?
-    district  String?
-    province  String?
-    isDefault Boolean @default(false)
+    id       String  @id @default(uuid())
+    userId   String
+    user     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+    name     String
+    address  String
+    ward     String?
+    district String?
+    province String?
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
     @@unique([name])
     @@index([userId])
-}
-
-model VerificationCode {
-    id    String               @id @default(uuid())
-    email String               @db.VarChar(500)
-    code  String               @db.VarChar(50)
-    type  VerificationCodeType
-
-    expiresAt DateTime
-    createdAt DateTime @default(now())
-
-    @@unique([email, type])
-    @@index([expiresAt])
-}
-
-enum VerificationCodeType {
-    REGISTER
-    CHANGE_PASSWORD
 }
 
 enum HTTP_METHOD {
@@ -106,6 +76,12 @@ enum HTTP_METHOD {
     HEAD
 }
 
+enum GROUP {
+    ADMIN
+    SELLER
+    CUSTOMER
+}
+
 model Permission {
     id          String      @id @default(uuid())
     name        String      @db.VarChar(500)
@@ -113,7 +89,7 @@ model Permission {
     path        String      @db.VarChar(1000)
     method      HTTP_METHOD
     module      String      @default("") @db.VarChar(500)
-    roles       Role[]
+    group       GROUP       @default(CUSTOMER)
 
     createdById String?
     updatedById String?
@@ -123,39 +99,7 @@ model Permission {
     createdAt DateTime  @default(now())
     updatedAt DateTime  @updatedAt
 
-    @@unique([name])
+    @@unique([path, method, group])
     @@index([deletedAt])
-}
-
-model Role {
-    id          String       @id @default(uuid())
-    name        String       @db.VarChar(500)
-    description String       @default("")
-    permissions Permission[]
-
-    parents     RoleInheritance[] @relation("ChildRoles") // role cha của role này
-    children    RoleInheritance[] @relation("ParentRoles") // role con của role này
-    // nếu là customer , nó sẽ có children nơi nó làm parent
-    // nếu là seller , nó sẽ có parent nơi nó làm children ?
-    createdById String?
-    updatedById String?
-    deletedById String?
-
-    deletedAt DateTime?
-    createdAt DateTime  @default(now())
-    updatedAt DateTime  @updatedAt
-
-    @@index([deletedAt])
-}
-
-model RoleInheritance {
-    id String @id @default(uuid())
-
-    parentId String
-    childId  String
-
-    parent Role @relation("ParentRoles", fields: [parentId], references: [id])
-    child  Role @relation("ChildRoles", fields: [childId], references: [id])
-
-    createdAt DateTime @default(now())
+    @@index([group])
 }

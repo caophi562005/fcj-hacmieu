@@ -6,14 +6,14 @@ import {
   CreatePermissionRequest,
   DeleteManyPermissionsRequest,
   DeletePermissionRequest,
+  GetAllPermissionsRequest,
+  GetAllPermissionsResponse,
   GetManyPermissionsRequest,
   GetManyPermissionsResponse,
-  GetManyUniquePermissionsRequest,
-  GetManyUniquePermissionsResponse,
   GetPermissionRequest,
   GetPermissionResponse,
   UpdatePermissionRequest,
-} from '@common/interfaces/models/role/permission';
+} from '@common/interfaces/models/iam';
 import { Controller, UseInterceptors } from '@nestjs/common';
 import { GrpcMethod } from '@nestjs/microservices';
 import { PermissionService } from '../services/permission.service';
@@ -30,11 +30,11 @@ export class PermissionGrpcController {
     return this.permissionService.list(data);
   }
 
-  @GrpcMethod(GrpcModuleName.IAM.PERMISSION, 'GetManyUniquePermissions')
-  getManyUniquePermissions(
-    data: GetManyUniquePermissionsRequest,
-  ): Promise<GetManyUniquePermissionsResponse> {
-    return this.permissionService.listUnique(data);
+  @GrpcMethod(GrpcModuleName.IAM.PERMISSION, 'GetAllPermissions')
+  getAllPermissions(
+    data: GetAllPermissionsRequest,
+  ): Promise<GetAllPermissionsResponse> {
+    return this.permissionService.listAll(data);
   }
 
   @GrpcMethod(GrpcModuleName.IAM.PERMISSION, 'GetPermission')

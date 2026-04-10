@@ -1,12 +1,12 @@
 import { BaseConfiguration } from '@common/configurations/base.config';
 import { GrpcService } from '@common/constants/grpc.constant';
 import { HttpMethodValues } from '@common/constants/http-method.constant';
-import { DefaultRoleName } from '@common/constants/user.constant';
+import { GroupType } from '@common/constants/user.constant';
 import {
   CountResponse,
-  ROLE_SERVICE_NAME,
-  RoleServiceClient,
-} from '@common/interfaces/proto-types/role';
+  PERMISSION_MODULE_SERVICE_NAME,
+  PermissionModuleClient,
+} from '@common/interfaces/proto-types/iam';
 import { INestApplication, Logger } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
@@ -15,9 +15,9 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const executeSyncWithRetry = async (
   app: INestApplication,
-  roleName: DefaultRoleName,
+  group: GroupType,
   maxRetries = 5,
-  initialDelayMs = 1000
+  initialDelayMs = 1000,
 ): Promise<void> => {
   let lastError: Error | undefined;
 
@@ -26,37 +26,46 @@ const executeSyncWithRetry = async (
       Logger.log(
         `[SyncPermissions] Attempt ${attempt + 1}/${
           maxRetries + 1
-        } to sync permissions for role: ${roleName}`
+        } to sync permissions for group: ${group}`,
       );
 
-      const grpcClient = app.get<ClientGrpc>(GrpcService.ROLE_SERVICE);
-      const roleService =
-        grpcClient.getService<RoleServiceClient>(ROLE_SERVICE_NAME);
-
-      const role = await firstValueFrom(
-        roleService.getRole({
-          name: roleName,
-          withInheritance: false,
-        })
+      const grpcClient = app.get<ClientGrpc>(GrpcService.IAM_SERVICE);
+      const permissionModule = grpcClient.getService<PermissionModuleClient>(
+        PERMISSION_MODULE_SERVICE_NAME,
       );
 
       const server = app.getHttpAdapter().getInstance();
       const router = server.router;
       const globalPrefix = BaseConfiguration.GLOBAL_PREFIX || 'api/v1';
 
-      const permissionInDb = role.permissions || [];
+      const permissionInDb = await firstValueFrom(
+        permissionModule.getAllPermissions({
+          group,
+        }),
+      );
+
+      const permissionItems = Array.isArray(permissionInDb?.permissions)
+        ? permissionInDb.permissions
+        : [];
+
+      if (!Array.isArray(permissionInDb?.permissions)) {
+        Logger.warn(
+          `[SyncPermissions] getAllPermissions returned no permissions array for group: ${group}`,
+        );
+      }
 
       let availableRoutes: {
         path: string;
         method: keyof typeof HttpMethodValues;
         module: string;
         name: string;
+        group: GroupType;
       }[] = router.stack
         .map((layer: any) => {
           if (layer.route) {
             const path = layer.route?.path;
             const method = String(
-              layer.route?.stack[0].method
+              layer.route?.stack[0].method,
             ).toUpperCase() as keyof typeof HttpMethodValues;
 
             // Skip wildcard routes or routes without valid HTTP methods
@@ -68,13 +77,14 @@ const executeSyncWithRetry = async (
             // e.g., /api/v1/auth/login -> auth
             const pathWithoutPrefix = path.replace(`/${globalPrefix}/`, '');
             const moduleName = String(
-              pathWithoutPrefix.split('/')[0]
+              pathWithoutPrefix.split('/')[0],
             ).toUpperCase();
             return {
               path,
               method,
               name: method + ' ' + path,
               module: moduleName,
+              group,
             };
           }
           return undefined;
@@ -91,21 +101,27 @@ const executeSyncWithRetry = async (
       });
 
       //Tạo object PermissionInDbMap với key là [method-path]
-      const permissionInDbMap = permissionInDb.reduce((acc, item) => {
-        acc[`${item.method}-${item.path}`] = item;
-        return acc;
-      }, {} as Record<string, any>);
+      const permissionInDbMap = permissionItems.reduce(
+        (acc, item) => {
+          acc[`${item.method}-${item.path}`] = item;
+          return acc;
+        },
+        {} as Record<string, any>,
+      );
       // Logger.debug('Permission in DB Map: ', permissionInDbMap);
 
       //Tạo object availableRoutesMap với key là [method-path]
-      const availableRoutesMap = availableRoutes.reduce((acc, item) => {
-        acc[`${item.method}-${item.path}`] = item;
-        return acc;
-      }, {} as Record<string, any>);
+      const availableRoutesMap = availableRoutes.reduce(
+        (acc, item) => {
+          acc[`${item.method}-${item.path}`] = item;
+          return acc;
+        },
+        {} as Record<string, any>,
+      );
       // Logger.debug('Available Routes Map: ', availableRoutesMap);
 
       //Tìm permission trong db mà k tồn tại trong available
-      const permissionToDelete = permissionInDb.filter((item) => {
+      const permissionToDelete = permissionItems.filter((item) => {
         return !availableRoutesMap[`${item.method}-${item.path}`];
       });
       // Logger.debug('Permission to delete: ', permissionToDelete);
@@ -114,9 +130,9 @@ const executeSyncWithRetry = async (
       let deleteResult: CountResponse = { count: 0 };
       if (permissionToDelete.length > 0) {
         deleteResult = await firstValueFrom(
-          roleService.deleteManyPermissions({
+          permissionModule.deleteManyPermissions({
             ids: permissionToDelete.map((item) => item.id),
-          })
+          }),
         );
         Logger.log(`Delete : ${deleteResult.count}`);
       } else {
@@ -132,35 +148,17 @@ const executeSyncWithRetry = async (
       let permissionToAdd: CountResponse = { count: 0 };
       if (routesToAdd.length > 0) {
         permissionToAdd = await firstValueFrom(
-          roleService.createManyPermissions({
+          permissionModule.createManyPermissions({
             permissions: routesToAdd,
-          })
+          }),
         );
         Logger.log(`Add : ${permissionToAdd.count}`);
       } else {
         Logger.log('No permission to add');
       }
 
-      if (permissionToAdd.count > 0 || deleteResult.count > 0) {
-        const updatedPermissionInDb = await firstValueFrom(
-          roleService.getManyUniquePermissions({
-            names: availableRoutes.map((item) => item.name),
-          })
-        );
-
-        await firstValueFrom(
-          roleService.updateRole({
-            id: role.id,
-            updatedById: 'SYSTEM',
-            permissionIds: updatedPermissionInDb.permissions.map(
-              (item) => item.id
-            ),
-          })
-        );
-      }
-
       Logger.log(
-        `[SyncPermissions] ✓ Successfully synced permissions for role: ${roleName}`
+        `[SyncPermissions] ✓ Successfully synced permissions for group: ${group}`,
       );
       return; // Success - exit function
     } catch (error) {
@@ -171,8 +169,8 @@ const executeSyncWithRetry = async (
         Logger.error(
           `[SyncPermissions] ✗ Failed to sync permissions after ${
             maxRetries + 1
-          } attempts for role: ${roleName}`,
-          error instanceof Error ? error.stack : String(error)
+          } attempts for group: ${group}`,
+          error instanceof Error ? error.stack : String(error),
         );
       } else {
         // Calculate exponential backoff delay: 1s, 2s, 4s, 8s, 16s...
@@ -181,7 +179,7 @@ const executeSyncWithRetry = async (
           `[SyncPermissions] ⚠ Attempt ${
             attempt + 1
           } failed. Retrying in ${delayMs}ms...`,
-          error instanceof Error ? error.message : String(error)
+          error instanceof Error ? error.message : String(error),
         );
         await sleep(delayMs);
       }
@@ -190,22 +188,22 @@ const executeSyncWithRetry = async (
 
   // Báo lỗi khi đã hết số lần thử
   throw new Error(
-    `Failed to sync permissions for role ${roleName} after ${
+    `Failed to sync permissions for group ${group} after ${
       maxRetries + 1
-    } attempts. Last error: ${lastError?.message}`
+    } attempts. Last error: ${lastError?.message}`,
   );
 };
 
 export const syncPermissions = async (
   app: INestApplication,
-  roleName: DefaultRoleName
+  group: GroupType,
 ) => {
   try {
-    await executeSyncWithRetry(app, roleName);
+    await executeSyncWithRetry(app, group);
   } catch (error) {
     Logger.error(
       `[SyncPermissions] Permission sync failed but application will continue running`,
-      error instanceof Error ? error.stack : String(error)
+      error instanceof Error ? error.stack : String(error),
     );
   }
 };

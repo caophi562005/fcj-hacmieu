@@ -3,11 +3,11 @@ import {
   CreatePermissionRequest,
   DeleteManyPermissionsRequest,
   DeletePermissionRequest,
+  GetAllPermissionsRequest,
   GetManyPermissionsRequest,
-  GetManyUniquePermissionsRequest,
   GetPermissionRequest,
   UpdatePermissionRequest,
-} from '@common/interfaces/models/role/permission';
+} from '@common/interfaces/models/iam';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PermissionRepository } from '../repositories/permission.repository';
 
@@ -18,23 +18,25 @@ export class PermissionService {
   async list(data: GetManyPermissionsRequest) {
     const permissions = await this.permissionRepository.list(data);
     if (permissions.totalItems === 0) {
-      throw new NotFoundException('Error.PermissionNotFound');
+      throw new NotFoundException('Error.Permission.NotFound');
     }
     return permissions;
   }
 
-  async listUnique(data: GetManyUniquePermissionsRequest) {
-    const permissions = await this.permissionRepository.listUnique(data);
-    if (permissions.length === 0) {
-      throw new NotFoundException('Error.PermissionNotFound');
+  async listAll(data: GetAllPermissionsRequest) {
+    const permissions = await this.permissionRepository.listAll(data);
+    if (permissions.permissions.length === 0) {
+      return {
+        permissions: [],
+      };
     }
-    return { permissions };
+    return permissions;
   }
 
   async findById(data: GetPermissionRequest) {
     const permission = await this.permissionRepository.findById(data);
     if (!permission) {
-      throw new NotFoundException('Error.PermissionNotFound');
+      throw new NotFoundException('Error.Permission.NotFound');
     }
     return permission;
   }
@@ -52,7 +54,7 @@ export class PermissionService {
       id: data.id,
     });
     if (!permission) {
-      throw new NotFoundException('Error.PermissionNotFound');
+      throw new NotFoundException('Error.Permission.NotFound');
     }
     return this.permissionRepository.update(data);
   }
@@ -62,7 +64,7 @@ export class PermissionService {
       id: data.id,
     });
     if (!permission) {
-      throw new NotFoundException('Error.PermissionNotFound');
+      throw new NotFoundException('Error.Permission.NotFound');
     }
     return this.permissionRepository.delete(data);
   }

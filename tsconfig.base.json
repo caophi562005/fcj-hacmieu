@@ -24,9 +24,10 @@
       "@common/interceptors/*": ["libs/interceptors/src/lib/*"],
       "@common/schemas/*": ["libs/schemas/src/lib/*"],
       "@common/constants/*": ["libs/constants/src/lib/*"],
-      "@common/decorators": ["libs/decorators/src/index.ts"],
-      "@common/guards": ["libs/guards/src/index.ts"],
-      "@common/utils/*": ["libs/utils/src/lib/*"]
+      "@common/decorators/*": ["libs/decorators/src/lib/*"],
+      "@common/guards/*": ["libs/guards/src/lib/*"],
+      "@common/utils/*": ["libs/utils/src/lib/*"],
+      "@common/middlewares/*": ["libs/middlewares/src/lib/*"]
     }
   },
   "exclude": ["node_modules", "tmp"]

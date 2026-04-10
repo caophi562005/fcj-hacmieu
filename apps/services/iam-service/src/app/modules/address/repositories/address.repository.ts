@@ -2,7 +2,7 @@ import {
   CreateAddressRequest,
   GetAddressRequest,
   GetManyAddressesRequest,
-} from '@common/interfaces/models/user-access';
+} from '@common/interfaces/models/iam';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma-client/iam-service';
 import { PrismaService } from '../../../prisma/prisma.service';

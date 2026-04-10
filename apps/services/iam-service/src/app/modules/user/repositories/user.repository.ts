@@ -1,7 +1,7 @@
 import {
   GetManyUsersRequest,
   GetUserRequest,
-} from '@common/interfaces/models/user-access';
+} from '@common/interfaces/models/iam';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma-client/iam-service';
 import { PrismaService } from '../../../prisma/prisma.service';
@@ -14,7 +14,7 @@ export class UserRepository {
     const where: Prisma.UserWhereUniqueInput = {
       id: data?.id || undefined,
       email: data?.email || undefined,
-      phoneNumber: data?.phoneNumber || undefined,
+      username: data?.username || undefined,
     };
     return this.prismaService.user.findUnique({
       where,
@@ -26,14 +26,11 @@ export class UserRepository {
     const take = data.limit;
 
     const where: Prisma.UserWhereInput = {
-      firstName: data?.firstName || undefined,
-      lastName: data?.lastName || undefined,
       email: data?.email || undefined,
       username: data?.username || undefined,
-      phoneNumber: data?.phoneNumber || undefined,
       gender: data?.gender || undefined,
       status: data?.status || undefined,
-      roleName: data?.roleName || undefined,
+      group: data?.group || undefined,
     };
 
     const [totalItems, users] = await Promise.all([
@@ -66,30 +63,6 @@ export class UserRepository {
     return this.prismaService.user.update({
       where: { id: data.id as string },
       data,
-    });
-  }
-
-  async checkParticipantExists(participantIds: string[]) {
-    const userCount = await this.prismaService.user.count({
-      where: {
-        id: {
-          in: participantIds,
-        },
-      },
-    });
-
-    const shopCount = 1;
-
-    return userCount + shopCount;
-  }
-
-  async getManyInformationUsers(userIds: string[]) {
-    return this.prismaService.user.findMany({
-      where: {
-        id: {
-          in: userIds,
-        },
-      },
     });
   }
 }

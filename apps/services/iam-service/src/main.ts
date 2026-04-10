@@ -5,6 +5,8 @@
 
 import { AppConfiguration } from '@common/configurations/app.config';
 import { BaseConfiguration } from '@common/configurations/base.config';
+import { GrpcServerOptions } from '@common/configurations/grpc.config';
+import { GrpcService } from '@common/constants/grpc.constant';
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app/app.module';
@@ -18,8 +20,8 @@ async function bootstrap() {
   app.setGlobalPrefix(globalPrefix);
   const port = AppConfiguration.IAM_SERVICE_PORT || 3001;
 
-  // app.connectMicroservice(GrpcServerOptions(GrpcService.PRODUCT_SERVICE));
-  // await app.startAllMicroservices();
+  app.connectMicroservice(GrpcServerOptions(GrpcService.IAM_SERVICE));
+  await app.startAllMicroservices();
 
   await app.listen(port);
   Logger.log(

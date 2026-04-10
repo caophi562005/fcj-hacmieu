@@ -1,8 +1,10 @@
 import {
   DeleteManyPermissionsRequest,
+  GetAllPermissionsRequest,
+  GetAllPermissionsResponse,
   GetManyPermissionsRequest,
   GetManyPermissionsResponse,
-} from '@common/interfaces/models/role/permission';
+} from '@common/interfaces/models/iam';
 import { Injectable } from '@nestjs/common';
 import { Permission, Prisma } from '@prisma-client/iam-service';
 import { PrismaService } from '../../../prisma/prisma.service';
@@ -26,11 +28,14 @@ export class PermissionRepository {
       this.prismaService.permission.findMany({
         where: {
           deletedAt: null,
-          roles: {
-            some: {
-              name: data.name,
-            },
-          },
+          group: data.group ?? undefined,
+        },
+        select: {
+          id: true,
+          path: true,
+          method: true,
+          module: true,
+          group: true,
         },
         skip,
         take,
@@ -48,22 +53,46 @@ export class PermissionRepository {
     };
   }
 
-  async listUnique(data: {
-    names: Prisma.PermissionWhereUniqueInput['name'][];
-  }): Promise<Pick<Permission, 'id' | 'method' | 'path'>[]> {
-    return this.prismaService.permission.findMany({
+  async listAll(
+    data: GetAllPermissionsRequest,
+  ): Promise<GetAllPermissionsResponse> {
+    const permissions = await this.prismaService.permission.findMany({
       where: {
-        OR: data.names.map((item) => ({
-          name: item,
-        })),
+        deletedAt: null,
+        group: data.group ?? undefined,
       },
       select: {
         id: true,
         path: true,
         method: true,
+        module: true,
+        group: true,
+      },
+      orderBy: {
+        module: 'asc',
       },
     });
+    return {
+      permissions,
+    };
   }
+
+  // async listUnique(data: {
+  //   names: Prisma.PermissionWhereUniqueInput['name'][];
+  // }): Promise<Pick<Permission, 'id' | 'method' | 'path'>[]> {
+  //   return this.prismaService.permission.findMany({
+  //     where: {
+  //       OR: data.names.map((item) => ({
+  //         name: item,
+  //       })),
+  //     },
+  //     select: {
+  //       id: true,
+  //       path: true,
+  //       method: true,
+  //     },
+  //   });
+  // }
 
   findById(
     where: Prisma.PermissionWhereUniqueInput,

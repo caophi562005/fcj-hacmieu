@@ -10,19 +10,7 @@ const grpcUrlSchema = z
 export const GrpcConfigurationSchema = z.object({
   PROTO_PATH: z.string(),
 
-  USER_ACCESS_SERVICE_GRPC_URL: grpcUrlSchema,
-  MEDIA_SERVICE_GRPC_URL: grpcUrlSchema,
-  ROLE_SERVICE_GRPC_URL: grpcUrlSchema,
-  PRODUCT_SERVICE_GRPC_URL: grpcUrlSchema,
-  QUERY_SERVICE_GRPC_URL: grpcUrlSchema,
-  NOTIFICATION_SERVICE_GRPC_URL: grpcUrlSchema,
-  CHAT_SERVICE_GRPC_URL: grpcUrlSchema,
-  CART_SERVICE_GRPC_URL: grpcUrlSchema,
-  ORDER_SERVICE_GRPC_URL: grpcUrlSchema,
-  PAYMENT_SERVICE_GRPC_URL: grpcUrlSchema,
-  REPORT_SERVICE_GRPC_URL: grpcUrlSchema,
-  REVIEW_SERVICE_GRPC_URL: grpcUrlSchema,
-  PROMOTION_SERVICE_GRPC_URL: grpcUrlSchema,
+  IAM_SERVICE_GRPC_URL: grpcUrlSchema,
 });
 
 const configServer = GrpcConfigurationSchema.safeParse(process.env);
@@ -35,6 +23,10 @@ if (!configServer.success) {
 
 export const GrpcConfiguration = configServer.data;
 
+/**
+ * Chuẩn hóa tên service: loại bỏ hậu tố '_SERVICE', chuyển thành chữ thường và thay thế '_' bằng '-'.
+ * VD: 'IAM_SERVICE' -> 'iam', 'PAYMENT_GATEWAY_SERVICE' -> 'payment-gateway'
+ */
 const normalizeServiceName = (name: GrpcService): string =>
   name
     .replace(/_SERVICE$/, '')
@@ -43,12 +35,12 @@ const normalizeServiceName = (name: GrpcService): string =>
 
 const getProtoPath = (serviceName: GrpcService) => {
   return `${GrpcConfiguration.PROTO_PATH}${normalizeServiceName(
-    serviceName
+    serviceName,
   )}.proto`;
 };
 
 export const GrpcClientProvider = (
-  serviceName: GrpcService
+  serviceName: GrpcService,
 ): ClientProviderOptions => {
   return {
     name: serviceName,

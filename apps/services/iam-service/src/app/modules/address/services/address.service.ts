@@ -7,7 +7,7 @@ import {
   GetManyAddressesRequest,
   GetManyAddressesResponse,
   UpdateAddressRequest,
-} from '@common/interfaces/models/user-access';
+} from '@common/interfaces/models/iam';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { AddressRepository } from '../repositories/address.repository';
 
@@ -38,7 +38,7 @@ export class AddressService {
     try {
       const createdAddress = await this.addressRepository.create(data);
       return createdAddress;
-    } catch (error) {
+    } catch (error: any) {
       if (error.code === PrismaErrorValues.UNIQUE_CONSTRAINT_VIOLATION) {
         throw new NotFoundException('Error.AddressAlreadyExists');
       }
@@ -53,7 +53,7 @@ export class AddressService {
     try {
       const updatedAddress = await this.addressRepository.update(data);
       return updatedAddress;
-    } catch (error) {
+    } catch (error: any) {
       if (error.code === PrismaErrorValues.RECORD_NOT_FOUND) {
         throw new NotFoundException('Error.AddressNotFound');
       }
@@ -65,7 +65,7 @@ export class AddressService {
     try {
       const deletedAddress = await this.addressRepository.delete(data);
       return deletedAddress;
-    } catch (error) {
+    } catch (error: any) {
       if (error.code === PrismaErrorValues.RECORD_NOT_FOUND) {
         throw new NotFoundException('Error.AddressNotFound');
       }

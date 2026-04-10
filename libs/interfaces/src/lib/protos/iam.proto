@@ -1,0 +1,286 @@
+syntax = "proto3";
+
+package IAM_SERVICE;
+
+service AuthModule {
+  rpc ExchangeCode(ExchangeCodeRequest) returns (ExchangeCodeResponse);
+  rpc RefreshSession(RefreshSessionRequest) returns (ExchangeCodeResponse);
+  rpc LogoutCurrentSession(LogoutCurrentSessionRequest) returns (Empty);
+  rpc ChangePassword(ChangePasswordRequest) returns (Message);
+  rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse);
+}
+
+message ExchangeCodeRequest {
+  optional string processId = 1;
+  string code = 2;
+}
+
+message RefreshSessionRequest {
+  optional string processId = 1;
+  string refreshToken = 2;
+}
+
+message LogoutCurrentSessionRequest {
+  optional string processId = 1;
+  string refreshToken = 2;
+}
+
+message ChangePasswordRequest {
+  optional string processId = 1;
+  string previousPassword = 2;
+  string proposedPassword = 3;
+  string accessToken = 4;
+}
+
+message ValidateTokenRequest {
+  optional string processId = 1;
+  string accessToken = 2;
+}
+
+message ExchangeCodeResponse {
+  string accessToken = 1;
+  string idToken = 2;
+  string refreshToken = 3;
+  int32 expiresIn = 4;
+  string tokenType = 5;
+  string scope = 6;
+}
+
+message Empty {}
+
+message Message {
+  string message = 1;
+}
+
+message ValidateTokenResponse {
+  string userId = 1;
+  string username = 2;
+  string groups = 3;
+  repeated Permissions permissions = 4;
+  bool isValid = 5;
+}
+
+service PermissionModule {
+  rpc GetManyPermissions(GetManyPermissionsRequest) returns (GetManyPermissionsResponse);
+  rpc GetAllPermissions(GetAllPermissionsRequest) returns (GetAllPermissionsResponse);
+  rpc CreatePermission(CreatePermissionRequest) returns (CreatePermissionResponse);
+  rpc CreateManyPermissions(CreateManyPermissionsRequest) returns (CountResponse);
+  rpc DeleteManyPermissions(DeleteManyPermissionsRequest) returns (CountResponse);
+}
+
+message Permissions {
+  string id = 1;
+  string path = 2;
+  string method = 3;
+  string group = 4;
+}
+
+message GetManyPermissionsRequest {
+  optional string processId = 1;
+  int32 page = 2;
+  int32 limit = 3;
+  optional string group = 4;
+}
+
+message GetAllPermissionsRequest {
+  optional string processId = 1;
+  string group = 2;
+}
+
+message GetAllPermissionsResponse {
+  repeated Permissions permissions = 1;
+}
+
+message CreatePermissionResponse {
+  string id = 1;
+  string name = 2;
+  optional string description = 3;
+  string module = 4;
+  string path = 5;
+  string method = 6;
+  string group = 7;
+  string createdById = 8;
+  string updatedById = 9;
+  string deletedById = 10;
+  string deletedAt = 11;
+  string createdAt = 12;
+  string updatedAt = 13;
+}
+
+message GetManyPermissionsResponse {
+  repeated Permissions permissions = 1;
+  int32 page = 2;
+  int32 limit = 3;
+  int32 totalItems = 4;
+  int32 totalPages = 5;
+}
+
+message CreatePermissionRequest {
+  optional string processId = 1;
+  string name = 2;
+  optional string description = 3;
+  string module = 4;
+  string path = 5;
+  string method = 6;
+  string group = 7;
+  optional string createdById = 8;
+}
+
+message CreateManyPermissionsRequest {
+  repeated CreatePermissionRequest permissions = 1;
+}
+
+message DeleteManyPermissionsRequest {
+  repeated string ids = 1;
+}
+
+message CountResponse {
+  int32 count = 1;
+}
+
+service AddressModule {
+  rpc GetManyAddresses(GetManyAddressesRequest) returns (GetManyAddressesResponse);
+  rpc GetAddress(GetAddressRequest) returns (AddressResponse);
+  rpc CreateAddress(CreateAddressRequest) returns (AddressResponse);
+  rpc UpdateAddress(UpdateAddressRequest) returns (AddressResponse);
+  rpc DeleteAddress(DeleteAddressRequest) returns (AddressResponse);
+}
+
+message GetManyAddressesRequest {
+  optional string processId = 1;
+  string userId = 2;
+  int32 page = 3;
+  int32 limit = 4;
+}
+
+message GetManyAddressesResponse {
+  repeated AddressResponse addresses = 1;
+  int32 page = 2;
+  int32 limit = 3;
+  int32 totalItems = 4;
+  int32 totalPages = 5;
+}
+
+message GetAddressRequest {
+  optional string processId = 1;
+  string id = 2;
+  string userId = 3;
+}
+
+message CreateAddressRequest {
+  optional string processId = 1;
+  string userId = 2;
+  string name = 3;
+  string address = 4;
+  optional string ward = 5;
+  optional string district = 6;
+  optional string province = 7;
+}
+
+message UpdateAddressRequest {
+  optional string processId = 1;
+  string id = 2;
+  optional string userId = 3;
+  optional string name = 4;
+  optional string address = 5;
+  optional string ward = 6;
+  optional string district = 7;
+  optional string province = 8;
+}
+
+message DeleteAddressRequest {
+  optional string processId = 1;
+  string id = 2;
+  string userId = 3;
+}
+
+message AddressResponse {
+  string id = 1;
+  string userId = 2;
+  string name = 3;
+  string address = 4;
+  string ward = 5;
+  string district = 6;
+  string province = 7;
+  string createdAt = 8;
+  string updatedAt = 9;
+}
+
+service UserModule {
+  rpc GetUser(GetUserRequest) returns (UserResponse);
+  rpc GetManyUsers(GetManyUsersRequest) returns (GetManyUsersResponse);
+  rpc UpdateUser(UpdateUserRequest) returns (UserResponse);
+  rpc CreateUser(CreateUserRequest) returns (UserResponse);
+}
+
+message GetUserRequest {
+  optional string processId = 1;
+  optional string id = 2;
+  optional string email = 3;
+  optional string username = 4;
+}
+
+message UpdateUserRequest {
+  optional string processId = 1;
+  string id = 2;
+  optional string phoneNumber = 3;
+  optional string avatar = 4;
+  optional string gender = 5;
+  optional string birthday = 6;
+}
+
+message CreateUserRequest {
+  optional string processId = 1;
+  string id = 2;
+  string email = 3;
+  string username = 4;
+  string avatar = 5;
+  string group = 6;
+}
+
+message UserResponse {
+  string id = 1;
+  string email = 2;
+  string username = 3;
+  string phoneNumber = 4;
+  string avatar = 5;
+  string birthday = 6;
+  string gender = 7;
+  string status = 8;
+  string group = 9;
+  string createdById = 10;
+  string updatedById = 11;
+  string deletedById = 12;
+  string deletedAt = 13;
+  string createdAt = 14;
+  string updatedAt = 15;
+}
+
+message GetManyUsersRequest {
+  optional string processId = 1;
+  int32 page = 2;
+  int32 limit = 3;
+  optional string email = 4;
+  optional string phoneNumber = 5;
+  optional string username = 6;
+  optional string gender = 7; // "MALE" | "FEMALE" | "OTHER"
+  optional string status = 8; // "ACTIVE" | "INACTIVE" | "BLOCKED"
+  optional string group = 9;
+}
+
+message GetManyUsersResponse {
+  int32 page = 1;
+  int32 limit = 2;
+  int32 totalItems = 3;
+  int32 totalPages = 4;
+  repeated UserBasicInfo users = 5;
+}
+
+message UserBasicInfo {
+  string id = 1;
+  string email = 2;
+  string phoneNumber = 3;
+  string gender = 4;
+  string status = 5;
+  string group = 6;
+}

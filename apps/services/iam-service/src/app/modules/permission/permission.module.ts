@@ -1,18 +1,12 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { PermissionGrpcController } from './controllers/permission-grpc.controller';
-import { RoleGrpcController } from './controllers/role-grpc.controller';
 import { PermissionRepository } from './repositories/permission.repository';
-import { RoleRepository } from './repositories/role.repository';
 import { PermissionService } from './services/permission.service';
-import { RoleService } from './services/role.service';
 
+@Global()
 @Module({
-  controllers: [PermissionGrpcController, RoleGrpcController],
-  providers: [
-    PermissionRepository,
-    PermissionService,
-    RoleRepository,
-    RoleService,
-  ],
+  controllers: [PermissionGrpcController],
+  providers: [PermissionRepository, PermissionService],
+  exports: [PermissionService],
 })
 export class PermissionModule {}
