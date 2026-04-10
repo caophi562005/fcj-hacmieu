@@ -1,0 +1,162 @@
+syntax = "proto3";
+
+package SHOP_SERVICE;
+
+service MerchantModule {
+  rpc GetManyMerchants(GetManyMerchantsRequest) returns (GetManyMerchantsResponse);
+  rpc GetMerchant(GetMerchantRequest) returns (MerchantResponse);
+  rpc CreateMerchant(CreateMerchantRequest) returns (MerchantResponse);
+  rpc UpdateMerchant(UpdateMerchantRequest) returns (MerchantResponse);
+  rpc DeleteMerchant(DeleteMerchantRequest) returns (MerchantResponse);
+}
+
+service ShopModule {
+  rpc GetManyShops(GetManyShopsRequest) returns (GetManyShopsResponse);
+  rpc GetShop(GetShopRequest) returns (ShopResponse);
+  rpc CreateShop(CreateShopRequest) returns (ShopResponse);
+  rpc UpdateShop(UpdateShopRequest) returns (ShopResponse);
+  rpc DeleteShop(DeleteShopRequest) returns (ShopResponse);
+}
+
+message GetManyMerchantsRequest {
+  optional string processId = 1;
+  int32 page = 2;
+  int32 limit = 3;
+  optional string userId = 4;
+  optional string legalName = 5;
+  optional string type = 6;
+  optional string approvalStatus = 7;
+  optional bool canSell = 8;
+}
+
+message GetMerchantRequest {
+  optional string processId = 1;
+  string id = 2;
+}
+
+message CreateMerchantRequest {
+  optional string processId = 1;
+  string userId = 2;
+  string type = 3;
+  string legalName = 4;
+  optional string taxCode = 5;
+  optional string createdById = 6;
+}
+
+message UpdateMerchantRequest {
+  optional string processId = 1;
+  string id = 2;
+  optional string userId = 3;
+  optional string type = 4;
+  optional string legalName = 5;
+  optional string taxCode = 6;
+  optional string approvalStatus = 7;
+  optional bool canSell = 8;
+  optional string updatedById = 9;
+}
+
+message DeleteMerchantRequest {
+  optional string processId = 1;
+  string id = 2;
+  optional string deletedById = 3;
+}
+
+message MerchantResponse {
+  string id = 1;
+  string userId = 2;
+  string type = 3;
+  string legalName = 4;
+  string taxCode = 5;
+  string approvalStatus = 6;
+  bool canSell = 7;
+  string createdById = 8;
+  string updatedById = 9;
+  string deletedById = 10;
+  string deletedAt = 11;
+  string createdAt = 12;
+  string updatedAt = 13;
+}
+
+message GetManyMerchantsResponse {
+  repeated MerchantResponse merchants = 1;
+  int32 page = 2;
+  int32 limit = 3;
+  int32 totalItems = 4;
+  int32 totalPages = 5;
+}
+
+message GetManyShopsRequest {
+  optional string processId = 1;
+  int32 page = 2;
+  int32 limit = 3;
+  optional string merchantId = 4;
+  optional string name = 5;
+  optional string status = 6;
+}
+
+message GetShopRequest {
+  optional string processId = 1;
+  string id = 2;
+}
+
+message CreateShopRequest {
+  optional string processId = 1;
+  string merchantId = 2;
+  string name = 3;
+  string description = 4;
+  optional string logo = 5;
+  optional string banner = 6;
+  optional string phone = 7;
+  string status = 8;
+  optional string pickupAddress = 9;
+  optional string returnAddress = 10;
+  optional string createdById = 11;
+}
+
+message UpdateShopRequest {
+  optional string processId = 1;
+  string id = 2;
+  optional string merchantId = 3;
+  optional string name = 4;
+  optional string description = 5;
+  optional string logo = 6;
+  optional string banner = 7;
+  optional string phone = 8;
+  optional string status = 9;
+  optional string pickupAddress = 10;
+  optional string returnAddress = 11;
+  optional string updatedById = 12;
+}
+
+message DeleteShopRequest {
+  optional string processId = 1;
+  string id = 2;
+  optional string deletedById = 3;
+}
+
+message ShopResponse {
+  string id = 1;
+  string merchantId = 2;
+  string name = 3;
+  string description = 4;
+  string logo = 5;
+  string banner = 6;
+  string phone = 7;
+  string status = 8;
+  string pickupAddress = 9;
+  string returnAddress = 10;
+  string createdById = 11;
+  string updatedById = 12;
+  string deletedById = 13;
+  string deletedAt = 14;
+  string createdAt = 15;
+  string updatedAt = 16;
+}
+
+message GetManyShopsResponse {
+  repeated ShopResponse shops = 1;
+  int32 page = 2;
+  int32 limit = 3;
+  int32 totalItems = 4;
+  int32 totalPages = 5;
+}

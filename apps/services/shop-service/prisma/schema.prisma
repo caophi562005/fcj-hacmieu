@@ -1,0 +1,81 @@
+generator client {
+    provider      = "prisma-client"
+    output        = "../src/generated/prisma-client"
+    moduleFormat  = "cjs"
+    binaryTargets = ["native", "debian-openssl-1.1.x"]
+}
+
+datasource db {
+    provider = "postgresql"
+}
+
+enum MerchantType {
+    INDIVIDUAL
+    BUSINESS
+}
+
+enum MerchantApprovalStatus {
+    PENDING
+    APPROVED
+    REJECTED
+    SUSPENDED
+}
+
+enum ShopStatus {
+    DRAFT
+    ACTIVE
+    INACTIVE
+    CLOSED
+}
+
+model Merchant {
+    id        String       @id @default(uuid())
+    userId    String       @unique
+    type      MerchantType @default(INDIVIDUAL)
+    legalName String       @db.VarChar(500)
+    taxCode   String?      @db.VarChar(100)
+
+    approvalStatus MerchantApprovalStatus @default(PENDING)
+    canSell        Boolean                @default(false)
+
+    shops Shop[]
+
+    createdById String?
+    updatedById String?
+    deletedById String?
+
+    deletedAt DateTime?
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+
+    @@index([approvalStatus])
+    @@index([canSell])
+    @@index([deletedAt])
+}
+
+model Shop {
+    id          String     @id @default(uuid())
+    merchantId  String
+    merchant    Merchant   @relation(fields: [merchantId], references: [id])
+    name        String     @db.VarChar(500)
+    description String     @default("")
+    logo        String?    @db.VarChar(1000)
+    banner      String?    @db.VarChar(1000)
+    phone       String?    @db.VarChar(20)
+    status      ShopStatus @default(DRAFT)
+
+    pickupAddress String?
+    returnAddress String?
+
+    createdById String?
+    updatedById String?
+    deletedById String?
+
+    deletedAt DateTime?
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+
+    @@index([merchantId])
+    @@index([status])
+    @@index([deletedAt])
+}
