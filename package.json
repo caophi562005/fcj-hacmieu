@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "dev": "pnpm nx reset && pnpm nx run-many -t serve --projects=iam-service,customer-bff",
+    "dev": "pnpm nx reset && pnpm nx run-many -t serve --projects=iam-service,catalog-service,customer-bff,admin-bff",
     "build": "pnpm nx reset && pnpm nx run-many -t build --projects=catalog-service",
     "generate-ts-proto": "pnpm nx generate-ts-proto interfaces"
   },

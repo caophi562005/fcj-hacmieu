@@ -1,5 +1,6 @@
 export enum GrpcService {
   IAM_SERVICE = 'IAM_SERVICE',
+  CATALOG_SERVICE = 'CATALOG_SERVICE',
 }
 
 export const GrpcModuleName = {

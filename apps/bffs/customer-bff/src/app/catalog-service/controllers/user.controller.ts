@@ -3,7 +3,7 @@ import { UserData } from '@common/decorators/user-data.decorator';
 import {
   UpdateUserRequestDto,
   UserResponseDto,
-} from '@common/interfaces/dtos/iam';
+} from '@common/interfaces/dtos/iam/user.dto';
 import { Body, Controller, Get, Put } from '@nestjs/common';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { UserService } from '../services/user.service';

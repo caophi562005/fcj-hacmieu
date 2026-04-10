@@ -43,7 +43,11 @@ export const UpdateBrandRequestSchema = BrandSchema.pick({
 export const DeleteBrandRequestSchema = BrandSchema.pick({
   id: true,
   deletedById: true,
-}).strict();
+})
+  .extend({
+    processId: z.uuid().optional(),
+  })
+  .strict();
 
 export type GetManyBrandsRequest = z.infer<typeof GetManyBrandsRequestSchema>;
 export type GetBrandRequest = z.infer<typeof GetBrandRequestSchema>;

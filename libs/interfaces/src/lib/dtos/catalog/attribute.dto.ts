@@ -6,35 +6,35 @@ import {
   GetManyAttributesRequestSchema,
   GetManyAttributesResponseSchema,
   UpdateAttributeRequestSchema,
-} from '@common/interfaces/models/product';
+} from '@common/interfaces/models/catalog';
 import { createZodDto } from 'nestjs-zod';
 
 export class GetManyAttributesRequestDto extends createZodDto(
-  GetManyAttributesRequestSchema
+  GetManyAttributesRequestSchema,
 ) {}
 
 export class GetAttributeRequestDto extends createZodDto(
-  GetAttributeRequestSchema
+  GetAttributeRequestSchema,
 ) {}
 
 export class CreateAttributeRequestDto extends createZodDto(
-  CreateAttributeRequestSchema
+  CreateAttributeRequestSchema.omit({ processId: true, createdById: true }),
 ) {}
 
 export class UpdateAttributeRequestDto extends createZodDto(
-  UpdateAttributeRequestSchema
+  UpdateAttributeRequestSchema.omit({ processId: true, updatedById: true }),
 ) {}
 
 export class DeleteAttributeRequestDto extends createZodDto(
-  DeleteAttributeRequestSchema
+  DeleteAttributeRequestSchema.omit({ processId: true, deletedById: true }),
 ) {}
 
-//=================================================Response DTOs=================================================
+// ====================================================================================================
 
 export class GetManyAttributesResponseDto extends createZodDto(
-  GetManyAttributesResponseSchema
+  GetManyAttributesResponseSchema,
 ) {}
 
 export class GetAttributeResponseDto extends createZodDto(
-  GetAttributeResponseSchema
+  GetAttributeResponseSchema,
 ) {}

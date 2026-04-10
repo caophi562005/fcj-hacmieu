@@ -1,4 +1,3 @@
-import { ResponseSchema } from '@common/interfaces/models/common/response.model';
 import {
   CreateProductRequestSchema,
   DeleteProductRequestSchema,
@@ -7,35 +6,36 @@ import {
   GetProductRequestSchema,
   GetProductResponseSchema,
   UpdateProductRequestSchema,
-} from '@common/interfaces/models/product';
+} from '@common/interfaces/models/catalog';
+import { ResponseSchema } from '@common/interfaces/models/common/response.model';
 import { createZodDto } from 'nestjs-zod';
 
 export class GetManyProductsRequestDto extends createZodDto(
-  GetManyProductsRequestSchema
+  GetManyProductsRequestSchema,
 ) {}
 
 export class GetProductRequestDto extends createZodDto(
-  GetProductRequestSchema
+  GetProductRequestSchema,
 ) {}
 
 export class CreateProductRequestDto extends createZodDto(
-  CreateProductRequestSchema
+  CreateProductRequestSchema,
 ) {}
 
 export class UpdateProductRequestDto extends createZodDto(
-  UpdateProductRequestSchema
+  UpdateProductRequestSchema,
 ) {}
 
 export class DeleteProductRequestDto extends createZodDto(
-  DeleteProductRequestSchema
+  DeleteProductRequestSchema.omit({ processId: true, deletedById: true }),
 ) {}
 
-//=================================================Response DTOs=================================================
+// ====================================================================================================
 
 export class GetManyProductsResponseDto extends createZodDto(
-  ResponseSchema(GetManyProductsResponseSchema)
+  ResponseSchema(GetManyProductsResponseSchema),
 ) {}
 
 export class GetProductResponseDto extends createZodDto(
-  ResponseSchema(GetProductResponseSchema)
+  ResponseSchema(GetProductResponseSchema),
 ) {}

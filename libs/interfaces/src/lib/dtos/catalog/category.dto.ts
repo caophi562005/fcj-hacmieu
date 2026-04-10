@@ -1,4 +1,3 @@
-import { ResponseSchema } from '@common/interfaces/models/common/response.model';
 import {
   CreateCategoryRequestSchema,
   DeleteCategoryRequestSchema,
@@ -7,35 +6,36 @@ import {
   GetManyCategoriesRequestSchema,
   GetManyCategoriesResponseSchema,
   UpdateCategoryRequestSchema,
-} from '@common/interfaces/models/product';
+} from '@common/interfaces/models/catalog';
+import { ResponseSchema } from '@common/interfaces/models/common/response.model';
 import { createZodDto } from 'nestjs-zod';
 
 export class GetManyCategoriesRequestDto extends createZodDto(
-  GetManyCategoriesRequestSchema
+  GetManyCategoriesRequestSchema,
 ) {}
 
 export class GetCategoryRequestDto extends createZodDto(
-  GetCategoryRequestSchema
+  GetCategoryRequestSchema,
 ) {}
 
 export class CreateCategoryRequestDto extends createZodDto(
-  CreateCategoryRequestSchema
+  CreateCategoryRequestSchema.omit({ processId: true, createdById: true }),
 ) {}
 
 export class UpdateCategoryRequestDto extends createZodDto(
-  UpdateCategoryRequestSchema
+  UpdateCategoryRequestSchema.omit({ processId: true, updatedById: true }),
 ) {}
 
 export class DeleteCategoryRequestDto extends createZodDto(
-  DeleteCategoryRequestSchema
+  DeleteCategoryRequestSchema.omit({ processId: true, deletedById: true }),
 ) {}
 
-//=================================================Response DTOs=================================================
+// ====================================================================================================
 
 export class GetManyCategoriesResponseDto extends createZodDto(
-  ResponseSchema(GetManyCategoriesResponseSchema)
+  ResponseSchema(GetManyCategoriesResponseSchema),
 ) {}
 
 export class GetCategoryResponseDto extends createZodDto(
-  ResponseSchema(GetCategoryResponseSchema)
+  ResponseSchema(GetCategoryResponseSchema),
 ) {}

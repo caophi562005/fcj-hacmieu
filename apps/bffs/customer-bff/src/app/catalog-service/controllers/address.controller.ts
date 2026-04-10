@@ -8,7 +8,7 @@ import {
   GetManyAddressesRequestDto,
   GetManyAddressesResponseDto,
   UpdateAddressRequestDto,
-} from '@common/interfaces/dtos/iam';
+} from '@common/interfaces/dtos/iam/address.dto';
 import {
   Body,
   Controller,

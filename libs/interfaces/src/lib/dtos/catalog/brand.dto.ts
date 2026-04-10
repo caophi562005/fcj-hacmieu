@@ -1,4 +1,3 @@
-import { ResponseSchema } from '@common/interfaces/models/common/response.model';
 import {
   CreateBrandRequestSchema,
   DeleteBrandRequestSchema,
@@ -7,33 +6,34 @@ import {
   GetManyBrandsRequestSchema,
   GetManyBrandsResponseSchema,
   UpdateBrandRequestSchema,
-} from '@common/interfaces/models/product';
+} from '@common/interfaces/models/catalog';
+import { ResponseSchema } from '@common/interfaces/models/common/response.model';
 import { createZodDto } from 'nestjs-zod';
 
 export class GetManyBrandsRequestDto extends createZodDto(
-  GetManyBrandsRequestSchema
+  GetManyBrandsRequestSchema,
 ) {}
 
 export class GetBrandRequestDto extends createZodDto(GetBrandRequestSchema) {}
 
 export class CreateBrandRequestDto extends createZodDto(
-  CreateBrandRequestSchema
+  CreateBrandRequestSchema.omit({ processId: true, createdById: true }),
 ) {}
 
 export class UpdateBrandRequestDto extends createZodDto(
-  UpdateBrandRequestSchema
+  UpdateBrandRequestSchema.omit({ processId: true, updatedById: true }),
 ) {}
 
 export class DeleteBrandRequestDto extends createZodDto(
-  DeleteBrandRequestSchema
+  DeleteBrandRequestSchema.omit({ processId: true, deletedById: true }),
 ) {}
 
-//=================================================Response DTOs=================================================
+// ====================================================================================================
 
 export class GetManyBrandsResponseDto extends createZodDto(
-  ResponseSchema(GetManyBrandsResponseSchema)
+  ResponseSchema(GetManyBrandsResponseSchema),
 ) {}
 
 export class GetBrandResponseDto extends createZodDto(
-  ResponseSchema(GetBrandResponseSchema)
+  ResponseSchema(GetBrandResponseSchema),
 ) {}
