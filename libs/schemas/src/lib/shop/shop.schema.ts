@@ -15,6 +15,7 @@ export const ShopSchema = BaseSchema.extend({
   logo: z.string().max(1000).nullable(),
   banner: z.string().max(1000).nullable(),
   phone: z.string().max(20).nullable(),
+  credit: z.number().nonnegative().default(0),
   status: ShopStatusEnums,
   pickupAddress: z.string().nullable(),
   returnAddress: z.string().nullable(),

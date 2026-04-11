@@ -79,21 +79,45 @@ export class MerchantRepository {
   }
 
   delete(data: Prisma.MerchantWhereInput, isHard?: boolean) {
-    return isHard
-      ? this.prismaService.merchant.delete({
+    const id = data.id as string;
+    const deletedAt = new Date();
+
+    return this.prismaService.$transaction(async (tx) => {
+      if (isHard) {
+        await tx.shop.deleteMany({
           where: {
-            id: data.id as string,
-          },
-        })
-      : this.prismaService.merchant.update({
-          where: {
-            id: data.id as string,
-            deletedAt: null,
-          },
-          data: {
-            deletedAt: new Date(),
-            deletedById: data.deletedById as string,
+            merchantId: id,
           },
         });
+
+        return tx.merchant.delete({
+          where: {
+            id,
+          },
+        });
+      }
+
+      await tx.shop.updateMany({
+        where: {
+          merchantId: id,
+          deletedAt: null,
+        },
+        data: {
+          deletedAt,
+          deletedById: data.deletedById as string,
+        },
+      });
+
+      return tx.merchant.update({
+        where: {
+          id,
+          deletedAt: null,
+        },
+        data: {
+          deletedAt,
+          deletedById: data.deletedById as string,
+        },
+      });
+    });
   }
 }

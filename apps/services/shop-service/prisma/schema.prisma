@@ -38,7 +38,7 @@ model Merchant {
     approvalStatus MerchantApprovalStatus @default(PENDING)
     canSell        Boolean                @default(false)
 
-    shops Shop[]
+    shop Shop?
 
     createdById String?
     updatedById String?
@@ -55,13 +55,14 @@ model Merchant {
 
 model Shop {
     id          String     @id @default(uuid())
-    merchantId  String
+    merchantId  String     @unique
     merchant    Merchant   @relation(fields: [merchantId], references: [id])
     name        String     @db.VarChar(500)
     description String     @default("")
     logo        String?    @db.VarChar(1000)
     banner      String?    @db.VarChar(1000)
     phone       String?    @db.VarChar(20)
+    credit      Float      @default(0)
     status      ShopStatus @default(DRAFT)
 
     pickupAddress String?
@@ -75,7 +76,6 @@ model Shop {
     createdAt DateTime  @default(now())
     updatedAt DateTime  @updatedAt
 
-    @@index([merchantId])
     @@index([status])
     @@index([deletedAt])
 }

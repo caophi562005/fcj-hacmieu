@@ -142,15 +142,16 @@ message ShopResponse {
   string logo = 5;
   string banner = 6;
   string phone = 7;
-  string status = 8;
-  string pickupAddress = 9;
-  string returnAddress = 10;
-  string createdById = 11;
-  string updatedById = 12;
-  string deletedById = 13;
-  string deletedAt = 14;
-  string createdAt = 15;
-  string updatedAt = 16;
+  double credit = 8;
+  string status = 9;
+  string pickupAddress = 10;
+  string returnAddress = 11;
+  string createdById = 12;
+  string updatedById = 13;
+  string deletedById = 14;
+  string deletedAt = 15;
+  string createdAt = 16;
+  string updatedAt = 17;
 }
 
 message GetManyShopsResponse {
