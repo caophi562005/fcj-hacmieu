@@ -3,11 +3,8 @@ import {
   AttributeModuleClient,
   AttributeResponse,
   CATALOG_SERVICE_PACKAGE_NAME,
-  CreateAttributeRequest,
-  DeleteAttributeRequest,
   GetAttributeRequest,
   GetManyAttributesRequest,
-  UpdateAttributeRequest,
 } from '@common/interfaces/proto-types/catalog';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
@@ -34,23 +31,5 @@ export class AttributeService implements OnModuleInit {
 
   async getAttribute(data: GetAttributeRequest): Promise<AttributeResponse> {
     return firstValueFrom(this.attributeModule.getAttribute(data));
-  }
-
-  async createAttribute(
-    data: CreateAttributeRequest,
-  ): Promise<AttributeResponse> {
-    return firstValueFrom(this.attributeModule.createAttribute(data));
-  }
-
-  async updateAttribute(
-    data: UpdateAttributeRequest,
-  ): Promise<AttributeResponse> {
-    return firstValueFrom(this.attributeModule.updateAttribute(data));
-  }
-
-  async deleteAttribute(
-    data: DeleteAttributeRequest,
-  ): Promise<AttributeResponse> {
-    return firstValueFrom(this.attributeModule.deleteAttribute(data));
   }
 }

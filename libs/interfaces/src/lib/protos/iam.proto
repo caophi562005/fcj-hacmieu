@@ -55,7 +55,7 @@ message Message {
 message ValidateTokenResponse {
   string userId = 1;
   string username = 2;
-  string groups = 3;
+  repeated string groups = 3;
   repeated Permissions permissions = 4;
   bool isValid = 5;
 }
@@ -235,7 +235,7 @@ message CreateUserRequest {
   string email = 3;
   string username = 4;
   string avatar = 5;
-  string group = 6;
+  repeated string group = 6;
 }
 
 message UserResponse {
@@ -247,7 +247,7 @@ message UserResponse {
   string birthday = 6;
   string gender = 7;
   string status = 8;
-  string group = 9;
+  repeated string group = 9;
   string createdById = 10;
   string updatedById = 11;
   string deletedById = 12;
@@ -265,7 +265,7 @@ message GetManyUsersRequest {
   optional string username = 6;
   optional string gender = 7; // "MALE" | "FEMALE" | "OTHER"
   optional string status = 8; // "ACTIVE" | "INACTIVE" | "BLOCKED"
-  optional string group = 9;
+  repeated string group = 9;
 }
 
 message GetManyUsersResponse {
@@ -282,5 +282,5 @@ message UserBasicInfo {
   string phoneNumber = 3;
   string gender = 4;
   string status = 5;
-  string group = 6;
+  repeated string group = 6;
 }

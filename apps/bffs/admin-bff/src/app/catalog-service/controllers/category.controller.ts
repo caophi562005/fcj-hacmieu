@@ -3,10 +3,21 @@ import { UserData } from '@common/decorators/user-data.decorator';
 import {
   CreateCategoryRequestDto,
   DeleteCategoryRequestDto,
+  GetCategoryRequestDto,
   GetCategoryResponseDto,
+  GetManyCategoriesRequestDto,
   UpdateCategoryRequestDto,
 } from '@common/interfaces/dtos/catalog';
-import { Body, Controller, Delete, Param, Post, Put } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+} from '@nestjs/common';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { CategoryService } from '../services/category.service';
 
@@ -15,24 +26,29 @@ import { CategoryService } from '../services/category.service';
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
-  // @Get()
-  // async getManyCategories(
-  //   @Query() queries: GetManyCategoriesRequestDto,
-  //   @ProcessId() processId: string
-  // ) {
-  //   return this.categoryReadService.getManyCategories({
-  //     ...queries,
-  //     processId,
-  //   });
-  // }
+  @Get()
+  async getManyCategories(
+    @Query() queries: GetManyCategoriesRequestDto,
+    @ProcessId() processId: string,
+  ) {
+    return this.categoryService.getManyCategories({
+      page: 1,
+      limit: 10,
+      ...queries,
+      processId,
+    });
+  }
 
-  // @Get(':id')
-  // async getCategoryById(
-  //   @Param() params: GetCategoryRequestDto,
-  //   @ProcessId() processId: string
-  // ) {
-  //   return this.categoryReadService.getCategory({ ...params, processId });
-  // }
+  @Get(':id')
+  @ApiOkResponse({
+    type: GetCategoryResponseDto,
+  })
+  async getCategory(
+    @Param() params: GetCategoryRequestDto,
+    @ProcessId() processId: string,
+  ) {
+    return this.categoryService.getCategory({ ...params, processId });
+  }
 
   @Post()
   @ApiOkResponse({

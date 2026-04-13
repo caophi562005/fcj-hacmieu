@@ -2,18 +2,25 @@ import { GrpcClientProvider } from '@common/configurations/grpc.config';
 import { GrpcService } from '@common/constants/grpc.constant';
 import { Module } from '@nestjs/common';
 import { ClientsModule } from '@nestjs/microservices';
-import { AddressController } from './controllers/address.controller';
-import { AuthController } from './controllers/auth.controller';
-import { UserController } from './controllers/user.controller';
-import { AddressService } from './services/addesss.service';
-import { AuthService } from './services/auth.service';
-import { UserService } from './services/user.service';
+import { AttributeController } from './controllers/attribute.controller';
+import { BrandController } from './controllers/brand.controller';
+import { CategoryController } from './controllers/category.controller';
+import { ProductController } from './controllers/product.controller';
+import { AttributeService } from './services/attribute.service';
+import { BrandService } from './services/brand.service';
+import { CategoryService } from './services/category.service';
+import { ProductService } from './services/product.service';
 
 @Module({
   imports: [
-    ClientsModule.register([GrpcClientProvider(GrpcService.IAM_SERVICE)]),
+    ClientsModule.register([GrpcClientProvider(GrpcService.CATALOG_SERVICE)]),
   ],
-  controllers: [AuthController, UserController, AddressController],
-  providers: [AuthService, UserService, AddressService],
+  controllers: [
+    ProductController,
+    CategoryController,
+    BrandController,
+    AttributeController,
+  ],
+  providers: [ProductService, CategoryService, BrandService, AttributeService],
 })
-export class IamModule {}
+export class CatalogModule {}

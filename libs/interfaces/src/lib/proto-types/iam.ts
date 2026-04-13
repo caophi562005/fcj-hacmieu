@@ -56,7 +56,7 @@ export interface Message {
 export interface ValidateTokenResponse {
   userId: string;
   username: string;
-  groups: string;
+  groups: string[];
   permissions: Permissions[];
   isValid: boolean;
 }
@@ -213,7 +213,7 @@ export interface CreateUserRequest {
   email: string;
   username: string;
   avatar: string;
-  group: string;
+  group: string[];
 }
 
 export interface UserResponse {
@@ -225,7 +225,7 @@ export interface UserResponse {
   birthday: string;
   gender: string;
   status: string;
-  group: string;
+  group: string[];
   createdById: string;
   updatedById: string;
   deletedById: string;
@@ -249,7 +249,7 @@ export interface GetManyUsersRequest {
     | undefined;
   /** "ACTIVE" | "INACTIVE" | "BLOCKED" */
   status?: string | undefined;
-  group?: string | undefined;
+  group: string[];
 }
 
 export interface GetManyUsersResponse {
@@ -266,7 +266,7 @@ export interface UserBasicInfo {
   phoneNumber: string;
   gender: string;
   status: string;
-  group: string;
+  group: string[];
 }
 
 export const IAM_SERVICE_PACKAGE_NAME = "IAM_SERVICE";

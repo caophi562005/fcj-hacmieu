@@ -3,11 +3,8 @@ import {
   CATEGORY_MODULE_SERVICE_NAME,
   CategoryModuleClient,
   CategoryResponse,
-  CreateCategoryRequest,
-  DeleteCategoryRequest,
   GetCategoryRequest,
   GetManyCategoriesRequest,
-  UpdateCategoryRequest,
 } from '@common/interfaces/proto-types/catalog';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
@@ -34,17 +31,5 @@ export class CategoryService implements OnModuleInit {
 
   async getCategory(data: GetCategoryRequest): Promise<CategoryResponse> {
     return firstValueFrom(this.categoryModule.getCategory(data));
-  }
-
-  async createCategory(data: CreateCategoryRequest): Promise<CategoryResponse> {
-    return firstValueFrom(this.categoryModule.createCategory(data));
-  }
-
-  async updateCategory(data: UpdateCategoryRequest): Promise<CategoryResponse> {
-    return firstValueFrom(this.categoryModule.updateCategory(data));
-  }
-
-  async deleteCategory(data: DeleteCategoryRequest): Promise<CategoryResponse> {
-    return firstValueFrom(this.categoryModule.deleteCategory(data));
   }
 }

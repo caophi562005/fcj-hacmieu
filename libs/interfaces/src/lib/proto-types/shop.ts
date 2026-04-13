@@ -5,10 +5,10 @@
 // source: shop.proto
 
 /* eslint-disable */
-import { GrpcMethod, GrpcStreamMethod } from '@nestjs/microservices';
-import { Observable } from 'rxjs';
+import { GrpcMethod, GrpcStreamMethod } from "@nestjs/microservices";
+import { Observable } from "rxjs";
 
-export const protobufPackage = 'SHOP_SERVICE';
+export const protobufPackage = "SHOP_SERVICE";
 
 export interface GetManyMerchantsRequest {
   processId?: string | undefined;
@@ -154,12 +154,10 @@ export interface GetManyShopsResponse {
   totalPages: number;
 }
 
-export const SHOP_SERVICE_PACKAGE_NAME = 'SHOP_SERVICE';
+export const SHOP_SERVICE_PACKAGE_NAME = "SHOP_SERVICE";
 
 export interface MerchantModuleClient {
-  getManyMerchants(
-    request: GetManyMerchantsRequest,
-  ): Observable<GetManyMerchantsResponse>;
+  getManyMerchants(request: GetManyMerchantsRequest): Observable<GetManyMerchantsResponse>;
 
   getMerchant(request: GetMerchantRequest): Observable<MerchantResponse>;
 
@@ -173,76 +171,45 @@ export interface MerchantModuleClient {
 export interface MerchantModuleController {
   getManyMerchants(
     request: GetManyMerchantsRequest,
-  ):
-    | Promise<GetManyMerchantsResponse>
-    | Observable<GetManyMerchantsResponse>
-    | GetManyMerchantsResponse;
+  ): Promise<GetManyMerchantsResponse> | Observable<GetManyMerchantsResponse> | GetManyMerchantsResponse;
 
-  getMerchant(
-    request: GetMerchantRequest,
-  ):
-    | Promise<MerchantResponse>
-    | Observable<MerchantResponse>
-    | MerchantResponse;
+  getMerchant(request: GetMerchantRequest): Promise<MerchantResponse> | Observable<MerchantResponse> | MerchantResponse;
 
   createMerchant(
     request: CreateMerchantRequest,
-  ):
-    | Promise<MerchantResponse>
-    | Observable<MerchantResponse>
-    | MerchantResponse;
+  ): Promise<MerchantResponse> | Observable<MerchantResponse> | MerchantResponse;
 
   updateMerchant(
     request: UpdateMerchantRequest,
-  ):
-    | Promise<MerchantResponse>
-    | Observable<MerchantResponse>
-    | MerchantResponse;
+  ): Promise<MerchantResponse> | Observable<MerchantResponse> | MerchantResponse;
 
   deleteMerchant(
     request: DeleteMerchantRequest,
-  ):
-    | Promise<MerchantResponse>
-    | Observable<MerchantResponse>
-    | MerchantResponse;
+  ): Promise<MerchantResponse> | Observable<MerchantResponse> | MerchantResponse;
 }
 
 export function MerchantModuleControllerMethods() {
   return function (constructor: Function) {
     const grpcMethods: string[] = [
-      'getManyMerchants',
-      'getMerchant',
-      'createMerchant',
-      'updateMerchant',
-      'deleteMerchant',
+      "getManyMerchants",
+      "getMerchant",
+      "createMerchant",
+      "updateMerchant",
+      "deleteMerchant",
     ];
     for (const method of grpcMethods) {
-      const descriptor: any = Reflect.getOwnPropertyDescriptor(
-        constructor.prototype,
-        method,
-      );
-      GrpcMethod('MerchantModule', method)(
-        constructor.prototype[method],
-        method,
-        descriptor,
-      );
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcMethod("MerchantModule", method)(constructor.prototype[method], method, descriptor);
     }
     const grpcStreamMethods: string[] = [];
     for (const method of grpcStreamMethods) {
-      const descriptor: any = Reflect.getOwnPropertyDescriptor(
-        constructor.prototype,
-        method,
-      );
-      GrpcStreamMethod('MerchantModule', method)(
-        constructor.prototype[method],
-        method,
-        descriptor,
-      );
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcStreamMethod("MerchantModule", method)(constructor.prototype[method], method, descriptor);
     }
   };
 }
 
-export const MERCHANT_MODULE_SERVICE_NAME = 'MerchantModule';
+export const MERCHANT_MODULE_SERVICE_NAME = "MerchantModule";
 
 export interface ShopModuleClient {
   getManyShops(request: GetManyShopsRequest): Observable<GetManyShopsResponse>;
@@ -259,61 +226,30 @@ export interface ShopModuleClient {
 export interface ShopModuleController {
   getManyShops(
     request: GetManyShopsRequest,
-  ):
-    | Promise<GetManyShopsResponse>
-    | Observable<GetManyShopsResponse>
-    | GetManyShopsResponse;
+  ): Promise<GetManyShopsResponse> | Observable<GetManyShopsResponse> | GetManyShopsResponse;
 
-  getShop(
-    request: GetShopRequest,
-  ): Promise<ShopResponse> | Observable<ShopResponse> | ShopResponse;
+  getShop(request: GetShopRequest): Promise<ShopResponse> | Observable<ShopResponse> | ShopResponse;
 
-  createShop(
-    request: CreateShopRequest,
-  ): Promise<ShopResponse> | Observable<ShopResponse> | ShopResponse;
+  createShop(request: CreateShopRequest): Promise<ShopResponse> | Observable<ShopResponse> | ShopResponse;
 
-  updateShop(
-    request: UpdateShopRequest,
-  ): Promise<ShopResponse> | Observable<ShopResponse> | ShopResponse;
+  updateShop(request: UpdateShopRequest): Promise<ShopResponse> | Observable<ShopResponse> | ShopResponse;
 
-  deleteShop(
-    request: DeleteShopRequest,
-  ): Promise<ShopResponse> | Observable<ShopResponse> | ShopResponse;
+  deleteShop(request: DeleteShopRequest): Promise<ShopResponse> | Observable<ShopResponse> | ShopResponse;
 }
 
 export function ShopModuleControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = [
-      'getManyShops',
-      'getShop',
-      'createShop',
-      'updateShop',
-      'deleteShop',
-    ];
+    const grpcMethods: string[] = ["getManyShops", "getShop", "createShop", "updateShop", "deleteShop"];
     for (const method of grpcMethods) {
-      const descriptor: any = Reflect.getOwnPropertyDescriptor(
-        constructor.prototype,
-        method,
-      );
-      GrpcMethod('ShopModule', method)(
-        constructor.prototype[method],
-        method,
-        descriptor,
-      );
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcMethod("ShopModule", method)(constructor.prototype[method], method, descriptor);
     }
     const grpcStreamMethods: string[] = [];
     for (const method of grpcStreamMethods) {
-      const descriptor: any = Reflect.getOwnPropertyDescriptor(
-        constructor.prototype,
-        method,
-      );
-      GrpcStreamMethod('ShopModule', method)(
-        constructor.prototype[method],
-        method,
-        descriptor,
-      );
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcStreamMethod("ShopModule", method)(constructor.prototype[method], method, descriptor);
     }
   };
 }
 
-export const SHOP_MODULE_SERVICE_NAME = 'ShopModule';
+export const SHOP_MODULE_SERVICE_NAME = "ShopModule";

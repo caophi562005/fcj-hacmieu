@@ -1,13 +1,10 @@
 import {
   CATALOG_SERVICE_PACKAGE_NAME,
-  CreateProductRequest,
-  DeleteProductRequest,
   GetManyProductsRequest,
   GetProductRequest,
   PRODUCT_MODULE_SERVICE_NAME,
   ProductModuleClient,
   ProductResponse,
-  UpdateProductRequest,
 } from '@common/interfaces/proto-types/catalog';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
@@ -34,17 +31,5 @@ export class ProductService implements OnModuleInit {
 
   async getProduct(data: GetProductRequest): Promise<ProductResponse> {
     return firstValueFrom(this.productModule.getProduct(data));
-  }
-
-  async createProduct(data: CreateProductRequest): Promise<ProductResponse> {
-    return firstValueFrom(this.productModule.createProduct(data));
-  }
-
-  async updateProduct(data: UpdateProductRequest): Promise<ProductResponse> {
-    return firstValueFrom(this.productModule.updateProduct(data));
-  }
-
-  async deleteProduct(data: DeleteProductRequest): Promise<ProductResponse> {
-    return firstValueFrom(this.productModule.deleteProduct(data));
   }
 }

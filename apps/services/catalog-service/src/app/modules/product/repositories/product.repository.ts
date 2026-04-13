@@ -18,6 +18,39 @@ interface AttributeInputItem {
 export class ProductRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
+  private readonly productResponseInclude = {
+    skus: {
+      where: {
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        value: true,
+        price: true,
+        stock: true,
+        image: true,
+      },
+    },
+    brand: {
+      select: {
+        id: true,
+        name: true,
+        logo: true,
+      },
+    },
+    categories: {
+      where: {
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        name: true,
+        logo: true,
+        parentCategoryId: true,
+      },
+    },
+  };
+
   private async validateAttributes(attributes: AttributeInputItem[]) {
     if (!attributes || attributes.length === 0) {
       return;
@@ -59,6 +92,14 @@ export class ProductRepository {
     return this.prismaService.product.create({
       data: {
         ...productData,
+
+        provinceId: 1,
+        provinceName: 'test provinceName',
+        districtId: 1,
+        districtName: 'test districtName',
+        wardId: 1,
+        wardName: 'test wardName',
+
         createdById: data.createdById,
         brand: data.brandId
           ? {
@@ -77,38 +118,7 @@ export class ProductRepository {
           },
         },
       },
-      include: {
-        skus: {
-          where: {
-            deletedAt: null,
-          },
-          select: {
-            id: true,
-            value: true,
-            price: true,
-            stock: true,
-            image: true,
-          },
-        },
-        brand: {
-          select: {
-            id: true,
-            name: true,
-            logo: true,
-          },
-        },
-        categories: {
-          where: {
-            deletedAt: null,
-          },
-          select: {
-            id: true,
-            name: true,
-            logo: true,
-            parentCategory: true,
-          },
-        },
-      },
+      include: this.productResponseInclude,
     });
   }
 
@@ -175,38 +185,7 @@ export class ProductRepository {
             connect: categories.map((category) => ({ id: category })),
           },
         },
-        include: {
-          skus: {
-            where: {
-              deletedAt: null,
-            },
-            select: {
-              id: true,
-              value: true,
-              price: true,
-              stock: true,
-              image: true,
-            },
-          },
-          brand: {
-            select: {
-              id: true,
-              name: true,
-              logo: true,
-            },
-          },
-          categories: {
-            where: {
-              deletedAt: null,
-            },
-            select: {
-              id: true,
-              name: true,
-              logo: true,
-              parentCategory: true,
-            },
-          },
-        },
+        include: this.productResponseInclude,
       }),
 
       // Xoá mềm các SKU không có trong data payload
@@ -254,6 +233,7 @@ export class ProductRepository {
           id: data.id,
           shopId: data.shopId,
         },
+        include: this.productResponseInclude,
       });
     } else {
       const [product] = await Promise.all([
@@ -267,6 +247,7 @@ export class ProductRepository {
             deletedById: data.deletedById,
             deletedAt: new Date(),
           },
+          include: this.productResponseInclude,
         }),
         this.prismaService.sKU.updateMany({
           where: {
@@ -420,5 +401,59 @@ export class ProductRepository {
       isValid: isAllValid,
       items: results,
     };
+  }
+
+  async list(data: any) {
+    const page = data.page || 1;
+    const limit = data.limit || 10;
+    const skip = (page - 1) * limit;
+
+    const [products, totalItems] = await Promise.all([
+      this.prismaService.product.findMany({
+        where: {
+          deletedAt: null,
+          name: data.name ? { contains: data.name } : undefined,
+          shopId: data.shopId ? data.shopId : undefined,
+          isApproved:
+            data.isApproved !== undefined ? data.isApproved : undefined,
+        },
+        skip,
+        take: limit,
+        include: {
+          ...this.productResponseInclude,
+        },
+      }),
+      this.prismaService.product.count({
+        where: {
+          deletedAt: null,
+          name: data.name ? { contains: data.name } : undefined,
+          shopId: data.shopId ? data.shopId : undefined,
+          isApproved:
+            data.isApproved !== undefined ? data.isApproved : undefined,
+        },
+      }),
+    ]);
+
+    const totalPages = Math.ceil(totalItems / limit);
+
+    return {
+      page,
+      limit,
+      totalItems,
+      totalPages,
+      products,
+    };
+  }
+
+  async findById(data: any) {
+    return this.prismaService.product.findFirst({
+      where: {
+        id: data.id,
+        deletedAt: null,
+      },
+      include: {
+        ...this.productResponseInclude,
+      },
+    });
   }
 }

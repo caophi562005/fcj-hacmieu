@@ -14,6 +14,16 @@ import { BrandService } from '../services/brand.service';
 export class BrandGrpcController {
   constructor(private readonly brandService: BrandService) {}
 
+  @GrpcMethod(GrpcModuleName.CATALOG.BRAND, 'GetManyBrands')
+  getManyBrands(data: any) {
+    return this.brandService.list(data);
+  }
+
+  @GrpcMethod(GrpcModuleName.CATALOG.BRAND, 'GetBrand')
+  getBrand(data: any) {
+    return this.brandService.findById(data);
+  }
+
   @GrpcMethod(GrpcModuleName.CATALOG.BRAND, 'CreateBrand')
   createBrand(data: CreateBrandRequest) {
     return this.brandService.create(data);

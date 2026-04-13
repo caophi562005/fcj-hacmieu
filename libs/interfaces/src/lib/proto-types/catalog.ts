@@ -10,6 +10,31 @@ import { Observable } from "rxjs";
 
 export const protobufPackage = "CATALOG_SERVICE";
 
+/** ==================== GetManyProductsRequest ====================// */
+export interface GetManyProductsRequest {
+  processId?: string | undefined;
+  page: number;
+  limit: number;
+  name?: string | undefined;
+  shopId?: string | undefined;
+  isApproved?: boolean | undefined;
+}
+
+/** ==================== GetManyProductsResponse ====================// */
+export interface GetManyProductsResponse {
+  page: number;
+  limit: number;
+  totalItems: number;
+  totalPages: number;
+  products: ProductResponse[];
+}
+
+/** ==================== GetProductRequest ====================// */
+export interface GetProductRequest {
+  processId?: string | undefined;
+  id: string;
+}
+
 export interface CreateProductRequest {
   processId?: string | undefined;
   name: string;
@@ -114,6 +139,29 @@ export interface ParentCategoryResponse {
   name: string;
 }
 
+/** ==================== GetManyCategoriesRequest ====================// */
+export interface GetManyCategoriesRequest {
+  processId?: string | undefined;
+  page: number;
+  limit: number;
+  name?: string | undefined;
+}
+
+/** ==================== GetManyCategoriesResponse ====================// */
+export interface GetManyCategoriesResponse {
+  page: number;
+  limit: number;
+  totalItems: number;
+  totalPages: number;
+  categories: CategoryResponse[];
+}
+
+/** ==================== GetCategoryRequest ====================// */
+export interface GetCategoryRequest {
+  processId?: string | undefined;
+  id: string;
+}
+
 export interface CategoryResponse {
   id: string;
   name: string;
@@ -163,6 +211,29 @@ export interface BrandResponse {
   updatedAt: string;
 }
 
+/** ==================== GetManyBrandsRequest ====================// */
+export interface GetManyBrandsRequest {
+  processId?: string | undefined;
+  page: number;
+  limit: number;
+  name?: string | undefined;
+}
+
+/** ==================== GetManyBrandsResponse ====================// */
+export interface GetManyBrandsResponse {
+  page: number;
+  limit: number;
+  totalItems: number;
+  totalPages: number;
+  brands: BrandResponse[];
+}
+
+/** ==================== GetBrandRequest ====================// */
+export interface GetBrandRequest {
+  processId?: string | undefined;
+  id: string;
+}
+
 export interface CreateBrandRequest {
   processId?: string | undefined;
   name: string;
@@ -206,6 +277,29 @@ export interface AttributeResponse {
   deletedAt: string;
   createdAt: string;
   updatedAt: string;
+}
+
+/** ==================== GetManyAttributesRequest ====================// */
+export interface GetManyAttributesRequest {
+  processId?: string | undefined;
+  page: number;
+  limit: number;
+  name?: string | undefined;
+}
+
+/** ==================== GetManyAttributesResponse ====================// */
+export interface GetManyAttributesResponse {
+  page: number;
+  limit: number;
+  totalItems: number;
+  totalPages: number;
+  attributes: AttributeResponse[];
+}
+
+/** ==================== GetAttributeRequest ====================// */
+export interface GetAttributeRequest {
+  processId?: string | undefined;
+  id: string;
 }
 
 export interface CreateAttributeRequest {
@@ -341,6 +435,10 @@ export interface DashboardSellerResponse {
 export const CATALOG_SERVICE_PACKAGE_NAME = "CATALOG_SERVICE";
 
 export interface ProductModuleClient {
+  getManyProducts(request: GetManyProductsRequest): Observable<GetManyProductsResponse>;
+
+  getProduct(request: GetProductRequest): Observable<ProductResponse>;
+
   createProduct(request: CreateProductRequest): Observable<ProductResponse>;
 
   updateProduct(request: UpdateProductRequest): Observable<ProductResponse>;
@@ -349,6 +447,12 @@ export interface ProductModuleClient {
 }
 
 export interface ProductModuleController {
+  getManyProducts(
+    request: GetManyProductsRequest,
+  ): Promise<GetManyProductsResponse> | Observable<GetManyProductsResponse> | GetManyProductsResponse;
+
+  getProduct(request: GetProductRequest): Promise<ProductResponse> | Observable<ProductResponse> | ProductResponse;
+
   createProduct(
     request: CreateProductRequest,
   ): Promise<ProductResponse> | Observable<ProductResponse> | ProductResponse;
@@ -364,7 +468,7 @@ export interface ProductModuleController {
 
 export function ProductModuleControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = ["createProduct", "updateProduct", "deleteProduct"];
+    const grpcMethods: string[] = ["getManyProducts", "getProduct", "createProduct", "updateProduct", "deleteProduct"];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
       GrpcMethod("ProductModule", method)(constructor.prototype[method], method, descriptor);
@@ -380,6 +484,10 @@ export function ProductModuleControllerMethods() {
 export const PRODUCT_MODULE_SERVICE_NAME = "ProductModule";
 
 export interface CategoryModuleClient {
+  getManyCategories(request: GetManyCategoriesRequest): Observable<GetManyCategoriesResponse>;
+
+  getCategory(request: GetCategoryRequest): Observable<CategoryResponse>;
+
   createCategory(request: CreateCategoryRequest): Observable<CategoryResponse>;
 
   updateCategory(request: UpdateCategoryRequest): Observable<CategoryResponse>;
@@ -388,6 +496,12 @@ export interface CategoryModuleClient {
 }
 
 export interface CategoryModuleController {
+  getManyCategories(
+    request: GetManyCategoriesRequest,
+  ): Promise<GetManyCategoriesResponse> | Observable<GetManyCategoriesResponse> | GetManyCategoriesResponse;
+
+  getCategory(request: GetCategoryRequest): Promise<CategoryResponse> | Observable<CategoryResponse> | CategoryResponse;
+
   createCategory(
     request: CreateCategoryRequest,
   ): Promise<CategoryResponse> | Observable<CategoryResponse> | CategoryResponse;
@@ -403,7 +517,13 @@ export interface CategoryModuleController {
 
 export function CategoryModuleControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = ["createCategory", "updateCategory", "deleteCategory"];
+    const grpcMethods: string[] = [
+      "getManyCategories",
+      "getCategory",
+      "createCategory",
+      "updateCategory",
+      "deleteCategory",
+    ];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
       GrpcMethod("CategoryModule", method)(constructor.prototype[method], method, descriptor);
@@ -419,6 +539,10 @@ export function CategoryModuleControllerMethods() {
 export const CATEGORY_MODULE_SERVICE_NAME = "CategoryModule";
 
 export interface BrandModuleClient {
+  getManyBrands(request: GetManyBrandsRequest): Observable<GetManyBrandsResponse>;
+
+  getBrand(request: GetBrandRequest): Observable<BrandResponse>;
+
   createBrand(request: CreateBrandRequest): Observable<BrandResponse>;
 
   updateBrand(request: UpdateBrandRequest): Observable<BrandResponse>;
@@ -427,6 +551,12 @@ export interface BrandModuleClient {
 }
 
 export interface BrandModuleController {
+  getManyBrands(
+    request: GetManyBrandsRequest,
+  ): Promise<GetManyBrandsResponse> | Observable<GetManyBrandsResponse> | GetManyBrandsResponse;
+
+  getBrand(request: GetBrandRequest): Promise<BrandResponse> | Observable<BrandResponse> | BrandResponse;
+
   createBrand(request: CreateBrandRequest): Promise<BrandResponse> | Observable<BrandResponse> | BrandResponse;
 
   updateBrand(request: UpdateBrandRequest): Promise<BrandResponse> | Observable<BrandResponse> | BrandResponse;
@@ -436,7 +566,7 @@ export interface BrandModuleController {
 
 export function BrandModuleControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = ["createBrand", "updateBrand", "deleteBrand"];
+    const grpcMethods: string[] = ["getManyBrands", "getBrand", "createBrand", "updateBrand", "deleteBrand"];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
       GrpcMethod("BrandModule", method)(constructor.prototype[method], method, descriptor);
@@ -452,6 +582,10 @@ export function BrandModuleControllerMethods() {
 export const BRAND_MODULE_SERVICE_NAME = "BrandModule";
 
 export interface AttributeModuleClient {
+  getManyAttributes(request: GetManyAttributesRequest): Observable<GetManyAttributesResponse>;
+
+  getAttribute(request: GetAttributeRequest): Observable<AttributeResponse>;
+
   createAttribute(request: CreateAttributeRequest): Observable<AttributeResponse>;
 
   updateAttribute(request: UpdateAttributeRequest): Observable<AttributeResponse>;
@@ -460,6 +594,14 @@ export interface AttributeModuleClient {
 }
 
 export interface AttributeModuleController {
+  getManyAttributes(
+    request: GetManyAttributesRequest,
+  ): Promise<GetManyAttributesResponse> | Observable<GetManyAttributesResponse> | GetManyAttributesResponse;
+
+  getAttribute(
+    request: GetAttributeRequest,
+  ): Promise<AttributeResponse> | Observable<AttributeResponse> | AttributeResponse;
+
   createAttribute(
     request: CreateAttributeRequest,
   ): Promise<AttributeResponse> | Observable<AttributeResponse> | AttributeResponse;
@@ -475,7 +617,13 @@ export interface AttributeModuleController {
 
 export function AttributeModuleControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = ["createAttribute", "updateAttribute", "deleteAttribute"];
+    const grpcMethods: string[] = [
+      "getManyAttributes",
+      "getAttribute",
+      "createAttribute",
+      "updateAttribute",
+      "deleteAttribute",
+    ];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
       GrpcMethod("AttributeModule", method)(constructor.prototype[method], method, descriptor);

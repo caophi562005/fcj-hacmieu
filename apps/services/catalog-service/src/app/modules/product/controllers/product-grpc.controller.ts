@@ -14,6 +14,16 @@ import { ProductService } from '../services/product.service';
 export class ProductGrpcController {
   constructor(private readonly productService: ProductService) {}
 
+  @GrpcMethod(GrpcModuleName.CATALOG.PRODUCT, 'GetManyProducts')
+  getManyProducts(data: any) {
+    return this.productService.list(data);
+  }
+
+  @GrpcMethod(GrpcModuleName.CATALOG.PRODUCT, 'GetProduct')
+  getProduct(data: any) {
+    return this.productService.findById(data);
+  }
+
   @GrpcMethod(GrpcModuleName.CATALOG.PRODUCT, 'CreateProduct')
   createProduct(data: CreateProductRequest) {
     return this.productService.create(data);

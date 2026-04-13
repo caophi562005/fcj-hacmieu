@@ -1,4 +1,3 @@
-import { GroupEnums } from '@common/constants/user.constant';
 import { UserSchema } from '@common/schemas/iam/user.schema';
 import z from 'zod';
 import { PaginationQueryRequestSchema } from '../../common/pagination.model';
@@ -18,10 +17,10 @@ export const GetManyUsersRequestSchema = UserSchema.pick({
   username: true,
   gender: true,
   status: true,
+  group: true,
 })
   .partial()
   .safeExtend({
-    group: GroupEnums.optional(),
     processId: z.string().optional(),
     page: PaginationQueryRequestSchema.shape.page,
     limit: PaginationQueryRequestSchema.shape.limit,

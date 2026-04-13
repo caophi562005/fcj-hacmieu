@@ -30,7 +30,11 @@ export class UserRepository {
       username: data?.username || undefined,
       gender: data?.gender || undefined,
       status: data?.status || undefined,
-      group: data?.group || undefined,
+      group: data?.group?.length
+        ? {
+            hasSome: data.group,
+          }
+        : undefined,
     };
 
     const [totalItems, users] = await Promise.all([

@@ -3,9 +3,20 @@ import { UserData } from '@common/decorators/user-data.decorator';
 import {
   CreateBrandRequestDto,
   DeleteBrandRequestDto,
+  GetBrandRequestDto,
+  GetManyBrandsRequestDto,
   UpdateBrandRequestDto,
 } from '@common/interfaces/dtos/catalog';
-import { Body, Controller, Delete, Param, Post, Put } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { BrandService } from '../services/brand.service';
 
@@ -14,21 +25,21 @@ import { BrandService } from '../services/brand.service';
 export class BrandController {
   constructor(private readonly brandService: BrandService) {}
 
-  // @Get()
-  // async getManyBrands(
-  //   @Query() queries: GetManyBrandsRequestDto,
-  //   @ProcessId() processId: string,
-  // ) {
-  //   return this.brandReadService.getManyBrands({ ...queries, processId });
-  // }
+  @Get()
+  async getManyBrands(
+    @Query() queries: GetManyBrandsRequestDto,
+    @ProcessId() processId: string,
+  ) {
+    return this.brandService.getManyBrands({ ...queries, processId });
+  }
 
-  // @Get(':id')
-  // async getBrandById(
-  //   @Param() params: GetBrandRequestDto,
-  //   @ProcessId() processId: string,
-  // ) {
-  //   return this.brandReadService.getBrand({ ...params, processId });
-  // }
+  @Get(':id')
+  async getBrand(
+    @Param() params: GetBrandRequestDto,
+    @ProcessId() processId: string,
+  ) {
+    return this.brandService.getBrand({ ...params, processId });
+  }
 
   @Post()
   async createBrand(

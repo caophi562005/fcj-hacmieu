@@ -55,4 +55,62 @@ export class CategoryRepository {
           },
         });
   }
+
+  async list(data: any) {
+    const page = data.page || 1;
+    const limit = data.limit || 10;
+    const skip = (page - 1) * limit;
+
+    const [categories, totalItems] = await Promise.all([
+      this.prismaService.category.findMany({
+        where: {
+          deletedAt: null,
+          name: data.name ? { contains: data.name } : undefined,
+        },
+        skip,
+        take: limit,
+        include: {
+          parentCategory: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      }),
+      this.prismaService.category.count({
+        where: {
+          deletedAt: null,
+          name: data.name ? { contains: data.name } : undefined,
+        },
+      }),
+    ]);
+
+    const totalPages = Math.ceil(totalItems / limit);
+
+    return {
+      page,
+      limit,
+      totalItems,
+      totalPages,
+      categories,
+    };
+  }
+
+  async findById(data: any) {
+    return this.prismaService.category.findFirst({
+      where: {
+        id: data.id,
+        deletedAt: null,
+      },
+      include: {
+        parentCategory: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+  }
 }

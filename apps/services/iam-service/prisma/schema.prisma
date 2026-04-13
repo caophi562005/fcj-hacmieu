@@ -31,7 +31,7 @@ model User {
     gender      GENDER?
     status      USER_STATUS @default(ACTIVE)
 
-    group GROUP
+    group GROUP[]
 
     updatedById String?
     deletedById String?

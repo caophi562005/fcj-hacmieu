@@ -149,8 +149,10 @@ export class AuthService {
     if (!payload) {
       return {
         isValid: false,
-        userId: payload.sub,
-        username: payload.username,
+        userId: '',
+        username: '',
+        groups: [],
+        permissions: [],
       };
     }
 
@@ -159,22 +161,40 @@ export class AuthService {
         isValid: false,
         userId: payload.sub,
         username: payload.username,
+        groups: [],
+        permissions: [],
       };
     }
 
-    let permissions: GetAllPermissionsResponse;
-    if (payload['cognito:groups']) {
-      permissions = await this.permissionService.listAll({
-        group: payload['cognito:groups'][0] as GroupType,
-      });
-    }
+    const groups = Array.from(
+      new Set((payload['cognito:groups'] as string[] | undefined) ?? []),
+    );
+
+    const permissionsByGroup: GetAllPermissionsResponse[] = await Promise.all(
+      groups.map((group) =>
+        this.permissionService.listAll({
+          group: group as GroupType,
+        }),
+      ),
+    );
+
+    const uniquePermissions = Array.from(
+      new Map(
+        permissionsByGroup
+          .flatMap((item) => item.permissions)
+          .map((permission) => [
+            `${permission.path}:${permission.method}`,
+            permission,
+          ]),
+      ).values(),
+    );
 
     return {
       isValid: true,
       userId: payload.sub,
       username: payload.username,
-      groups: payload['cognito:groups'][0] || 'Unknown',
-      permissions: permissions ? permissions.permissions : [],
+      groups,
+      permissions: uniquePermissions,
     };
   }
 }

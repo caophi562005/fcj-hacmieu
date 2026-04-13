@@ -39,4 +39,46 @@ export class AttributeRepository {
           },
         });
   }
+
+  async list(data: any) {
+    const page = data.page || 1;
+    const limit = data.limit || 10;
+    const skip = (page - 1) * limit;
+
+    const [attributes, totalItems] = await Promise.all([
+      this.prismaService.attribute.findMany({
+        where: {
+          deletedAt: null,
+          name: data.name ? { contains: data.name } : undefined,
+        },
+        skip,
+        take: limit,
+      }),
+      this.prismaService.attribute.count({
+        where: {
+          deletedAt: null,
+          name: data.name ? { contains: data.name } : undefined,
+        },
+      }),
+    ]);
+
+    const totalPages = Math.ceil(totalItems / limit);
+
+    return {
+      page,
+      limit,
+      totalItems,
+      totalPages,
+      attributes,
+    };
+  }
+
+  async findById(data: any) {
+    return this.prismaService.attribute.findFirst({
+      where: {
+        id: data.id,
+        deletedAt: null,
+      },
+    });
+  }
 }

@@ -3,36 +3,54 @@ import { UserData } from '@common/decorators/user-data.decorator';
 import {
   CreateAttributeRequestDto,
   DeleteAttributeRequestDto,
+  GetAttributeRequestDto,
   GetAttributeResponseDto,
+  GetManyAttributesRequestDto,
+  GetManyAttributesResponseDto,
   UpdateAttributeRequestDto,
 } from '@common/interfaces/dtos/catalog';
-import { Body, Controller, Delete, Param, Post, Put } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+} from '@nestjs/common';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { AttributeService } from '../services/attribute.service';
 
-@Controller('attribute')
-@ApiTags('Product')
+@Controller('catalog/attribute')
+@ApiTags('Catalog/Attribute')
 export class AttributeController {
   constructor(private readonly attributeService: AttributeService) {}
 
-  // @Get()
-  // async getManyAttributes(
-  //   @Query() queries: GetManyAttributesRequestDto,
-  //   @ProcessId() processId: string
-  // ) {
-  //   return this.attributeReadService.getManyAttributes({
-  //     ...queries,
-  //     processId,
-  //   });
-  // }
+  @Get()
+  @ApiOkResponse({
+    type: GetManyAttributesResponseDto,
+  })
+  async getManyAttributes(
+    @Query() queries: GetManyAttributesRequestDto,
+    @ProcessId() processId: string,
+  ) {
+    return this.attributeService.getManyAttributes({
+      ...queries,
+      processId,
+    });
+  }
 
-  // @Get(':id')
-  // async getAttributeById(
-  //   @Param() params: GetAttributeRequestDto,
-  //   @ProcessId() processId: string
-  // ) {
-  //   return this.attributeReadService.getAttribute({ ...params, processId });
-  // }
+  @Get(':id')
+  @ApiOkResponse({
+    type: GetAttributeResponseDto,
+  })
+  async getAttribute(
+    @Param() params: GetAttributeRequestDto,
+    @ProcessId() processId: string,
+  ) {
+    return this.attributeService.getAttribute({ ...params, processId });
+  }
 
   @Post()
   @ApiOkResponse({

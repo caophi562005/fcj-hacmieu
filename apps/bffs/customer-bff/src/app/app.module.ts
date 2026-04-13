@@ -9,12 +9,14 @@ import { LoggerMiddleware } from '@common/middlewares/logger.middleware';
 import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ClientsModule } from '@nestjs/microservices';
+import { CatalogModule } from './catalog-service/catalog.module';
 import { IamModule } from './iam-service/iam.module';
 import { ShopModule } from './shop-service/shop.module';
 
 @Module({
   imports: [
     CacheProvider,
+    CatalogModule,
     IamModule,
     ShopModule,
     ClientsModule.register([GrpcClientProvider(GrpcService.IAM_SERVICE)]),

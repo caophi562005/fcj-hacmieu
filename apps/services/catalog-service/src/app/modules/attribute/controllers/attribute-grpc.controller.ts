@@ -14,6 +14,16 @@ import { AttributeService } from '../services/attribute.service';
 export class AttributeGrpcController {
   constructor(private readonly attributeService: AttributeService) {}
 
+  @GrpcMethod(GrpcModuleName.CATALOG.ATTRIBUTE, 'GetManyAttributes')
+  getManyAttributes(data: any) {
+    return this.attributeService.list(data);
+  }
+
+  @GrpcMethod(GrpcModuleName.CATALOG.ATTRIBUTE, 'GetAttribute')
+  getAttribute(data: any) {
+    return this.attributeService.findById(data);
+  }
+
   @GrpcMethod(GrpcModuleName.CATALOG.ATTRIBUTE, 'CreateAttribute')
   createAttribute(data: CreateAttributeRequest) {
     return this.attributeService.create(data);

@@ -3,9 +3,36 @@ syntax = "proto3";
 package CATALOG_SERVICE;
 
 service ProductModule {
+  rpc GetManyProducts(GetManyProductsRequest) returns (GetManyProductsResponse);
+  rpc GetProduct(GetProductRequest) returns (ProductResponse);
   rpc CreateProduct(CreateProductRequest) returns (ProductResponse);
   rpc UpdateProduct(UpdateProductRequest) returns (ProductResponse);
   rpc DeleteProduct(DeleteProductRequest) returns (ProductResponse);
+}
+
+//==================== GetManyProductsRequest ====================//
+message GetManyProductsRequest {
+  optional string processId = 1;
+  int32 page = 2;
+  int32 limit = 3;
+  optional string name = 4;
+  optional string shopId = 5;
+  optional bool isApproved = 6;
+}
+
+//==================== GetManyProductsResponse ====================//
+message GetManyProductsResponse {
+  int32 page = 1;
+  int32 limit = 2;
+  int32 totalItems = 3;
+  int32 totalPages = 4;
+  repeated ProductResponse products = 5;
+}
+
+//==================== GetProductRequest ====================//
+message GetProductRequest {
+  optional string processId = 1;
+  string id = 2;
 }
 
 message CreateProductRequest {
@@ -118,6 +145,8 @@ message ProductResponse {
 }
 
 service CategoryModule {
+  rpc GetManyCategories(GetManyCategoriesRequest) returns (GetManyCategoriesResponse);
+  rpc GetCategory(GetCategoryRequest) returns (CategoryResponse);
   rpc CreateCategory(CreateCategoryRequest) returns (CategoryResponse);
   rpc UpdateCategory(UpdateCategoryRequest) returns (CategoryResponse);
   rpc DeleteCategory(DeleteCategoryRequest) returns (CategoryResponse);
@@ -126,6 +155,29 @@ service CategoryModule {
 message ParentCategoryResponse {
   string id = 1;
   string name = 2;
+}
+
+//==================== GetManyCategoriesRequest ====================//
+message GetManyCategoriesRequest {
+  optional string processId = 1;
+  int32 page = 2;
+  int32 limit = 3;
+  optional string name = 4;
+}
+
+//==================== GetManyCategoriesResponse ====================//
+message GetManyCategoriesResponse {
+  int32 page = 1;
+  int32 limit = 2;
+  int32 totalItems = 3;
+  int32 totalPages = 4;
+  repeated CategoryResponse categories = 5;
+}
+
+//==================== GetCategoryRequest ====================//
+message GetCategoryRequest {
+  optional string processId = 1;
+  string id = 2;
 }
 
 message CategoryResponse {
@@ -166,6 +218,8 @@ message DeleteCategoryRequest {
 }
 
 service BrandModule {
+  rpc GetManyBrands(GetManyBrandsRequest) returns (GetManyBrandsResponse);
+  rpc GetBrand(GetBrandRequest) returns (BrandResponse);
   rpc CreateBrand(CreateBrandRequest) returns (BrandResponse);
   rpc UpdateBrand(UpdateBrandRequest) returns (BrandResponse);
   rpc DeleteBrand(DeleteBrandRequest) returns (BrandResponse);
@@ -181,6 +235,29 @@ message BrandResponse {
   string deletedAt = 7;
   string createdAt = 8;
   string updatedAt = 9;
+}
+
+//==================== GetManyBrandsRequest ====================//
+message GetManyBrandsRequest {
+  optional string processId = 1;
+  int32 page = 2;
+  int32 limit = 3;
+  optional string name = 4;
+}
+
+//==================== GetManyBrandsResponse ====================//
+message GetManyBrandsResponse {
+  int32 page = 1;
+  int32 limit = 2;
+  int32 totalItems = 3;
+  int32 totalPages = 4;
+  repeated BrandResponse brands = 5;
+}
+
+//==================== GetBrandRequest ====================//
+message GetBrandRequest {
+  optional string processId = 1;
+  string id = 2;
 }
 
 message CreateBrandRequest {
@@ -206,6 +283,8 @@ message DeleteBrandRequest {
 
 
 service AttributeModule {
+  rpc GetManyAttributes(GetManyAttributesRequest) returns (GetManyAttributesResponse);
+  rpc GetAttribute(GetAttributeRequest) returns (AttributeResponse);
   rpc CreateAttribute(CreateAttributeRequest) returns (AttributeResponse);
   rpc UpdateAttribute(UpdateAttributeRequest) returns (AttributeResponse);
   rpc DeleteAttribute(DeleteAttributeRequest) returns (AttributeResponse);
@@ -233,6 +312,29 @@ message AttributeResponse {
   string deletedAt = 7;
   string createdAt = 8;
   string updatedAt = 9;
+}
+
+//==================== GetManyAttributesRequest ====================//
+message GetManyAttributesRequest {
+  optional string processId = 1;
+  int32 page = 2;
+  int32 limit = 3;
+  optional string name = 4;
+}
+
+//==================== GetManyAttributesResponse ====================//
+message GetManyAttributesResponse {
+  int32 page = 1;
+  int32 limit = 2;
+  int32 totalItems = 3;
+  int32 totalPages = 4;
+  repeated AttributeResponse attributes = 5;
+}
+
+//==================== GetAttributeRequest ====================//
+message GetAttributeRequest {
+  optional string processId = 1;
+  string id = 2;
 }
 
 message CreateAttributeRequest {

@@ -14,5 +14,5 @@ export const UserSchema = BaseSchema.extend({
   birthday: z.any().nullable(),
   gender: GenderEnums,
   status: UserStatusEnums,
-  group: GroupEnums,
+  group: z.array(GroupEnums),
 });

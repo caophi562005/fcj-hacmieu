@@ -39,4 +39,46 @@ export class BrandRepository {
           },
         });
   }
+
+  async list(data: any) {
+    const page = data.page || 1;
+    const limit = data.limit || 10;
+    const skip = (page - 1) * limit;
+
+    const [brands, totalItems] = await Promise.all([
+      this.prismaService.brand.findMany({
+        where: {
+          deletedAt: null,
+          name: data.name ? { contains: data.name } : undefined,
+        },
+        skip,
+        take: limit,
+      }),
+      this.prismaService.brand.count({
+        where: {
+          deletedAt: null,
+          name: data.name ? { contains: data.name } : undefined,
+        },
+      }),
+    ]);
+
+    const totalPages = Math.ceil(totalItems / limit);
+
+    return {
+      page,
+      limit,
+      totalItems,
+      totalPages,
+      brands,
+    };
+  }
+
+  async findById(data: any) {
+    return this.prismaService.brand.findFirst({
+      where: {
+        id: data.id,
+        deletedAt: null,
+      },
+    });
+  }
 }

@@ -3,11 +3,8 @@ import {
   BrandModuleClient,
   BrandResponse,
   CATALOG_SERVICE_PACKAGE_NAME,
-  CreateBrandRequest,
-  DeleteBrandRequest,
   GetBrandRequest,
   GetManyBrandsRequest,
-  UpdateBrandRequest,
 } from '@common/interfaces/proto-types/catalog';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
@@ -34,17 +31,5 @@ export class BrandService implements OnModuleInit {
 
   async getBrand(data: GetBrandRequest): Promise<BrandResponse> {
     return firstValueFrom(this.brandModule.getBrand(data));
-  }
-
-  async createBrand(data: CreateBrandRequest): Promise<BrandResponse> {
-    return firstValueFrom(this.brandModule.createBrand(data));
-  }
-
-  async updateBrand(data: UpdateBrandRequest): Promise<BrandResponse> {
-    return firstValueFrom(this.brandModule.updateBrand(data));
-  }
-
-  async deleteBrand(data: DeleteBrandRequest): Promise<BrandResponse> {
-    return firstValueFrom(this.brandModule.deleteBrand(data));
   }
 }

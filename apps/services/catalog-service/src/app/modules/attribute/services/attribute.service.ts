@@ -16,6 +16,22 @@ import { AttributeRepository } from '../repositories/attribute.repository';
 export class AttributeService {
   constructor(private readonly attributeRepository: AttributeRepository) {}
 
+  async list(data: any) {
+    const attributes = await this.attributeRepository.list(data);
+    if (attributes.totalItems === 0) {
+      throw new NotFoundException('Error.NoAttributesFound');
+    }
+    return attributes;
+  }
+
+  async findById(data: any) {
+    const attribute = await this.attributeRepository.findById(data);
+    if (!attribute) {
+      throw new NotFoundException('Error.AttributeNotFound');
+    }
+    return attribute;
+  }
+
   async create({
     processId,
     ...data

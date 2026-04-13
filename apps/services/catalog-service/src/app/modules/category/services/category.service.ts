@@ -11,6 +11,22 @@ import { CategoryRepository } from '../repositories/category.repository';
 export class CategoryService {
   constructor(private readonly categoryRepository: CategoryRepository) {}
 
+  async list(data: any) {
+    const categories = await this.categoryRepository.list(data);
+    if (categories.totalItems === 0) {
+      throw new NotFoundException('Error.NoCategoriesFound');
+    }
+    return categories;
+  }
+
+  async findById(data: any) {
+    const category = await this.categoryRepository.findById(data);
+    if (!category) {
+      throw new NotFoundException('Error.CategoryNotFound');
+    }
+    return category;
+  }
+
   async create({ processId, ...data }: CreateCategoryRequest) {
     try {
       const createdCategory = await this.categoryRepository.create(data);
