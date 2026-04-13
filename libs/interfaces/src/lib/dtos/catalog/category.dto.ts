@@ -11,11 +11,11 @@ import { ResponseSchema } from '@common/interfaces/models/common/response.model'
 import { createZodDto } from 'nestjs-zod';
 
 export class GetManyCategoriesRequestDto extends createZodDto(
-  GetManyCategoriesRequestSchema,
+  GetManyCategoriesRequestSchema.omit({ processId: true }),
 ) {}
 
 export class GetCategoryRequestDto extends createZodDto(
-  GetCategoryRequestSchema,
+  GetCategoryRequestSchema.omit({ processId: true }),
 ) {}
 
 export class CreateCategoryRequestDto extends createZodDto(

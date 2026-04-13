@@ -10,11 +10,11 @@ import {
 import { createZodDto } from 'nestjs-zod';
 
 export class GetManyAttributesRequestDto extends createZodDto(
-  GetManyAttributesRequestSchema,
+  GetManyAttributesRequestSchema.omit({ processId: true }),
 ) {}
 
 export class GetAttributeRequestDto extends createZodDto(
-  GetAttributeRequestSchema,
+  GetAttributeRequestSchema.omit({ processId: true }),
 ) {}
 
 export class CreateAttributeRequestDto extends createZodDto(

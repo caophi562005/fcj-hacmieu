@@ -5,10 +5,13 @@ import { PaginationQueryRequestSchema } from '../../common/pagination.model';
 export const GetManyAttributesRequestSchema =
   PaginationQueryRequestSchema.extend({
     name: z.string().optional(),
+    processId: z.string().optional(),
   });
 
 export const GetAttributeRequestSchema = AttributeSchema.pick({
   id: true,
+}).extend({
+  processId: z.string().optional(),
 });
 
 export const CreateAttributeRequestSchema = AttributeSchema.pick({

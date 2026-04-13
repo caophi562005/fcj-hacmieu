@@ -1,5 +1,6 @@
 import { ResponseSchema } from '@common/interfaces/models/common/response.model';
 import {
+  CheckPromotionRequestSchema,
   CreatePromotionRequestSchema,
   DeletePromotionRequestSchema,
   GetManyPromotionsRequestSchema,
@@ -12,35 +13,39 @@ import {
 import { createZodDto } from 'nestjs-zod';
 
 export class GetManyPromotionsRequestDto extends createZodDto(
-  GetManyPromotionsRequestSchema.omit({ processId: true })
+  GetManyPromotionsRequestSchema.omit({ processId: true }),
 ) {}
 
 export class GetPromotionRequestDto extends createZodDto(
-  GetPromotionRequestSchema.omit({ processId: true })
+  GetPromotionRequestSchema.omit({ processId: true }),
 ) {}
 
 export class CreatePromotionRequestDto extends createZodDto(
-  CreatePromotionRequestSchema.omit({ processId: true, createdById: true })
+  CreatePromotionRequestSchema.omit({ processId: true, createdById: true }),
 ) {}
 
 export class UpdatePromotionRequestDto extends createZodDto(
-  UpdatePromotionRequestSchema.omit({ processId: true })
+  UpdatePromotionRequestSchema.omit({ processId: true }),
 ) {}
 
 export class DeletePromotionRequestDto extends createZodDto(
-  DeletePromotionRequestSchema.omit({ processId: true })
+  DeletePromotionRequestSchema.omit({ processId: true, deletedById: true }),
 ) {}
 
-//=================================================Response DTOs=================================================
+export class CheckPromotionRequestDto extends createZodDto(
+  CheckPromotionRequestSchema.omit({ processId: true, userId: true }),
+) {}
+
+// ====================================================================================================
 
 export class GetManyPromotionsResponseDto extends createZodDto(
-  ResponseSchema(GetManyPromotionsResponseSchema)
+  ResponseSchema(GetManyPromotionsResponseSchema),
 ) {}
 
 export class GetPromotionResponseDto extends createZodDto(
-  ResponseSchema(GetPromotionResponseSchema)
+  ResponseSchema(GetPromotionResponseSchema),
 ) {}
 
 export class PromotionResponseDto extends createZodDto(
-  ResponseSchema(PromotionResponseSchema)
+  ResponseSchema(PromotionResponseSchema),
 ) {}

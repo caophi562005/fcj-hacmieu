@@ -11,10 +11,12 @@ import { ResponseSchema } from '@common/interfaces/models/common/response.model'
 import { createZodDto } from 'nestjs-zod';
 
 export class GetManyBrandsRequestDto extends createZodDto(
-  GetManyBrandsRequestSchema,
+  GetManyBrandsRequestSchema.omit({ processId: true }),
 ) {}
 
-export class GetBrandRequestDto extends createZodDto(GetBrandRequestSchema) {}
+export class GetBrandRequestDto extends createZodDto(
+  GetBrandRequestSchema.omit({ processId: true }),
+) {}
 
 export class CreateBrandRequestDto extends createZodDto(
   CreateBrandRequestSchema.omit({ processId: true, createdById: true }),

@@ -1,6 +1,5 @@
 import { PromotionSchema } from '@common/schemas/promotion';
 import z from 'zod';
-import { PaginationQueryRequestSchema } from '../common/pagination.model';
 
 export const GetManyPromotionsRequestSchema = PromotionSchema.pick({
   code: true,
@@ -16,8 +15,8 @@ export const GetManyPromotionsRequestSchema = PromotionSchema.pick({
     processId: z.uuid().optional(),
     includeUsed: z.boolean().default(false),
     userId: z.uuid().optional(),
-    page: PaginationQueryRequestSchema.shape.page,
-    limit: PaginationQueryRequestSchema.shape.limit,
+    page: z.coerce.number().int().positive().default(1),
+    limit: z.coerce.number().int().positive().default(10),
   })
   .strict();
 

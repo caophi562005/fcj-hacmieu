@@ -11,6 +11,7 @@ import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ClientsModule } from '@nestjs/microservices';
 import { CatalogModule } from './catalog-service/catalog.module';
 import { IamModule } from './iam-service/iam.module';
+import { PromotionModule } from './promotion-service/promotion.module';
 import { ShopModule } from './shop-service/shop.module';
 
 @Module({
@@ -18,6 +19,7 @@ import { ShopModule } from './shop-service/shop.module';
     CacheProvider,
     IamModule,
     CatalogModule,
+    PromotionModule,
     ShopModule,
     ClientsModule.register([GrpcClientProvider(GrpcService.IAM_SERVICE)]),
   ],

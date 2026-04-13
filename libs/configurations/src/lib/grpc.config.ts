@@ -11,6 +11,9 @@ export const GrpcConfigurationSchema = z.object({
   PROTO_PATH: z.string(),
 
   IAM_SERVICE_GRPC_URL: grpcUrlSchema,
+  CATALOG_SERVICE_GRPC_URL: grpcUrlSchema,
+  SHOP_SERVICE_GRPC_URL: grpcUrlSchema,
+  PROMOTION_SERVICE_GRPC_URL: grpcUrlSchema,
 });
 
 const configServer = GrpcConfigurationSchema.safeParse(process.env);

@@ -17,10 +17,13 @@ export class PromotionRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
   async list(data: GetManyPromotionsRequest) {
-    const skip = (data.page - 1) * data.limit;
-    const take = data.limit;
+    const page = Number(data?.page) > 0 ? Number(data.page) : 1;
+    const limit = Number(data?.limit) > 0 ? Number(data.limit) : 10;
+    const skip = (page - 1) * limit;
+    const take = limit;
 
     const whereClause: Prisma.PromotionWhereInput = {
+      deletedAt: null,
       code: data?.code
         ? { contains: data.code, mode: 'insensitive' }
         : undefined,
@@ -69,17 +72,18 @@ export class PromotionRepository {
     return {
       promotions,
       totalItems,
-      page: data.page,
-      limit: data.limit,
-      totalPages: Math.ceil(totalItems / data.limit),
+      page,
+      limit,
+      totalPages: Math.ceil(totalItems / limit),
     };
   }
 
   findById(data: GetPromotionRequest) {
-    return this.prismaService.promotion.findUnique({
+    return this.prismaService.promotion.findFirst({
       where: {
         id: data?.id || undefined,
         code: data?.code || undefined,
+        deletedAt: null,
       },
     });
   }
@@ -120,9 +124,10 @@ export class PromotionRepository {
 
   async check(data: CheckPromotionRequest) {
     // Check promotion có tồn tại không
-    const promotion = await this.prismaService.promotion.findUnique({
+    const promotion = await this.prismaService.promotion.findFirst({
       where: {
         code: data.code,
+        deletedAt: null,
       },
     });
 
