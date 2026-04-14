@@ -15,6 +15,13 @@ module.exports = {
       compiler: 'tsc',
       main: './src/main.ts',
       tsConfig: './tsconfig.app.json',
+      assets: [
+        {
+          glob: 'payment.proto',
+          input: 'libs/interfaces/src/lib/protos',
+          output: './proto',
+        },
+      ],
       optimization: false,
       outputHashing: 'none',
       generatePackageJson: true,

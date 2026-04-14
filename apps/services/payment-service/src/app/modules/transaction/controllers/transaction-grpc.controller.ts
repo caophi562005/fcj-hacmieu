@@ -1,11 +1,12 @@
 import { GrpcModuleName } from '@common/constants/grpc.constant';
-
+import { GrpcLoggingInterceptor } from '@common/interceptors/grpcLogging.interceptor';
 import { WebhookTransactionRequest } from '@common/interfaces/models/payment/transaction';
-import { Controller } from '@nestjs/common';
+import { Controller, UseInterceptors } from '@nestjs/common';
 import { GrpcMethod } from '@nestjs/microservices';
 import { TransactionService } from '../services/transaction.service';
 
 @Controller()
+@UseInterceptors(GrpcLoggingInterceptor)
 export class TransactionGrpcController {
   constructor(private readonly transactionService: TransactionService) {}
 

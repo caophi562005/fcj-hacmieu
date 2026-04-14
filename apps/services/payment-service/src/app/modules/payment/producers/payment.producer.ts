@@ -19,11 +19,11 @@ export class PaymentProducer {
       CANCEL_PAYMENT_JOB_NAME,
       { paymentId },
       {
-        delay: ms(RedisConfiguration.PAYMENT_TTL as StringValue),
+        delay: ms(RedisConfiguration.REDIS_TTL as StringValue),
         jobId: generateCancelPaymentJobId(paymentId),
         removeOnComplete: true,
         removeOnFail: true,
-      }
+      },
     );
   }
 

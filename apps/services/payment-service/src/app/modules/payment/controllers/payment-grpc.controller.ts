@@ -2,6 +2,7 @@ import { GrpcModuleName } from '@common/constants/grpc.constant';
 import { GrpcLoggingInterceptor } from '@common/interceptors/grpcLogging.interceptor';
 import {
   CreatePaymentRequest,
+  DashboardPaymentRequest,
   GetManyPaymentsRequest,
   GetPaymentRequest,
   UpdatePaymentStatusRequest,
@@ -33,5 +34,10 @@ export class PaymentGrpcController {
   @GrpcMethod(GrpcModuleName.PAYMENT.PAYMENT, 'UpdatePaymentStatus')
   updatePaymentStatus(data: UpdatePaymentStatusRequest) {
     return this.paymentService.updateStatus(data);
+  }
+
+  @GrpcMethod(GrpcModuleName.PAYMENT.PAYMENT, 'DashboardPayment')
+  dashboardPayment(data: DashboardPaymentRequest) {
+    return this.paymentService.dashboard(data);
   }
 }

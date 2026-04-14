@@ -37,7 +37,7 @@ export interface WebhookTransactionResponse {
 export interface GetPaymentRequest {
   processId?: string | undefined;
   id: string;
-  userId: string;
+  userId?: string | undefined;
 }
 
 /** ==================== CreatePayment ====================// */
@@ -56,14 +56,14 @@ export interface PaymentResponse {
   id: string;
   code: string;
   userId: string;
-  orderId: string;
+  orderId: string[];
   method: string;
   status: string;
   amount: number;
-  createdById: string;
-  updatedById: string;
-  deletedById: string;
-  deletedAt: string;
+  createdById?: string | undefined;
+  updatedById?: string | undefined;
+  deletedById?: string | undefined;
+  deletedAt?: string | undefined;
   createdAt: string;
   updatedAt: string;
   qrCode?: string | undefined;
@@ -96,7 +96,7 @@ export interface UpdatePaymentStatusRequest {
   processId?: string | undefined;
   id: string;
   status: string;
-  updatedById: string;
+  updatedById?: string | undefined;
 }
 
 /** ==================== DashboardPayment ==================== */
@@ -108,11 +108,67 @@ export interface DashboardPaymentResponse {
   totalAmount: number;
 }
 
+/** ==================== GetRefund ====================// */
+export interface GetRefundRequest {
+  processId?: string | undefined;
+  id: string;
+  userId?: string | undefined;
+}
+
+/** ==================== CreateRefund ====================// */
+export interface CreateRefundRequest {
+  processId?: string | undefined;
+  userId: string;
+  orderId: string;
+  amount: number;
+  reason?: string | undefined;
+  createdById?: string | undefined;
+}
+
+export interface RefundResponse {
+  id: string;
+  userId: string;
+  orderId: string;
+  amount: number;
+  status: string;
+  reason?: string | undefined;
+  createdById?: string | undefined;
+  updatedById?: string | undefined;
+  deletedById?: string | undefined;
+  deletedAt?: string | undefined;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** ==================== GetManyRefunds ====================// */
+export interface GetManyRefundsRequest {
+  processId?: string | undefined;
+  page: number;
+  limit: number;
+  userId?: string | undefined;
+  orderId?: string | undefined;
+  status?: string | undefined;
+}
+
+export interface GetManyRefundsResponse {
+  refunds: RefundResponse[];
+  page: number;
+  limit: number;
+  totalItems: number;
+  totalPages: number;
+}
+
+/** ==================== UpdateRefundStatus ====================// */
+export interface UpdateRefundStatusRequest {
+  processId?: string | undefined;
+  id: string;
+  status: string;
+  updatedById?: string | undefined;
+}
+
 export const PAYMENT_SERVICE_PACKAGE_NAME = "PAYMENT_SERVICE";
 
-export interface PaymentServiceClient {
-  receiver(request: WebhookTransactionRequest): Observable<WebhookTransactionResponse>;
-
+export interface PaymentModuleClient {
   getManyPayments(request: GetManyPaymentsRequest): Observable<GetManyPaymentsResponse>;
 
   getPayment(request: GetPaymentRequest): Observable<PaymentResponse>;
@@ -124,11 +180,7 @@ export interface PaymentServiceClient {
   dashboardPayment(request: DashboardPaymentRequest): Observable<DashboardPaymentResponse>;
 }
 
-export interface PaymentServiceController {
-  receiver(
-    request: WebhookTransactionRequest,
-  ): Promise<WebhookTransactionResponse> | Observable<WebhookTransactionResponse> | WebhookTransactionResponse;
-
+export interface PaymentModuleController {
   getManyPayments(
     request: GetManyPaymentsRequest,
   ): Promise<GetManyPaymentsResponse> | Observable<GetManyPaymentsResponse> | GetManyPaymentsResponse;
@@ -148,10 +200,9 @@ export interface PaymentServiceController {
   ): Promise<DashboardPaymentResponse> | Observable<DashboardPaymentResponse> | DashboardPaymentResponse;
 }
 
-export function PaymentServiceControllerMethods() {
+export function PaymentModuleControllerMethods() {
   return function (constructor: Function) {
     const grpcMethods: string[] = [
-      "receiver",
       "getManyPayments",
       "getPayment",
       "createPayment",
@@ -160,14 +211,82 @@ export function PaymentServiceControllerMethods() {
     ];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
-      GrpcMethod("PaymentService", method)(constructor.prototype[method], method, descriptor);
+      GrpcMethod("PaymentModule", method)(constructor.prototype[method], method, descriptor);
     }
     const grpcStreamMethods: string[] = [];
     for (const method of grpcStreamMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
-      GrpcStreamMethod("PaymentService", method)(constructor.prototype[method], method, descriptor);
+      GrpcStreamMethod("PaymentModule", method)(constructor.prototype[method], method, descriptor);
     }
   };
 }
 
-export const PAYMENT_SERVICE_NAME = "PaymentService";
+export const PAYMENT_MODULE_SERVICE_NAME = "PaymentModule";
+
+export interface TransactionModuleClient {
+  receiver(request: WebhookTransactionRequest): Observable<WebhookTransactionResponse>;
+}
+
+export interface TransactionModuleController {
+  receiver(
+    request: WebhookTransactionRequest,
+  ): Promise<WebhookTransactionResponse> | Observable<WebhookTransactionResponse> | WebhookTransactionResponse;
+}
+
+export function TransactionModuleControllerMethods() {
+  return function (constructor: Function) {
+    const grpcMethods: string[] = ["receiver"];
+    for (const method of grpcMethods) {
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcMethod("TransactionModule", method)(constructor.prototype[method], method, descriptor);
+    }
+    const grpcStreamMethods: string[] = [];
+    for (const method of grpcStreamMethods) {
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcStreamMethod("TransactionModule", method)(constructor.prototype[method], method, descriptor);
+    }
+  };
+}
+
+export const TRANSACTION_MODULE_SERVICE_NAME = "TransactionModule";
+
+export interface RefundModuleClient {
+  getManyRefunds(request: GetManyRefundsRequest): Observable<GetManyRefundsResponse>;
+
+  getRefund(request: GetRefundRequest): Observable<RefundResponse>;
+
+  createRefund(request: CreateRefundRequest): Observable<RefundResponse>;
+
+  updateRefundStatus(request: UpdateRefundStatusRequest): Observable<RefundResponse>;
+}
+
+export interface RefundModuleController {
+  getManyRefunds(
+    request: GetManyRefundsRequest,
+  ): Promise<GetManyRefundsResponse> | Observable<GetManyRefundsResponse> | GetManyRefundsResponse;
+
+  getRefund(request: GetRefundRequest): Promise<RefundResponse> | Observable<RefundResponse> | RefundResponse;
+
+  createRefund(request: CreateRefundRequest): Promise<RefundResponse> | Observable<RefundResponse> | RefundResponse;
+
+  updateRefundStatus(
+    request: UpdateRefundStatusRequest,
+  ): Promise<RefundResponse> | Observable<RefundResponse> | RefundResponse;
+}
+
+export function RefundModuleControllerMethods() {
+  return function (constructor: Function) {
+    const grpcMethods: string[] = ["getManyRefunds", "getRefund", "createRefund", "updateRefundStatus"];
+    for (const method of grpcMethods) {
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcMethod("RefundModule", method)(constructor.prototype[method], method, descriptor);
+    }
+    const grpcStreamMethods: string[] = [];
+    for (const method of grpcStreamMethods) {
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcStreamMethod("RefundModule", method)(constructor.prototype[method], method, descriptor);
+    }
+  };
+}
+
+export const REFUND_MODULE_SERVICE_NAME = "RefundModule";

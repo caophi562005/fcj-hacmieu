@@ -12,6 +12,7 @@ import { ClientsModule } from '@nestjs/microservices';
 import { CatalogModule } from './catalog-service/catalog.module';
 import { IamModule } from './iam-service/iam.module';
 import { OrderModule } from './order-service/order.module';
+import { PaymentModule } from './payment-service/payment.module';
 import { PromotionModule } from './promotion-service/promotion.module';
 import { ShopModule } from './shop-service/shop.module';
 
@@ -21,6 +22,7 @@ import { ShopModule } from './shop-service/shop.module';
     CatalogModule,
     IamModule,
     OrderModule,
+    PaymentModule,
     PromotionModule,
     ShopModule,
     ClientsModule.register([GrpcClientProvider(GrpcService.IAM_SERVICE)]),

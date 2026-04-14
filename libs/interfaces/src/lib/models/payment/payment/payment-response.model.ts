@@ -13,8 +13,15 @@ export const GetManyPaymentsResponseSchema =
     payments: z.array(PaymentSchema),
   });
 
+export const DashboardPaymentResponseSchema = z.object({
+  totalAmount: z.number(),
+});
+
 export type PaymentResponse = z.infer<typeof PaymentResponseSchema>;
 export type GetPaymentResponse = z.infer<typeof GetPaymentResponseSchema>;
 export type GetManyPaymentsResponse = z.infer<
   typeof GetManyPaymentsResponseSchema
+>;
+export type DashboardPaymentResponse = z.infer<
+  typeof DashboardPaymentResponseSchema
 >;

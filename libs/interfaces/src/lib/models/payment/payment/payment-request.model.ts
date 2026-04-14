@@ -21,7 +21,7 @@ export const GetManyPaymentsRequestSchema = PaymentSchema.pick({
 export const GetPaymentRequestSchema = z
   .object({
     id: z.uuid(),
-    userId: z.uuid(),
+    userId: z.uuid().optional(),
     processId: z.uuid().optional(),
   })
   .strict();
@@ -59,6 +59,12 @@ export const UpdatePaymentStatusRequestSchema = PaymentSchema.pick({
   })
   .strict();
 
+export const DashboardPaymentRequestSchema = z
+  .object({
+    processId: z.uuid().optional(),
+  })
+  .strict();
+
 export type GetManyPaymentsRequest = z.infer<
   typeof GetManyPaymentsRequestSchema
 >;
@@ -67,4 +73,7 @@ export type CreatePaymentRequest = z.infer<typeof CreatePaymentRequestSchema>;
 export type DeletePaymentRequest = z.infer<typeof DeletePaymentRequestSchema>;
 export type UpdatePaymentStatusRequest = z.infer<
   typeof UpdatePaymentStatusRequestSchema
+>;
+export type DashboardPaymentRequest = z.infer<
+  typeof DashboardPaymentRequestSchema
 >;

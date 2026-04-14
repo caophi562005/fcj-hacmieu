@@ -12,8 +12,10 @@ export class PaymentRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
   async list(data: GetManyPaymentsRequest) {
-    const skip = (data.page - 1) * data.limit;
-    const take = data.limit;
+    const page = Number(data?.page) > 0 ? Number(data.page) : 1;
+    const limit = Number(data?.limit) > 0 ? Number(data.limit) : 10;
+    const skip = (page - 1) * limit;
+    const take = limit;
 
     const whereClause: Prisma.PaymentWhereInput = {
       userId: data?.userId || undefined,
@@ -40,9 +42,9 @@ export class PaymentRepository {
     return {
       payments,
       totalItems,
-      page: data.page,
-      limit: data.limit,
-      totalPages: Math.ceil(totalItems / data.limit),
+      page,
+      limit,
+      totalPages: Math.ceil(totalItems / limit),
     };
   }
 

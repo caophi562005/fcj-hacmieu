@@ -15,6 +15,7 @@ export const GrpcConfigurationSchema = z.object({
   SHOP_SERVICE_GRPC_URL: grpcUrlSchema,
   PROMOTION_SERVICE_GRPC_URL: grpcUrlSchema,
   ORDER_SERVICE_GRPC_URL: grpcUrlSchema,
+  PAYMENT_SERVICE_GRPC_URL: grpcUrlSchema,
   PRODUCT_SERVICE_GRPC_URL: grpcUrlSchema,
   USER_ACCESS_SERVICE_GRPC_URL: grpcUrlSchema,
 });
