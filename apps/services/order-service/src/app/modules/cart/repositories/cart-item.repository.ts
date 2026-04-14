@@ -15,8 +15,10 @@ export class CartItemRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
   async list(data: GetManyCartItemsRequest) {
-    const skip = (data.page - 1) * data.limit;
-    const take = data.limit;
+    const page = data.page ?? 1;
+    const limit = data.limit ?? 10;
+    const skip = (page - 1) * limit;
+    const take = limit;
 
     // Lấy cart của user (1 user = 1 cart)
     const cart = await this.prismaService.cart.findUnique({
@@ -61,10 +63,10 @@ export class CartItemRepository {
 
     return {
       cartItems: pageGroups,
-      page: data.page,
-      limit: data.limit,
+      page,
+      limit,
       totalItems: totalGroups,
-      totalPages: Math.ceil(totalGroups / data.limit),
+      totalPages: Math.ceil(totalGroups / limit),
     };
   }
 
@@ -80,20 +82,23 @@ export class CartItemRepository {
     });
   }
 
-  async add(data: AddCartItemRequest) {
+  async add(data: AddCartItemRequest & { cartId?: string }) {
     return this.prismaService.$transaction(async (tx) => {
-      // Tìm Cart hiện tại của user, nếu chưa có thì tạo
-      let cart = await tx.cart.findUnique({
-        where: { userId: data.userId },
-      });
+      let cart = data.cartId
+        ? await tx.cart.findUnique({ where: { id: data.cartId } })
+        : await tx.cart.findUnique({ where: { userId: data.userId } });
 
-      if (!cart) {
+      if (!cart && !data.cartId) {
         cart = await tx.cart.create({
           data: {
             userId: data.userId,
             itemCount: 0,
           },
         });
+      }
+
+      if (!cart) {
+        throw new NotFoundException('Error.CartNotFound');
       }
 
       const result = await tx.cartItem.upsert({
@@ -143,12 +148,11 @@ export class CartItemRepository {
     });
   }
 
-  async update(data: UpdateCartItemRequest) {
+  async update(data: UpdateCartItemRequest & { cartId?: string }) {
     return this.prismaService.$transaction(async (tx) => {
-      // Lấy cart của user
-      const cart = await tx.cart.findUnique({
-        where: { userId: data.userId },
-      });
+      const cart = data.cartId
+        ? await tx.cart.findUnique({ where: { id: data.cartId } })
+        : await tx.cart.findUnique({ where: { userId: data.userId } });
 
       if (!cart) {
         throw new NotFoundException('Error.CartNotFound');
@@ -178,7 +182,10 @@ export class CartItemRepository {
         await tx.cartItem.delete({
           where: whereUnique,
         });
-        cartItem = null as any;
+        cartItem = {
+          ...existItem,
+          quantity: 0,
+        };
       } else {
         // Cập nhật quantity mới
         cartItem = await tx.cartItem.update({
@@ -211,12 +218,11 @@ export class CartItemRepository {
     });
   }
 
-  async delete(data: DeleteCartItemRequest) {
+  async delete(data: DeleteCartItemRequest & { cartId?: string }) {
     return this.prismaService.$transaction(async (tx) => {
-      // Lấy cart của user
-      const cart = await tx.cart.findUnique({
-        where: { userId: data.userId },
-      });
+      const cart = data.cartId
+        ? await tx.cart.findUnique({ where: { id: data.cartId } })
+        : await tx.cart.findUnique({ where: { userId: data.userId } });
 
       if (!cart) {
         throw new NotFoundException('Error.CartNotFound');
@@ -224,7 +230,7 @@ export class CartItemRepository {
 
       let cartItemId = data.cartItemId;
       if (!cartItemId && data.productId && data.skuId) {
-        const carrItem = await tx.cartItem.findUnique({
+        const cartItem = await tx.cartItem.findUnique({
           where: {
             cartId_productId_skuId: {
               cartId: cart.id,
@@ -233,14 +239,17 @@ export class CartItemRepository {
             },
           },
         });
-        cartItemId = carrItem?.id;
+        cartItemId = cartItem?.id;
+      }
+
+      if (!cartItemId) {
+        throw new NotFoundException('Error.CartItemNotFound');
       }
 
       // Xóa CartItem
       await tx.cartItem.delete({
         where: {
           id: cartItemId,
-          cartId: cart.id,
         },
       });
 
@@ -265,12 +274,21 @@ export class CartItemRepository {
     });
   }
 
-  async validateCartItems(data: ValidateCartItemsRequest) {
-    const cart = await this.prismaService.cart.findUnique({
-      where: {
-        userId: data.userId,
-      },
-    });
+  async validateCartItems(
+    data: ValidateCartItemsRequest & { cartId?: string },
+  ) {
+    const cart = data.cartId
+      ? await this.prismaService.cart.findUnique({
+          where: { id: data.cartId },
+        })
+      : await this.prismaService.cart.findUnique({
+          where: { userId: data.userId },
+        });
+
+    if (!cart) {
+      return [];
+    }
+
     return this.prismaService.cartItem.findMany({
       where: {
         id: {

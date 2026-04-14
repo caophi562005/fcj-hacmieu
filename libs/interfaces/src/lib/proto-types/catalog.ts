@@ -444,6 +444,8 @@ export interface ProductModuleClient {
   updateProduct(request: UpdateProductRequest): Observable<ProductResponse>;
 
   deleteProduct(request: DeleteProductRequest): Observable<ProductResponse>;
+
+  validateProducts(request: ValidateProductsRequest): Observable<ValidateProductsResponse>;
 }
 
 export interface ProductModuleController {
@@ -464,11 +466,22 @@ export interface ProductModuleController {
   deleteProduct(
     request: DeleteProductRequest,
   ): Promise<ProductResponse> | Observable<ProductResponse> | ProductResponse;
+
+  validateProducts(
+    request: ValidateProductsRequest,
+  ): Promise<ValidateProductsResponse> | Observable<ValidateProductsResponse> | ValidateProductsResponse;
 }
 
 export function ProductModuleControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = ["getManyProducts", "getProduct", "createProduct", "updateProduct", "deleteProduct"];
+    const grpcMethods: string[] = [
+      "getManyProducts",
+      "getProduct",
+      "createProduct",
+      "updateProduct",
+      "deleteProduct",
+      "validateProducts",
+    ];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
       GrpcMethod("ProductModule", method)(constructor.prototype[method], method, descriptor);

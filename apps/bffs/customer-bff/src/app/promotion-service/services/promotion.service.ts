@@ -3,10 +3,10 @@ import {
   GetManyPromotionsRequest,
   GetManyPromotionsResponse,
   GetPromotionRequest,
-  PROMOTION_SERVICE_NAME,
+  PROMOTION_MODULE_SERVICE_NAME,
   PROMOTION_SERVICE_PACKAGE_NAME,
+  PromotionModuleClient,
   PromotionResponse,
-  PromotionServiceClient,
 } from '@common/interfaces/proto-types/promotion';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
@@ -14,7 +14,7 @@ import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class PromotionService implements OnModuleInit {
-  private promotionService!: PromotionServiceClient;
+  private promotionModule!: PromotionModuleClient;
 
   constructor(
     @Inject(PROMOTION_SERVICE_PACKAGE_NAME)
@@ -22,25 +22,25 @@ export class PromotionService implements OnModuleInit {
   ) {}
 
   onModuleInit() {
-    this.promotionService =
-      this.promotionClient.getService<PromotionServiceClient>(
-        PROMOTION_SERVICE_NAME,
+    this.promotionModule =
+      this.promotionClient.getService<PromotionModuleClient>(
+        PROMOTION_MODULE_SERVICE_NAME,
       );
   }
 
   async getManyPromotions(
     data: GetManyPromotionsRequest,
   ): Promise<GetManyPromotionsResponse> {
-    return firstValueFrom(this.promotionService.getManyPromotions(data));
+    return firstValueFrom(this.promotionModule.getManyPromotions(data));
   }
 
   async getPromotion(data: GetPromotionRequest): Promise<PromotionResponse> {
-    return firstValueFrom(this.promotionService.getPromotion(data));
+    return firstValueFrom(this.promotionModule.getPromotion(data));
   }
 
   async checkPromotion(
     data: CheckPromotionRequest,
   ): Promise<PromotionResponse> {
-    return firstValueFrom(this.promotionService.checkPromotion(data));
+    return firstValueFrom(this.promotionModule.checkPromotion(data));
   }
 }

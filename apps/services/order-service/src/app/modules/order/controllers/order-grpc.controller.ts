@@ -3,6 +3,8 @@ import { GrpcLoggingInterceptor } from '@common/interceptors/grpcLogging.interce
 import {
   CancelOrderRequest,
   CreateOrderRequest,
+  GetManyOrdersRequest,
+  GetOrderRequest,
   UpdateStatusOrderRequest,
 } from '@common/interfaces/models/order';
 import { Controller, UseInterceptors } from '@nestjs/common';
@@ -13,6 +15,16 @@ import { OrderService } from '../services/order.service';
 @UseInterceptors(GrpcLoggingInterceptor)
 export class OrderGrpcController {
   constructor(private readonly orderService: OrderService) {}
+
+  @GrpcMethod(GrpcModuleName.ORDER.ORDER, 'GetManyOrders')
+  getManyOrders(data: GetManyOrdersRequest) {
+    return this.orderService.list(data);
+  }
+
+  @GrpcMethod(GrpcModuleName.ORDER.ORDER, 'GetOrder')
+  getOrder(data: GetOrderRequest) {
+    return this.orderService.findById(data);
+  }
 
   @GrpcMethod(GrpcModuleName.ORDER.ORDER, 'CreateOrder')
   createOrder(data: CreateOrderRequest) {

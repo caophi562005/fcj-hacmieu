@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package PROMOTION_SERVICE;
 
-service PromotionService {
+service PromotionModule {
   rpc GetManyPromotions(GetManyPromotionsRequest) returns (GetManyPromotionsResponse);
   rpc GetPromotion(GetPromotionRequest) returns (PromotionResponse);
   rpc CreatePromotion(CreatePromotionRequest) returns (PromotionResponse);

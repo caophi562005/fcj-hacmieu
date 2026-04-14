@@ -2,7 +2,8 @@ import { OrderStatusValues } from '@common/constants/order.constant';
 import { PaymentStatusValues } from '@common/constants/payment.constant';
 import {
   CreateOrderRepository,
-  DashboardSellerRequest,
+  GetManyOrdersRequest,
+  GetOrderRequest,
   UpdateStatusOrderRequest,
 } from '@common/interfaces/models/order';
 import { generateCode } from '@common/utils/order-code.util';
@@ -13,6 +14,126 @@ import { PrismaService } from '../../../prisma/prisma.service';
 @Injectable()
 export class OrderRepository {
   constructor(private readonly prismaService: PrismaService) {}
+
+  async list(data: GetManyOrdersRequest) {
+    const page = Number(data?.page) > 0 ? Number(data.page) : 1;
+    const limit = Number(data?.limit) > 0 ? Number(data.limit) : 10;
+    const skip = (page - 1) * limit;
+
+    const where = {
+      deletedAt: null,
+      paymentId: data.paymentId || undefined,
+      status: data.status || undefined,
+      userId: data.userId || undefined,
+      shopId: data.shopId || undefined,
+    };
+
+    const [orders, totalItems] = await Promise.all([
+      this.prismaService.order.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: {
+          createdAt: 'desc',
+        },
+        include: {
+          items: {
+            select: {
+              productName: true,
+              productImage: true,
+            },
+            take: 1,
+          },
+        },
+      }),
+      this.prismaService.order.count({ where }),
+    ]);
+
+    return {
+      page,
+      limit,
+      totalItems,
+      totalPages: Math.ceil(totalItems / limit),
+      orders: orders.map((order) => ({
+        id: order.id,
+        code: order.code,
+        shopId: order.shopId,
+        shopName: '',
+        status: order.status,
+        itemTotal: order.itemTotal,
+        grandTotal: order.grandTotal,
+        firstProductImage: order.items[0]?.productImage || '',
+        firstProductName: order.items[0]?.productName || '',
+        createdAt: order.createdAt,
+      })),
+    };
+  }
+
+  async findById(data: GetOrderRequest) {
+    const order = await this.prismaService.order.findFirst({
+      where: {
+        id: data.orderId,
+        userId: data.userId || undefined,
+        shopId: data.shopId || undefined,
+        deletedAt: null,
+      },
+      include: {
+        items: {
+          select: {
+            id: true,
+            productId: true,
+            productImage: true,
+            productName: true,
+            skuValue: true,
+            quantity: true,
+            price: true,
+          },
+        },
+      },
+    });
+
+    if (!order) {
+      return null;
+    }
+
+    const receiverRaw = (order.receiver || {}) as {
+      name?: string;
+      phone?: string;
+      address?: string;
+    };
+
+    const receiver = {
+      name: receiverRaw.name || '',
+      phone: receiverRaw.phone || '',
+      address: receiverRaw.address || '',
+    };
+
+    return {
+      id: order.id,
+      code: order.code,
+      userId: order.userId,
+      shopId: order.shopId,
+      shopName: '',
+      status: order.status,
+      paymentMethod: order.paymentMethod,
+      paymentStatus: order.paymentStatus,
+      paymentId: order.paymentId,
+      itemTotal: order.itemTotal,
+      shippingFee: order.shippingFee,
+      discount: order.discount,
+      grandTotal: order.grandTotal,
+      receiver,
+      receiverName: receiver.name,
+      receiverPhone: receiver.phone,
+      receiverAddress: receiver.address,
+      timeline: Array.isArray(order.timeline) ? order.timeline : [],
+      itemsSnapshot: order.items,
+      firstProductName: order.items[0]?.productName || '',
+      firstProductImage: order.items[0]?.productImage || '',
+      createdAt: order.createdAt,
+      updatedAt: order.updatedAt,
+    };
+  }
 
   async create(data: CreateOrderRepository) {
     const orders = await this.prismaService.$transaction(async (tx) => {
@@ -166,42 +287,5 @@ export class OrderRepository {
         ],
       },
     });
-  }
-
-  async dashboardSeller(data: DashboardSellerRequest) {
-    const whereBase = {
-      shopId: data.shopId,
-    };
-
-    const [statusCounts, revenueAgg] = await Promise.all([
-      this.prismaService.order.groupBy({
-        by: ['status'],
-        where: whereBase,
-        _count: { _all: true },
-      }),
-
-      this.prismaService.order.aggregate({
-        where: {
-          ...whereBase,
-          status: OrderStatus.COMPLETED,
-        },
-        _sum: {
-          grandTotal: true,
-        },
-      }),
-    ]);
-
-    // Map status → count
-    const countMap = Object.fromEntries(
-      statusCounts.map((i) => [i.status, i._count._all]),
-    );
-
-    return {
-      totalOrders: statusCounts.reduce((sum, i) => sum + i._count._all, 0),
-      pendingOrders: countMap[OrderStatus.PENDING] ?? 0,
-      confirmedOrders: countMap[OrderStatus.CONFIRMED] ?? 0,
-      completedOrders: countMap[OrderStatus.COMPLETED] ?? 0,
-      totalRevenue: revenueAgg._sum.grandTotal ?? 0,
-    };
   }
 }

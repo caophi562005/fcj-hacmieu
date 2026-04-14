@@ -10,6 +10,23 @@ import { Observable } from "rxjs";
 
 export const protobufPackage = "ORDER_SERVICE";
 
+export interface GetManyOrdersRequest {
+  processId?: string | undefined;
+  page: number;
+  limit: number;
+  paymentId?: string | undefined;
+  status?: string | undefined;
+  userId?: string | undefined;
+  shopId?: string | undefined;
+}
+
+export interface GetOrderRequest {
+  processId?: string | undefined;
+  orderId: string;
+  userId?: string | undefined;
+  shopId?: string | undefined;
+}
+
 export interface CreateOrderRequest {
   processId?: string | undefined;
   userId: string;
@@ -33,6 +50,27 @@ export interface OrderGroup {
 
 export interface CreateOrderResponse {
   orders: Order[];
+}
+
+export interface GetManyOrdersResponse {
+  page: number;
+  limit: number;
+  totalItems: number;
+  totalPages: number;
+  orders: OrderSummary[];
+}
+
+export interface OrderSummary {
+  id: string;
+  code: string;
+  shopId: string;
+  shopName: string;
+  status: string;
+  itemTotal: number;
+  grandTotal: number;
+  firstProductImage: string;
+  firstProductName: string;
+  createdAt: string;
 }
 
 export interface OrderItem {
@@ -80,6 +118,42 @@ export interface Order {
   updatedAt: string;
 }
 
+export interface GetOrderResponse {
+  id: string;
+  code: string;
+  userId: string;
+  shopId: string;
+  shopName: string;
+  status: string;
+  paymentMethod: string;
+  paymentStatus: string;
+  paymentId: string;
+  itemTotal: number;
+  shippingFee: number;
+  discount: number;
+  grandTotal: number;
+  receiver: Receiver | undefined;
+  receiverName: string;
+  receiverPhone: string;
+  receiverAddress: string;
+  timeline: Timeline[];
+  itemsSnapshot: OrderItemSnapshot[];
+  firstProductName: string;
+  firstProductImage: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface OrderItemSnapshot {
+  id: string;
+  productId: string;
+  productImage: string;
+  productName: string;
+  skuValue: string;
+  quantity: number;
+  price: number;
+}
+
 /** ================================= Update status order =================================== */
 export interface UpdateStatusOrderRequest {
   processId?: string | undefined;
@@ -97,60 +171,190 @@ export interface CancelOrderRequest {
   shopId?: string | undefined;
 }
 
-/** ================================= Dashboard seller =================================== */
-export interface DashboardSellerRequest {
-  processId?: string | undefined;
-  userId: string;
-  shopId: string;
+export interface CancelOrderResponse {
+  orders: Order[];
 }
 
-export interface DashboardSellerResponse {
-  totalOrders: number;
-  completedOrders: number;
-  pendingOrders: number;
-  confirmedOrders: number;
-  totalRevenue: number;
+/** ==================== AddCartItem ====================// */
+export interface AddCartItemRequest {
+  processId?: string | undefined;
+  userId: string;
+  productId: string;
+  skuId: string;
+  shopId: string;
+  quantity: number;
+  skuValue: string;
+  productName: string;
+  productImage?: string | undefined;
+}
+
+export interface CartItemResponse {
+  id: string;
+  cartId: string;
+  productId: string;
+  skuId: string;
+  shopId: string;
+  quantity: number;
+  productName: string;
+  skuValue: string;
+  productImage: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CartResponse {
+  cartItem: CartItemResponse | undefined;
+  cartCount: number;
+}
+
+/** ==================== UpdateCartItem ====================// */
+export interface UpdateCartItemRequest {
+  processId?: string | undefined;
+  userId: string;
+  productId: string;
+  skuId: string;
+  shopId: string;
+  quantity: number;
+  skuValue: string;
+  productName: string;
+  productImage?: string | undefined;
+}
+
+/** ==================== DeleteCartItem ====================// */
+export interface DeleteCartItemRequest {
+  processId?: string | undefined;
+  userId: string;
+  cartItemId: string;
+}
+
+/** ==================== ValidateCartItems ====================// */
+export interface ValidateCartItemsRequest {
+  processId?: string | undefined;
+  cartItemIds: string[];
+  userId: string;
+}
+
+export interface ValidateCartItemsResponse {
+  cartItems: CartItemResponse[];
+}
+
+/** ==================== GetManyCartItems ====================// */
+export interface GetManyCartItemsRequest {
+  processId?: string | undefined;
+  userId: string;
+  page: number;
+  limit: number;
+}
+
+export interface ShopCartItems {
+  shopId: string;
+  cartItems: CartItemResponse[];
+}
+
+export interface GetManyCartItemsResponse {
+  cartItems: ShopCartItems[];
+  page: number;
+  limit: number;
+  totalItems: number;
+  totalPages: number;
 }
 
 export const ORDER_SERVICE_PACKAGE_NAME = "ORDER_SERVICE";
 
-export interface OrderServiceClient {
+export interface OrderModuleClient {
+  getManyOrders(request: GetManyOrdersRequest): Observable<GetManyOrdersResponse>;
+
+  getOrder(request: GetOrderRequest): Observable<GetOrderResponse>;
+
   createOrder(request: CreateOrderRequest): Observable<CreateOrderResponse>;
 
   updateStatusOrder(request: UpdateStatusOrderRequest): Observable<Order>;
 
-  cancelOrder(request: CancelOrderRequest): Observable<Order>;
-
-  dashboardSeller(request: DashboardSellerRequest): Observable<DashboardSellerResponse>;
+  cancelOrder(request: CancelOrderRequest): Observable<CancelOrderResponse>;
 }
 
-export interface OrderServiceController {
+export interface OrderModuleController {
+  getManyOrders(
+    request: GetManyOrdersRequest,
+  ): Promise<GetManyOrdersResponse> | Observable<GetManyOrdersResponse> | GetManyOrdersResponse;
+
+  getOrder(request: GetOrderRequest): Promise<GetOrderResponse> | Observable<GetOrderResponse> | GetOrderResponse;
+
   createOrder(
     request: CreateOrderRequest,
   ): Promise<CreateOrderResponse> | Observable<CreateOrderResponse> | CreateOrderResponse;
 
   updateStatusOrder(request: UpdateStatusOrderRequest): Promise<Order> | Observable<Order> | Order;
 
-  cancelOrder(request: CancelOrderRequest): Promise<Order> | Observable<Order> | Order;
-
-  dashboardSeller(
-    request: DashboardSellerRequest,
-  ): Promise<DashboardSellerResponse> | Observable<DashboardSellerResponse> | DashboardSellerResponse;
+  cancelOrder(
+    request: CancelOrderRequest,
+  ): Promise<CancelOrderResponse> | Observable<CancelOrderResponse> | CancelOrderResponse;
 }
 
-export function OrderServiceControllerMethods() {
+export function OrderModuleControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = ["createOrder", "updateStatusOrder", "cancelOrder", "dashboardSeller"];
+    const grpcMethods: string[] = ["getManyOrders", "getOrder", "createOrder", "updateStatusOrder", "cancelOrder"];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
-      GrpcMethod("OrderService", method)(constructor.prototype[method], method, descriptor);
+      GrpcMethod("OrderModule", method)(constructor.prototype[method], method, descriptor);
     }
     const grpcStreamMethods: string[] = [];
     for (const method of grpcStreamMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
-      GrpcStreamMethod("OrderService", method)(constructor.prototype[method], method, descriptor);
+      GrpcStreamMethod("OrderModule", method)(constructor.prototype[method], method, descriptor);
     }
   };
 }
 
-export const ORDER_SERVICE_NAME = "OrderService";
+export const ORDER_MODULE_SERVICE_NAME = "OrderModule";
+
+export interface CartModuleClient {
+  addCartItem(request: AddCartItemRequest): Observable<CartResponse>;
+
+  updateCartItem(request: UpdateCartItemRequest): Observable<CartResponse>;
+
+  deleteCartItem(request: DeleteCartItemRequest): Observable<CartResponse>;
+
+  validateCartItems(request: ValidateCartItemsRequest): Observable<ValidateCartItemsResponse>;
+
+  getManyCartItems(request: GetManyCartItemsRequest): Observable<GetManyCartItemsResponse>;
+}
+
+export interface CartModuleController {
+  addCartItem(request: AddCartItemRequest): Promise<CartResponse> | Observable<CartResponse> | CartResponse;
+
+  updateCartItem(request: UpdateCartItemRequest): Promise<CartResponse> | Observable<CartResponse> | CartResponse;
+
+  deleteCartItem(request: DeleteCartItemRequest): Promise<CartResponse> | Observable<CartResponse> | CartResponse;
+
+  validateCartItems(
+    request: ValidateCartItemsRequest,
+  ): Promise<ValidateCartItemsResponse> | Observable<ValidateCartItemsResponse> | ValidateCartItemsResponse;
+
+  getManyCartItems(
+    request: GetManyCartItemsRequest,
+  ): Promise<GetManyCartItemsResponse> | Observable<GetManyCartItemsResponse> | GetManyCartItemsResponse;
+}
+
+export function CartModuleControllerMethods() {
+  return function (constructor: Function) {
+    const grpcMethods: string[] = [
+      "addCartItem",
+      "updateCartItem",
+      "deleteCartItem",
+      "validateCartItems",
+      "getManyCartItems",
+    ];
+    for (const method of grpcMethods) {
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcMethod("CartModule", method)(constructor.prototype[method], method, descriptor);
+    }
+    const grpcStreamMethods: string[] = [];
+    for (const method of grpcStreamMethods) {
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcStreamMethod("CartModule", method)(constructor.prototype[method], method, descriptor);
+    }
+  };
+}
+
+export const CART_MODULE_SERVICE_NAME = "CartModule";

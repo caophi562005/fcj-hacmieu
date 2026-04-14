@@ -8,6 +8,7 @@ service ProductModule {
   rpc CreateProduct(CreateProductRequest) returns (ProductResponse);
   rpc UpdateProduct(UpdateProductRequest) returns (ProductResponse);
   rpc DeleteProduct(DeleteProductRequest) returns (ProductResponse);
+  rpc ValidateProducts(ValidateProductsRequest) returns (ValidateProductsResponse);
 }
 
 //==================== GetManyProductsRequest ====================//

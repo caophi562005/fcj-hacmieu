@@ -1,8 +1,8 @@
 import { PaymentMethodEnums } from '@common/constants/payment.constant';
+import { ValidateItemResultSchema } from '@common/interfaces/models/catalog/product/product-response.model';
 import { OrderSchema, ReceiverSchema } from '@common/schemas/order';
 import z from 'zod';
 import { PaginationQueryRequestSchema } from '../common/pagination.model';
-import { ValidateItemResultSchema } from '../product';
 
 export const CreateOrderRequestSchema = z
   .object({
@@ -16,7 +16,7 @@ export const CreateOrderRequestSchema = z
       z.object({
         shopId: z.uuid(),
         cartItemIds: z.array(z.uuid()).min(1),
-      })
+      }),
     ),
   })
   .strict();
@@ -33,7 +33,7 @@ export const CreateOrderRepositorySchema = z.object({
       discount: z.number(),
       shopId: z.uuid(),
       items: z.array(ValidateItemResultSchema),
-    })
+    }),
   ),
 });
 

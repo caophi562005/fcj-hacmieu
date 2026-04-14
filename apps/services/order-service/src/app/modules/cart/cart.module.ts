@@ -9,9 +9,10 @@ import { CartItemService } from './services/cart-item.service';
 
 @Module({
   imports: [
-    ClientsModule.register([GrpcClientProvider(GrpcService.PRODUCT_SERVICE)]),
+    ClientsModule.register([GrpcClientProvider(GrpcService.CATALOG_SERVICE)]),
   ],
   controllers: [CartGrpcController],
   providers: [CartItemRepository, CartRepository, CartItemService],
+  exports: [CartItemService],
 })
 export class CartModule {}

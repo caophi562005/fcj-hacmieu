@@ -126,7 +126,7 @@ export interface CheckPromotionRequest {
 
 export const PROMOTION_SERVICE_PACKAGE_NAME = "PROMOTION_SERVICE";
 
-export interface PromotionServiceClient {
+export interface PromotionModuleClient {
   getManyPromotions(request: GetManyPromotionsRequest): Observable<GetManyPromotionsResponse>;
 
   getPromotion(request: GetPromotionRequest): Observable<PromotionResponse>;
@@ -140,7 +140,7 @@ export interface PromotionServiceClient {
   checkPromotion(request: CheckPromotionRequest): Observable<PromotionResponse>;
 }
 
-export interface PromotionServiceController {
+export interface PromotionModuleController {
   getManyPromotions(
     request: GetManyPromotionsRequest,
   ): Promise<GetManyPromotionsResponse> | Observable<GetManyPromotionsResponse> | GetManyPromotionsResponse;
@@ -166,7 +166,7 @@ export interface PromotionServiceController {
   ): Promise<PromotionResponse> | Observable<PromotionResponse> | PromotionResponse;
 }
 
-export function PromotionServiceControllerMethods() {
+export function PromotionModuleControllerMethods() {
   return function (constructor: Function) {
     const grpcMethods: string[] = [
       "getManyPromotions",
@@ -178,14 +178,14 @@ export function PromotionServiceControllerMethods() {
     ];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
-      GrpcMethod("PromotionService", method)(constructor.prototype[method], method, descriptor);
+      GrpcMethod("PromotionModule", method)(constructor.prototype[method], method, descriptor);
     }
     const grpcStreamMethods: string[] = [];
     for (const method of grpcStreamMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
-      GrpcStreamMethod("PromotionService", method)(constructor.prototype[method], method, descriptor);
+      GrpcStreamMethod("PromotionModule", method)(constructor.prototype[method], method, descriptor);
     }
   };
 }
 
-export const PROMOTION_SERVICE_NAME = "PromotionService";
+export const PROMOTION_MODULE_SERVICE_NAME = "PromotionModule";

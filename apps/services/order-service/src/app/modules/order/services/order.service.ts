@@ -1,38 +1,26 @@
-import { PaymentStatusValues } from '@common/constants/payment.constant';
 import { PrismaErrorValues } from '@common/constants/prisma.constant';
 import { DiscountTypeValues } from '@common/constants/promotion.constant';
-import { QueueTopics } from '@common/constants/queue.constant';
 import {
   CancelOrderRequest,
   CreateOrderRequest,
   CreateOrderResponse,
+  GetManyOrdersRequest,
+  GetManyOrdersResponse,
+  GetOrderRequest,
+  GetOrderResponse,
   UpdateStatusOrderRequest,
 } from '@common/interfaces/models/order';
+import { CreatePromotionRedemptionRequest } from '@common/interfaces/models/promotion';
 import {
-  CreatePromotionRedemptionRequest,
-  PromotionResponse,
-} from '@common/interfaces/models/promotion';
+  CATALOG_SERVICE_PACKAGE_NAME,
+  PRODUCT_MODULE_SERVICE_NAME,
+  ProductModuleClient,
+} from '@common/interfaces/proto-types/catalog';
 import {
-  CART_SERVICE_NAME,
-  CART_SERVICE_PACKAGE_NAME,
-  CartServiceClient,
-} from '@common/interfaces/proto-types/cart';
-import {
-  PRODUCT_SERVICE_NAME,
-  PRODUCT_SERVICE_PACKAGE_NAME,
-  ProductServiceClient,
-} from '@common/interfaces/proto-types/product';
-import {
-  PROMOTION_SERVICE_NAME,
+  PROMOTION_MODULE_SERVICE_NAME,
   PROMOTION_SERVICE_PACKAGE_NAME,
-  PromotionServiceClient,
+  PromotionModuleClient,
 } from '@common/interfaces/proto-types/promotion';
-import {
-  USER_ACCESS_SERVICE_NAME,
-  USER_ACCESS_SERVICE_PACKAGE_NAME,
-  UserAccessServiceClient,
-} from '@common/interfaces/proto-types/user-access';
-import { generateCode } from '@common/utils/order-code.util';
 import {
   BadRequestException,
   Inject,
@@ -43,44 +31,55 @@ import {
 import { ClientGrpc } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
+import { CartItemService } from '../../cart/services/cart-item.service';
 import { OrderRepository } from '../repositories/order.repository';
 
 @Injectable()
 export class OrderService implements OnModuleInit {
-  private productService!: ProductServiceClient;
-  private cartService!: CartServiceClient;
-  private userAccessService!: UserAccessServiceClient;
-  private promotionService!: PromotionServiceClient;
+  private productModule!: ProductModuleClient;
+  private promotionModule!: PromotionModuleClient;
 
   constructor(
-    @Inject(PRODUCT_SERVICE_PACKAGE_NAME)
-    private productClient: ClientGrpc,
-
-    @Inject(CART_SERVICE_PACKAGE_NAME)
-    private cartClient: ClientGrpc,
+    @Inject(CATALOG_SERVICE_PACKAGE_NAME)
+    private catalogClient: ClientGrpc,
 
     @Inject(PROMOTION_SERVICE_PACKAGE_NAME)
     private promotionClient: ClientGrpc,
 
-    @Inject(USER_ACCESS_SERVICE_PACKAGE_NAME)
-    private userAccessClient: ClientGrpc,
-
-    private readonly orderRepository: OrderRepository
+    private readonly orderRepository: OrderRepository,
+    private readonly cartItemService: CartItemService,
   ) {}
 
   onModuleInit() {
-    this.productService =
-      this.productClient.getService<ProductServiceClient>(PRODUCT_SERVICE_NAME);
-    this.cartService =
-      this.cartClient.getService<CartServiceClient>(CART_SERVICE_NAME);
-    this.userAccessService =
-      this.userAccessClient.getService<UserAccessServiceClient>(
-        USER_ACCESS_SERVICE_NAME,
+    this.productModule = this.catalogClient.getService<ProductModuleClient>(
+      PRODUCT_MODULE_SERVICE_NAME,
+    );
+    this.promotionModule =
+      this.promotionClient.getService<PromotionModuleClient>(
+        PROMOTION_MODULE_SERVICE_NAME,
       );
-    this.promotionService =
-      this.promotionClient.getService<PromotionServiceClient>(
-        PROMOTION_SERVICE_NAME,
-      );
+  }
+
+  async list({
+    processId,
+    ...data
+  }: GetManyOrdersRequest): Promise<GetManyOrdersResponse> {
+    const orders = await this.orderRepository.list(data);
+    if (orders.totalItems === 0) {
+      throw new NotFoundException('Error.OrdersNotFound');
+    }
+    return orders;
+  }
+
+  async findById({
+    processId,
+    ...data
+  }: GetOrderRequest): Promise<GetOrderResponse> {
+    const order = await this.orderRepository.findById(data);
+    if (!order) {
+      throw new NotFoundException('Error.OrderNotFound');
+    }
+    return order;
   }
 
   async create({
@@ -88,50 +87,45 @@ export class OrderService implements OnModuleInit {
     userId,
     ...data
   }: CreateOrderRequest): Promise<CreateOrderResponse> {
-    const cartItemIds = data.orders.map((item) => item.cartItemIds).flat();
-    const cartItems = await firstValueFrom(
-      this.cartService.validateCartItems({
-        processId,
-        cartItemIds: cartItemIds,
-        userId,
-      }),
+    const cartItemIds = Array.from(
+      new Set(data.orders.flatMap((item) => item.cartItemIds)),
     );
-
-    // Check shopId có đúng k
-    const shop = await firstValueFrom(
-      this.userAccessService.validateShops({
-        processId,
-        shopIds: data.orders.map((order) => order.shopId),
-      }),
-    );
-
-    const productIds = cartItems.cartItems.map((item) => {
-      return {
-        productId: item.productId,
-        skuId: item.skuId,
-        quantity: item.quantity,
-        cartItemId: item.id,
-      };
+    const cartItems = await this.cartItemService.validateCartItems({
+      processId,
+      cartItemIds,
+      userId,
     });
 
+    const productIds = cartItems.cartItems.map((item) => ({
+      productId: item.productId,
+      skuId: item.skuId,
+      quantity: item.quantity,
+      cartItemId: item.id,
+    }));
+
     const productsResult = await firstValueFrom(
-      this.productService.validateProducts({
+      this.productModule.validateProducts({
         processId,
         productIds,
       }),
     );
 
     if (productsResult.isValid === false) {
-      throw new Error('Some products are invalid or out of stock');
+      throw new BadRequestException(
+        'Some products are invalid or out of stock',
+      );
     }
 
-    // Tính itemTotal cho từng order
+    const validatedItemByCartItemId = new Map(
+      productsResult.items.map((item) => [item.cartItemId, item]),
+    );
+
+    // Tính itemTotal cho từng order bằng map để tránh filter lặp nhiều lần.
     const ordersWithTotal = data.orders.map((order) => {
-      const orderItems = productsResult.items.filter(
-        (item) =>
-          item.shopId === order.shopId &&
-          order.cartItemIds.includes(item.cartItemId),
-      );
+      const orderItems = order.cartItemIds
+        .map((id) => validatedItemByCartItemId.get(id))
+        .filter((item) => item && item.shopId === order.shopId);
+
       const itemTotal = orderItems.reduce(
         (sum, item) => sum + item.price * item.quantity,
         0,
@@ -145,10 +139,17 @@ export class OrderService implements OnModuleInit {
     });
 
     // Check promotion và phân bổ discount
-    let promotionData: PromotionResponse | null = null;
+    let promotionData: {
+      id: string;
+      code: string;
+      discountType: string;
+      discountValue: number;
+      minOrderSubtotal: number;
+      maxDiscount?: number;
+    } | null = null;
     if (data.discountCode) {
       const promotion = await firstValueFrom(
-        this.promotionService.checkPromotion({
+        this.promotionModule.checkPromotion({
           processId,
           code: data.discountCode,
           userId,
@@ -212,7 +213,14 @@ export class OrderService implements OnModuleInit {
         }
       });
 
-      promotionData = promotion as PromotionResponse;
+      promotionData = {
+        id: promotion.id,
+        code: promotion.code,
+        discountType: promotion.discountType,
+        discountValue: promotion.discountValue,
+        minOrderSubtotal: promotion.minOrderSubtotal,
+        maxDiscount: promotion.maxDiscount,
+      };
     }
 
     const paymentId = uuidv4();
@@ -235,7 +243,9 @@ export class OrderService implements OnModuleInit {
         code: promotionData.code,
         promotionId: promotionData.id,
         orderIds: createdOrders.map((order) => order.id),
-        discountType: promotionData.discountType,
+        discountType: promotionData.discountType as
+          | typeof DiscountTypeValues.PERCENT
+          | typeof DiscountTypeValues.AMOUNT,
         discountValue: promotionData.discountValue,
         minOrderSubtotal: promotionData.minOrderSubtotal,
         maxDiscount: promotionData.maxDiscount,
@@ -325,7 +335,7 @@ export class OrderService implements OnModuleInit {
     //   ),
     // );
 
-    return cancelledOrders;
+    return { orders: cancelledOrders };
   }
 
   async paid(data: { paymentId: string }) {
