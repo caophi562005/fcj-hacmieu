@@ -22,6 +22,7 @@ import {
   OnModuleInit,
 } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
+import { firstValueFrom } from 'rxjs';
 import { CartItemRepository } from '../repositories/cart-item.repository';
 import { CartRepository } from '../repositories/cart.repository';
 
@@ -60,20 +61,50 @@ export class CartItemService implements OnModuleInit {
   }
 
   private async validateSKU(data: CartItemContext) {
-    // SKU validation is deferred to order service's validateProducts
-    // Here we just check that cartItem quantity doesn't exceed a reasonable limit
     const cartItem = await this.cartItemRepository.findUnique({
       cartId: data.cartId,
       skuId: data.skuId,
       productId: data.productId,
     });
 
-    // Validate total quantity after add/update
-    const newQuantity = cartItem
+    const requestedQuantity = cartItem
       ? cartItem.quantity + data.quantity
       : data.quantity;
-    if (newQuantity > 1000) {
+
+    if (requestedQuantity <= 0) {
       throw new BadRequestException('Error.InvalidQuantity');
+    }
+
+    const validation = await firstValueFrom(
+      this.productModule.validateProducts({
+        processId: data.processId,
+        productIds: [
+          {
+            productId: data.productId,
+            skuId: data.skuId,
+            quantity: requestedQuantity,
+            // validateProducts yêu cầu cartItemId, dùng skuId làm correlation id
+            cartItemId: data.skuId,
+          },
+        ],
+      }),
+    );
+
+    const [validationItem] = validation.items;
+
+    if (!validationItem || !validationItem.isValid) {
+      switch (validationItem?.error) {
+        case 'SKU_NOT_FOUND':
+          throw new NotFoundException('Error.SKUNotFound');
+
+        case 'OUT_OF_STOCK':
+          throw new NotFoundException('Error.SKUOutOfStock');
+
+        case 'PRODUCT_ID_MISMATCH':
+        case 'PRODUCT_UNAVAILABLE':
+        default:
+          throw new NotFoundException('Error.ProductNotFound');
+      }
     }
   }
 

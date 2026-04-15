@@ -9,6 +9,9 @@ export const SqsConfigurationSchema = z.object({
 
   CREATE_ORDER_QUEUE_NAME: z.string(),
   CREATE_ORDER_QUEUE_URL: z.string(),
+
+  DELETE_CART_ITEM_QUEUE_NAME: z.string(),
+  DELETE_CART_ITEM_QUEUE_URL: z.string(),
 });
 
 const configServer = SqsConfigurationSchema.safeParse(process.env);

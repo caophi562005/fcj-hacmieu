@@ -1,6 +1,8 @@
 import { SqsConfiguration } from '@common/configurations/sqs.config';
+import { CreatePaymentRequest } from '@common/interfaces/models/payment';
 import { Injectable, Logger } from '@nestjs/common';
-import { SqsConsumerEventHandler, SqsMessageHandler } from '@ssut/nestjs-sqs';
+import { SqsMessageHandler } from '@ssut/nestjs-sqs';
+import { PaymentService } from './payment.service';
 
 type SqsMessage = {
   MessageId?: string;
@@ -11,21 +13,26 @@ type SqsMessage = {
 export class PaymentConsumerService {
   private readonly logger = new Logger(PaymentConsumerService.name);
 
+  constructor(private readonly paymentService: PaymentService) {}
+
   @SqsMessageHandler(SqsConfiguration.CREATE_PAYMENT_QUEUE_NAME, false)
   async handleCreatePaymentMessage(message: SqsMessage) {
+    const body: CreatePaymentRequest = message.Body
+      ? JSON.parse(message.Body)
+      : null;
+    if (!body) {
+      this.logger.error(
+        `Received invalid message from ${SqsConfiguration.CREATE_PAYMENT_QUEUE_NAME}: ${message.MessageId ?? 'unknown-id'}`,
+      );
+      return;
+    }
+
+    const payment = await this.paymentService.create(body);
+
     this.logger.log(
       `Received message from ${SqsConfiguration.CREATE_PAYMENT_QUEUE_NAME}: ${message.MessageId ?? 'unknown-id'}`,
     );
-    this.logger.log(`Payload: ${message.Body ?? '{}'}`);
-  }
 
-  @SqsConsumerEventHandler(
-    SqsConfiguration.CREATE_PAYMENT_QUEUE_NAME,
-    'processing_error',
-  )
-  onProcessingError(error: Error, message: SqsMessage) {
-    this.logger.error(
-      `SQS processing error for ${message.MessageId ?? 'unknown-id'}: ${error.message}`,
-    );
+    return payment;
   }
 }

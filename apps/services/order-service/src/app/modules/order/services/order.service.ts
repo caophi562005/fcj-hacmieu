@@ -296,7 +296,7 @@ export class OrderService implements OnModuleInit {
         this.sendQueueMessage(SqsConfiguration.CREATE_ORDER_QUEUE_NAME, {
           processId,
           userId: order.userId,
-          order,
+          items: order.items,
         }),
       ),
     );

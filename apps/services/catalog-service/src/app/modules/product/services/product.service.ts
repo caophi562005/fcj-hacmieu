@@ -24,7 +24,6 @@ export class ProductService {
 
   async findById(data: any) {
     const product = await this.productRepository.findById(data);
-    console.log('Product: ', product);
     if (!product) {
       throw new NotFoundException('Error.ProductNotFound');
     }
