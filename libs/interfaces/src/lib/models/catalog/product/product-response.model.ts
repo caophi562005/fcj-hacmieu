@@ -21,7 +21,7 @@ export const GetManyProductsResponseSchema =
         averageRate: true,
         soldCount: true,
         ratingCount: true,
-      })
+      }),
     ),
   });
 
@@ -33,7 +33,7 @@ export const ProductResponseSchema = ProductSchema.extend({
       price: true,
       stock: true,
       image: true,
-    })
+    }),
   ),
   brand: BrandSchema.pick({
     id: true,
@@ -46,11 +46,11 @@ export const ProductResponseSchema = ProductSchema.extend({
       name: true,
       logo: true,
       parentCategoryId: true,
-    })
+    }),
   ),
 });
 
-export const GetProductResponseSchema = ProductViewSchema;
+export const GetProductResponseSchema = ProductResponseSchema;
 
 export const ValidateItemResultSchema = z.object({
   productId: z.string(),

@@ -44,6 +44,22 @@ export class OrderService implements OnModuleInit {
     );
   }
 
+  // async sendOrderMessage(payload: Record<string, unknown>) {
+  //   try {
+  //     await this.sqsService.send('CREATE_PAYMENT', {
+  //       id: uuidv4(), // ID duy nhất cho message
+  //       body: payload, // Dữ liệu bạn muốn gửi (sẽ tự động stringify JSON)
+  //       delaySeconds: 0,
+  //     });
+  //     return {
+  //       message: 'Message sent successfully',
+  //     };
+  //   } catch (error) {
+  //     console.error('Error sending message:', error);
+  //     throw new InternalServerErrorException('Error.SendOrderMessageFailed');
+  //   }
+  // }
+
   async getManyOrders(
     data: GetManyOrdersRequest,
   ): Promise<GetManyOrdersResponse> {

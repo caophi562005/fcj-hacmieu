@@ -4,6 +4,7 @@ import {
   CreateProductRequest,
   DeleteProductRequest,
   UpdateProductRequest,
+  ValidateProductsRequest,
 } from '@common/interfaces/models/catalog';
 import { Controller, UseInterceptors } from '@nestjs/common';
 import { GrpcMethod } from '@nestjs/microservices';
@@ -37,5 +38,10 @@ export class ProductGrpcController {
   @GrpcMethod(GrpcModuleName.CATALOG.PRODUCT, 'DeleteProduct')
   deleteProduct(data: DeleteProductRequest) {
     return this.productService.delete(data);
+  }
+
+  @GrpcMethod(GrpcModuleName.CATALOG.PRODUCT, 'ValidateProducts')
+  validateProducts(data: ValidateProductsRequest) {
+    return this.productService.validateProducts(data);
   }
 }

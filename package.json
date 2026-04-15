@@ -3,13 +3,14 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "dev": "pnpm nx reset && pnpm nx run-many -t serve --projects=iam-service,catalog-service,promotion-service,customer-bff,admin-bff",
+    "dev": "pnpm nx reset && pnpm nx run-many -t serve --projects=iam-service,catalog-service,order-service,payment-service,customer-bff",
     "build": "pnpm nx reset && pnpm nx run-many -t build --projects=catalog-service",
     "generate-ts-proto": "pnpm nx generate-ts-proto interfaces"
   },
   "private": true,
   "dependencies": {
     "@aws-sdk/client-cognito-identity-provider": "^3.1026.0",
+    "@aws-sdk/client-sqs": "^3.1030.0",
     "@grpc/grpc-js": "^1.14.3",
     "@grpc/proto-loader": "^0.8.0",
     "@keyv/redis": "^5.1.6",
@@ -22,6 +23,7 @@
     "@nestjs/swagger": "^11.2.7",
     "@prisma/adapter-pg": "^7.6.0",
     "@prisma/client": "^7.6.0",
+    "@ssut/nestjs-sqs": "^3.0.1",
     "aws-jwt-verify": "^5.1.1",
     "axios": "^1.6.0",
     "bullmq": "^5.73.0",

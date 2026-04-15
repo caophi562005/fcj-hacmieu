@@ -1,3 +1,8 @@
+import { SqsConfiguration } from '@common/configurations/sqs.config';
+import {
+  PaymentMethodValues,
+  PaymentStatusValues,
+} from '@common/constants/payment.constant';
 import { PrismaErrorValues } from '@common/constants/prisma.constant';
 import { DiscountTypeValues } from '@common/constants/promotion.constant';
 import {
@@ -25,10 +30,12 @@ import {
   BadRequestException,
   Inject,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
   OnModuleInit,
 } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
+import { SqsService } from '@ssut/nestjs-sqs';
 import { firstValueFrom } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 import { CartItemService } from '../../cart/services/cart-item.service';
@@ -48,6 +55,8 @@ export class OrderService implements OnModuleInit {
 
     private readonly orderRepository: OrderRepository,
     private readonly cartItemService: CartItemService,
+
+    private readonly sqsService: SqsService,
   ) {}
 
   onModuleInit() {
@@ -58,6 +67,19 @@ export class OrderService implements OnModuleInit {
       this.promotionClient.getService<PromotionModuleClient>(
         PROMOTION_MODULE_SERVICE_NAME,
       );
+  }
+
+  private async sendQueueMessage<T>(queueName: string, body: T) {
+    try {
+      await this.sqsService.send(queueName, {
+        id: uuidv4(),
+        body,
+        delaySeconds: 0,
+      });
+    } catch (error) {
+      console.error(`Error sending message to ${queueName}:`, error);
+      throw new InternalServerErrorException('Error.SendOrderMessageFailed');
+    }
   }
 
   async list({
@@ -250,35 +272,35 @@ export class OrderService implements OnModuleInit {
         minOrderSubtotal: promotionData.minOrderSubtotal,
         maxDiscount: promotionData.maxDiscount,
       };
-      // this.kafkaService.emit(
-      //   QueueTopics.PROMOTION.CREATE_REDEMPTION,
-      //   redemption,
-      // );
+      await this.sendQueueMessage(
+        SqsConfiguration.CREATE_REDEMPTION_QUEUE_NAME,
+        redemption,
+      );
     }
 
-    // this.kafkaService.emit(QueueTopics.ORDER.CREATE_PAYMENT_BY_ORDER, {
-    //   id: paymentId,
-    //   processId,
-    //   userId,
-    //   code: generateCode('PMC'),
-    //   orderId: createdOrders.map((order) => order.id),
-    //   method: data.paymentMethod,
-    //   status: PaymentStatusValues.PENDING,
-    //   amount: createdOrders.reduce((sum, order) => sum + order.grandTotal, 0),
-    // });
+    await this.sendQueueMessage(SqsConfiguration.CREATE_PAYMENT_QUEUE_NAME, {
+      id: paymentId,
+      processId,
+      userId,
+      code: `PAY-${Date.now()}`,
+      orderId: createdOrders.map((order) => order.id),
+      method:
+        data.paymentMethod ||
+        (PaymentMethodValues.ONLINE as typeof PaymentMethodValues.ONLINE),
+      status: PaymentStatusValues.PENDING,
+      amount: createdOrders.reduce((sum, order) => sum + order.grandTotal, 0),
+    });
 
-    // await Promise.all(
-    //   createdOrders.map((order) =>
-    //     this.kafkaService.emit(QueueTopics.ORDER.CREATE_ORDER, {
-    //       items: order.items,
-    //       userId: order.userId,
-    //       order: {
-    //         ...order,
-    //         shopName: shop.shops.find((s) => s.id === order.shopId)?.name || '',
-    //       },
-    //     }),
-    //   ),
-    // );
+    await Promise.all(
+      createdOrders.map((order) =>
+        this.sendQueueMessage(SqsConfiguration.CREATE_ORDER_QUEUE_NAME, {
+          processId,
+          userId: order.userId,
+          order,
+        }),
+      ),
+    );
+
     return { orders: createdOrders };
   }
 

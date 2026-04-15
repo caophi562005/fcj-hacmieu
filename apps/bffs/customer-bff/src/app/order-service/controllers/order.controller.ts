@@ -76,6 +76,11 @@ export class OrderController {
     });
   }
 
+  // @Post('test-message')
+  // async testSendOrderMessage(@Body() body: Record<string, unknown>) {
+  //   return this.orderService.sendOrderMessage(body);
+  // }
+
   @Put('status')
   async updateStatusOrder(
     @Body() body: UpdateOrderStatusRequestDto,
