@@ -1,4 +1,4 @@
-import { BrandSchema } from '@common/schemas/product';
+import { BrandSchema } from '@common/schemas/catalog';
 import z from 'zod';
 import { PaginationQueryResponseSchema } from '../../common/pagination.model';
 
@@ -19,7 +19,7 @@ export const GetBrandResponseSchema = z.object({
 export const GetManyBrandsResponseSchema = PaginationQueryResponseSchema.extend(
   {
     brands: z.array(GetBrandResponseSchema),
-  }
+  },
 );
 
 export type GetManyBrandsResponse = z.infer<typeof GetManyBrandsResponseSchema>;

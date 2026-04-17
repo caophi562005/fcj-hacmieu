@@ -5,8 +5,11 @@
 
 import { AppConfiguration } from '@common/configurations/app.config';
 import { BaseConfiguration } from '@common/configurations/base.config';
+import { GrpcConfiguration } from '@common/configurations/grpc.config';
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { Transport } from '@nestjs/microservices';
+import { join } from 'path';
 import { AppModule } from './app/app.module';
 
 async function bootstrap() {
@@ -18,8 +21,17 @@ async function bootstrap() {
   app.setGlobalPrefix(globalPrefix);
   const port = AppConfiguration.UTILITY_SERVICE_PORT || 3007;
 
-  // app.connectMicroservice(GrpcServerOptions(GrpcService.PRODUCT_SERVICE));
-  // await app.startAllMicroservices();
+  app.connectMicroservice({
+    transport: Transport.GRPC,
+    options: {
+      url: GrpcConfiguration.UTILITY_SERVICE_GRPC_URL,
+      package: ['UTILITY_SERVICE'],
+      protoPath: [
+        join(__dirname, `${GrpcConfiguration.PROTO_PATH}utility.proto`),
+      ],
+    },
+  });
+  await app.startAllMicroservices();
 
   await app.listen(port);
   Logger.log(

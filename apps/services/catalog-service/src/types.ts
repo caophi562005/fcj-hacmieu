@@ -1,7 +1,7 @@
 import {
   AttributesProduct as AttributesProductType,
   VariantsProduct as VariantsProductType,
-} from '@common/schemas/product';
+} from '@common/schemas/catalog';
 
 declare global {
   namespace PrismaJson {

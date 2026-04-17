@@ -20,19 +20,11 @@ export class PaymentConsumerService {
     const body: CreatePaymentRequest = message.Body
       ? JSON.parse(message.Body)
       : null;
-    if (!body) {
-      this.logger.error(
-        `Received invalid message from ${SqsConfiguration.CREATE_PAYMENT_QUEUE_NAME}: ${message.MessageId ?? 'unknown-id'}`,
-      );
-      return;
-    }
 
-    const payment = await this.paymentService.create(body);
+    this.paymentService.create(body);
 
     this.logger.log(
       `Received message from ${SqsConfiguration.CREATE_PAYMENT_QUEUE_NAME}: ${message.MessageId ?? 'unknown-id'}`,
     );
-
-    return payment;
   }
 }

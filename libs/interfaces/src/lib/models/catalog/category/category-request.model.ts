@@ -1,4 +1,4 @@
-import { CategorySchema } from '@common/schemas/product';
+import { CategorySchema } from '@common/schemas/catalog';
 import z from 'zod';
 
 export const GetManyCategoriesRequestSchema = z

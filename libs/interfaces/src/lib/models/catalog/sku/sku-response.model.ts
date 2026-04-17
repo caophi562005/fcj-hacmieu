@@ -1,4 +1,4 @@
-import { SKUSchema } from '@common/schemas/product';
+import { SKUSchema } from '@common/schemas/catalog';
 import z from 'zod';
 
 export const SKUResponseSchema = SKUSchema;

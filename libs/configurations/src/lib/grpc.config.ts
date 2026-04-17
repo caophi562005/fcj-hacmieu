@@ -16,6 +16,7 @@ export const GrpcConfigurationSchema = z.object({
   PROMOTION_SERVICE_GRPC_URL: grpcUrlSchema,
   ORDER_SERVICE_GRPC_URL: grpcUrlSchema,
   PAYMENT_SERVICE_GRPC_URL: grpcUrlSchema,
+  UTILITY_SERVICE_GRPC_URL: grpcUrlSchema,
 });
 
 const configServer = GrpcConfigurationSchema.safeParse(process.env);

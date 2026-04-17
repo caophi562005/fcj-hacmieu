@@ -1,4 +1,4 @@
-import { CartItemSchema } from '@common/schemas/cart';
+import { CartItemSchema } from '@common/schemas/order';
 import z from 'zod';
 import { PaginationQueryResponseSchema } from '../common/pagination.model';
 
@@ -15,7 +15,7 @@ export const GetManyCartItemsResponseSchema =
       z.object({
         shopId: z.uuid(),
         cartItems: z.array(CartItemResponseSchema),
-      })
+      }),
     ),
   });
 

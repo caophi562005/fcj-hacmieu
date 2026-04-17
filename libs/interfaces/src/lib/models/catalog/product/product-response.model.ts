@@ -4,7 +4,7 @@ import {
   ProductSchema,
   ProductViewSchema,
   SKUSchema,
-} from '@common/schemas/product';
+} from '@common/schemas/catalog';
 import z from 'zod';
 import { PaginationQueryResponseSchema } from '../../common/pagination.model';
 

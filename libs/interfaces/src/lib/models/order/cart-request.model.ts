@@ -1,4 +1,4 @@
-import { CartItemSchema } from '@common/schemas/cart';
+import { CartItemSchema } from '@common/schemas/order';
 import z from 'zod';
 import { PaginationQueryRequestSchema } from '../common/pagination.model';
 

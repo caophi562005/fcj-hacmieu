@@ -6,7 +6,7 @@ import {
   UpdateCartItemRequest,
   ValidateCartItemsRequest,
 } from '@common/interfaces/models/order';
-import { CartShopGroup } from '@common/schemas/cart';
+import { CartShopGroup } from '@common/schemas/order';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 

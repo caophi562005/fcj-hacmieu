@@ -1,0 +1,251 @@
+syntax = "proto3";
+
+package UTILITY_SERVICE;
+
+//==================== NOTIFICATION SERVICE ====================//
+service NotificationService {
+  rpc GetManyNotifications(GetManyNotificationsRequest) returns (GetManyNotificationsResponse);
+  rpc GetNotification(GetNotificationRequest) returns (NotificationResponse);
+  rpc CreateNotification(CreateNotificationRequest) returns (NotificationResponse);
+  rpc ReadNotification(ReadNotificationRequest) returns (ReadNotificationResponse);
+  rpc DeleteNotification(DeleteNotificationRequest) returns (NotificationResponse);
+}
+
+message GetManyNotificationsRequest {
+  optional string processId = 1;
+  int32 page = 2;
+  int32 limit = 3;
+  string userId = 4;
+  optional string type = 5;
+}
+
+message GetManyNotificationsResponse {
+  int32 page = 1;
+  int32 limit = 2;
+  int32 totalItems = 3;
+  int32 totalPages = 4;
+  repeated NotificationResponse notifications = 5;
+}
+
+message GetNotificationRequest {
+  optional string processId = 1;
+  string id = 2;
+  string userId = 3;
+}
+
+message CreateNotificationRequest {
+  optional string processId = 1;
+  string userId = 2;
+  string type = 3;
+  string title = 4;
+  string description = 5;
+  optional string link = 6;
+  optional string image = 7;
+  optional string metadata = 8;
+  optional string createdById = 9;
+}
+
+message ReadNotificationRequest {
+  optional string processId = 1;
+  repeated string id = 2;
+  optional string updatedById = 3;
+}
+
+message ReadNotificationResponse {
+  int32 count = 1;
+}
+
+message DeleteNotificationRequest {
+  optional string processId = 1;
+  string id = 2;
+  optional string deletedById = 3;
+}
+
+message NotificationResponse {
+  string id = 1;
+  string userId = 2;
+  string type = 3;
+  string title = 4;
+  string description = 5;
+  optional string link = 6;
+  optional string image = 7;
+  bool isRead = 8;
+  optional string metadata = 9;
+  optional string createdById = 10;
+  optional string updatedById = 11;
+  optional string deletedById = 12;
+  optional string deletedAt = 13;
+  string createdAt = 14;
+  string updatedAt = 15;
+}
+
+//==================== MEDIA SERVICE ====================//
+service MediaService {
+  rpc CreatePresignedUrl(CreatePresignedUrlRequest) returns (CreatePresignedUrlResponse);
+}
+
+message CreatePresignedUrlRequest {
+  optional string processId = 1;
+  string userId = 2;
+  string fileName = 3;
+  string fileType = 4;
+  int64 fileSize = 5;
+}
+
+message CreatePresignedUrlResponse {
+  string uploadUrl = 1;
+  string downloadUrl = 2;
+  int32 expiresIn = 3;
+}
+
+//==================== REPORT SERVICE ====================//
+service ReportService {
+  rpc GetManyReports(GetManyReportsRequest) returns (GetManyReportsResponse);
+  rpc GetReport(GetReportRequest) returns (ReportResponse);
+  rpc CreateReport(CreateReportRequest) returns (ReportResponse);
+  rpc UpdateReport(UpdateReportRequest) returns (ReportResponse);
+  rpc ResolveReport(ResolveReportRequest) returns (ReportResponse);
+  rpc DeleteReport(DeleteReportRequest) returns (ReportResponse);
+}
+
+message GetManyReportsRequest {
+  optional string processId = 1;
+  int32 page = 2;
+  int32 limit = 3;
+  optional string userId = 4;
+  optional string status = 5;
+}
+
+message GetManyReportsResponse {
+  int32 page = 1;
+  int32 limit = 2;
+  int32 totalItems = 3;
+  int32 totalPages = 4;
+  repeated ReportResponse reports = 5;
+}
+
+message GetReportRequest {
+  optional string processId = 1;
+  string id = 2;
+}
+
+message CreateReportRequest {
+  optional string processId = 1;
+  string reporterId = 2;
+  string targetType = 3;
+  string targetId = 4;
+  string category = 5;
+  string title = 6;
+  string description = 7;
+  repeated string media = 8;
+}
+
+message UpdateReportRequest {
+  optional string processId = 1;
+  string id = 2;
+  string status = 3;
+  optional string assigneeAdminId = 4;
+  optional string action = 5;
+}
+
+message ResolveReportRequest {
+  optional string processId = 1;
+  string id = 2;
+  optional string action = 3;
+}
+
+message DeleteReportRequest {
+  optional string processId = 1;
+  string id = 2;
+}
+
+message ReportResponse {
+  string id = 1;
+  string reporterId = 2;
+  string targetType = 3;
+  string targetId = 4;
+  string category = 5;
+  string title = 6;
+  string description = 7;
+  string status = 8;
+  optional string assigneeAdminId = 9;
+  optional string closedAt = 10;
+  repeated string media = 11;
+  optional string action = 12;
+  optional string deletedAt = 13;
+  string createdAt = 14;
+  string updatedAt = 15;
+}
+
+//==================== REVIEW SERVICE ====================//
+service ReviewService {
+  rpc GetManyReviews(GetManyReviewsRequest) returns (GetManyReviewsResponse);
+  rpc GetReview(GetReviewRequest) returns (ReviewResponse);
+  rpc CreateReview(CreateReviewRequest) returns (ReviewResponse);
+  rpc UpdateReview(UpdateReviewRequest) returns (ReviewResponse);
+  rpc DeleteReview(DeleteReviewRequest) returns (ReviewResponse);
+}
+
+message GetManyReviewsRequest {
+  optional string processId = 1;
+  int32 page = 2;
+  int32 limit = 3;
+  optional string productId = 4;
+  optional string sellerId = 5;
+  optional string userId = 6;
+}
+
+message GetManyReviewsResponse {
+  int32 page = 1;
+  int32 limit = 2;
+  int32 totalItems = 3;
+  int32 totalPages = 4;
+  repeated ReviewResponse reviews = 5;
+}
+
+message GetReviewRequest {
+  optional string processId = 1;
+  string id = 2;
+}
+
+message CreateReviewRequest {
+  optional string processId = 1;
+  string userId = 2;
+  string sellerId = 3;
+  string productId = 4;
+  string orderId = 5;
+  string orderItemId = 6;
+  int32 rating = 7;
+  optional string content = 8;
+  repeated string mediaUrls = 9;
+}
+
+message UpdateReviewRequest {
+  optional string processId = 1;
+  string id = 2;
+  string userId = 3;
+  optional string content = 4;
+  optional int32 rating = 5;
+  repeated string mediaUrls = 6;
+}
+
+message DeleteReviewRequest {
+  optional string processId = 1;
+  string id = 2;
+  string userId = 3;
+}
+
+message ReviewResponse {
+  string id = 1;
+  string userId = 2;
+  string sellerId = 3;
+  string productId = 4;
+  string orderId = 5;
+  string orderItemId = 6;
+  int32 rating = 7;
+  optional string content = 8;
+  repeated string mediaUrls = 9;
+  optional string deletedAt = 10;
+  string createdAt = 11;
+  string updatedAt = 12;
+}

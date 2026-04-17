@@ -53,7 +53,7 @@ export class CartController {
     @UserData('userId') userId: string,
   ) {
     return this.orderService.addCartItem({
-      ...body,
+      ...(body as any),
       processId,
       userId,
     });

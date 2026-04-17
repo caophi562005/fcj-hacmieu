@@ -5,6 +5,7 @@ export enum GrpcService {
   PROMOTION_SERVICE = 'PROMOTION_SERVICE',
   ORDER_SERVICE = 'ORDER_SERVICE',
   PAYMENT_SERVICE = 'PAYMENT_SERVICE',
+  UTILITY_SERVICE = 'UTILITY_SERVICE',
 }
 
 export const GrpcModuleName = {
@@ -33,7 +34,10 @@ export const GrpcModuleName = {
   },
 
   UTILITY: {
-    NOTIFICATION: 'NotificationModule',
+    NOTIFICATION: 'NotificationService',
+    MEDIA: 'MediaService',
+    REPORT: 'ReportService',
+    REVIEW: 'ReviewService',
   },
 
   IAM: {

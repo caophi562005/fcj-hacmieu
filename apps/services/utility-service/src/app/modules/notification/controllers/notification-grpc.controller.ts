@@ -3,8 +3,10 @@ import { GrpcLoggingInterceptor } from '@common/interceptors/grpcLogging.interce
 import {
   CreateNotificationRequest,
   DeleteNotificationRequest,
+  GetManyNotificationsRequest,
+  GetNotificationRequest,
   ReadNotificationRequest,
-} from '@common/interfaces/models/notification';
+} from '@common/interfaces/models/utility';
 import { Controller, UseInterceptors } from '@nestjs/common';
 import { GrpcMethod } from '@nestjs/microservices';
 import { NotificationService } from '../services/notification.service';
@@ -13,6 +15,16 @@ import { NotificationService } from '../services/notification.service';
 @UseInterceptors(GrpcLoggingInterceptor)
 export class NotificationGrpcController {
   constructor(private readonly notificationService: NotificationService) {}
+
+  @GrpcMethod(GrpcModuleName.UTILITY.NOTIFICATION, 'GetManyNotifications')
+  getManyNotifications(data: GetManyNotificationsRequest) {
+    return this.notificationService.list(data);
+  }
+
+  @GrpcMethod(GrpcModuleName.UTILITY.NOTIFICATION, 'GetNotification')
+  getNotification(data: GetNotificationRequest) {
+    return this.notificationService.findById(data);
+  }
 
   @GrpcMethod(GrpcModuleName.UTILITY.NOTIFICATION, 'CreateNotification')
   createNotification(data: CreateNotificationRequest) {

@@ -84,7 +84,6 @@ model Product {
     /// [Variants]
     variants     Json // Thuộc tính như màu sắc kích thước
     skus         SKU[]
-    reviewIds    String[]
 
     shopId String
 

@@ -1,4 +1,4 @@
-import { Metadata as MetadataType } from '@common/schemas/notification';
+import { Metadata as MetadataType } from '@common/schemas/utility';
 
 declare global {
   namespace PrismaJson {

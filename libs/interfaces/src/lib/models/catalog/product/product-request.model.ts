@@ -7,7 +7,7 @@ import {
   AttributesProductSchema,
   ProductSchema,
   SKUSchema,
-} from '@common/schemas/product';
+} from '@common/schemas/catalog';
 import { generateSKUs } from '@common/utils/generate-skus.util';
 import z from 'zod';
 
@@ -120,7 +120,7 @@ export const UpdateProductRequestSchema = CreateProductRequestSchema.safeExtend(
     id: z.uuid(),
     soldCount: z.number().optional(),
     isApproved: z.boolean().optional(),
-  }
+  },
 ).strict();
 
 export const DeleteProductRequestSchema = ProductSchema.pick({
@@ -140,7 +140,7 @@ export const ValidateProductsRequestSchema = z.object({
       skuId: z.uuid(),
       quantity: z.number(),
       cartItemId: z.uuid(),
-    })
+    }),
   ),
   processId: z.uuid().optional(),
 });

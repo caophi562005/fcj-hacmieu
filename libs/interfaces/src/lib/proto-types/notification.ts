@@ -10,6 +10,31 @@ import { Observable } from "rxjs";
 
 export const protobufPackage = "NOTIFICATION_SERVICE";
 
+/** ==================== GetManyNotificationsRequest ====================// */
+export interface GetManyNotificationsRequest {
+  processId?: string | undefined;
+  page: number;
+  limit: number;
+  userId: string;
+  type?: string | undefined;
+}
+
+/** ==================== GetManyNotificationsResponse ====================// */
+export interface GetManyNotificationsResponse {
+  page: number;
+  limit: number;
+  totalItems: number;
+  totalPages: number;
+  notifications: NotificationResponse[];
+}
+
+/** ==================== GetNotificationRequest ====================// */
+export interface GetNotificationRequest {
+  processId?: string | undefined;
+  id: string;
+  userId: string;
+}
+
 /** ==================== Metadata ====================// */
 export interface Metadata {
   orderId?: string | undefined;
@@ -65,6 +90,10 @@ export interface NotificationResponse {
 export const NOTIFICATION_SERVICE_PACKAGE_NAME = "NOTIFICATION_SERVICE";
 
 export interface NotificationServiceClient {
+  getManyNotifications(request: GetManyNotificationsRequest): Observable<GetManyNotificationsResponse>;
+
+  getNotification(request: GetNotificationRequest): Observable<NotificationResponse>;
+
   createNotification(request: CreateNotificationRequest): Observable<NotificationResponse>;
 
   readNotification(request: ReadNotificationRequest): Observable<NotificationResponse>;
@@ -73,6 +102,14 @@ export interface NotificationServiceClient {
 }
 
 export interface NotificationServiceController {
+  getManyNotifications(
+    request: GetManyNotificationsRequest,
+  ): Promise<GetManyNotificationsResponse> | Observable<GetManyNotificationsResponse> | GetManyNotificationsResponse;
+
+  getNotification(
+    request: GetNotificationRequest,
+  ): Promise<NotificationResponse> | Observable<NotificationResponse> | NotificationResponse;
+
   createNotification(
     request: CreateNotificationRequest,
   ): Promise<NotificationResponse> | Observable<NotificationResponse> | NotificationResponse;
@@ -88,7 +125,13 @@ export interface NotificationServiceController {
 
 export function NotificationServiceControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = ["createNotification", "readNotification", "deleteNotification"];
+    const grpcMethods: string[] = [
+      "getManyNotifications",
+      "getNotification",
+      "createNotification",
+      "readNotification",
+      "deleteNotification",
+    ];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
       GrpcMethod("NotificationService", method)(constructor.prototype[method], method, descriptor);

@@ -48,3 +48,112 @@ model Notification {
     @@index([userId])
     @@index([deletedAt])
 }
+
+enum ReportTargetType {
+    USER
+    SELLER
+    PRODUCT
+    ORDER
+    MESSAGE
+    REVIEW
+}
+
+enum ReportCategory {
+    SCAM
+    FRAUD
+    FAKE
+    HARASSMENT
+    SPAM
+    OTHER
+}
+
+enum ReportStatus {
+    PENDING
+    REVIEWING
+    RESOLVED
+    REJECTED
+}
+
+model Report {
+    id              String           @id @default(uuid())
+    reporterId      String
+    targetType      ReportTargetType
+    targetId        String
+    category        ReportCategory
+    title           String           @db.VarChar(200)
+    description     String           @db.VarChar(2000)
+    status          ReportStatus     @default(PENDING)
+    assigneeAdminId String?
+    closedAt        DateTime?
+
+    media  String[] @default([])
+    action String?  @db.VarChar(1000)
+
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    deletedAt DateTime?
+
+    @@index([status, createdAt(sort: Desc)])
+    @@index([targetType, targetId])
+    @@index([reporterId, createdAt(sort: Desc)])
+    @@index([assigneeAdminId, status])
+    @@index([deletedAt])
+}
+
+model Review {
+    id          String   @id @default(uuid())
+    userId      String
+    sellerId    String
+    productId   String
+    orderId     String
+    orderItemId String
+    rating      Int
+    content     String?  @db.VarChar(1000)
+    mediaUrls   String[] @default([])
+
+    reply ReviewReply?
+
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    deletedAt DateTime?
+
+    @@unique([userId, orderItemId])
+    @@index([productId, createdAt(sort: Desc)])
+    @@index([sellerId, createdAt(sort: Desc)])
+    @@index([userId, createdAt(sort: Desc)])
+    @@index([orderId])
+    @@index([deletedAt])
+}
+
+model ReviewReply {
+    id       String @id @default(uuid())
+    reviewId String @unique
+    sellerId String
+    content  String @db.VarChar(1000)
+
+    review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    deletedAt DateTime?
+
+    @@index([sellerId, createdAt(sort: Desc)])
+    @@index([deletedAt])
+}
+
+model RatingAggregate {
+    id        String @id @default(uuid())
+    productId String @unique
+
+    averageRating Float @default(0)
+    totalReviews  Int   @default(0)
+    star1Count    Int   @default(0)
+    star2Count    Int   @default(0)
+    star3Count    Int   @default(0)
+    star4Count    Int   @default(0)
+    star5Count    Int   @default(0)
+
+    updatedAt DateTime @updatedAt
+
+    @@index([productId])
+}

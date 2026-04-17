@@ -1,4 +1,4 @@
-import { AttributeSchema } from '@common/schemas/product';
+import { AttributeSchema } from '@common/schemas/catalog';
 import z from 'zod';
 import { PaginationQueryRequestSchema } from '../../common/pagination.model';
 

@@ -122,7 +122,6 @@ message ProductResponse {
   string brandId = 11;
   repeated string images = 12;
   repeated Variant variants = 13;
-  repeated string reviewIds = 14;
   string shopId = 15;
   int32 likeCount = 16;
   int32 ratingCount = 17;

@@ -1,4 +1,4 @@
-import { SKUSchema } from '@common/schemas/product';
+import { SKUSchema } from '@common/schemas/catalog';
 import z from 'zod';
 
 export const GetSKURequestSchema = SKUSchema.pick({
@@ -15,7 +15,7 @@ export const IncreaseStockRequestSchema = z.object({
       skuId: z.uuid(),
       quantity: z.number().min(1),
       productId: z.uuid(),
-    })
+    }),
   ),
 });
 

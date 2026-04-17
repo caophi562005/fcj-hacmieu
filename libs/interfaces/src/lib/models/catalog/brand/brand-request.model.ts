@@ -1,4 +1,4 @@
-import { BrandSchema } from '@common/schemas/product';
+import { BrandSchema } from '@common/schemas/catalog';
 import z from 'zod';
 import { PaginationQueryRequestSchema } from '../../common/pagination.model';
 
