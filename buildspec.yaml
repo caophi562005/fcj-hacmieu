@@ -1,0 +1,192 @@
+version: 0.2
+
+env:
+  variables:
+    AWS_REGION: 'ap-southeast-1'
+    ECR_REGISTRY: 'public.ecr.aws/h5u5b6t3/hacmieu'
+    KEEP_COUNT: '5'
+    PNPM_VERSION: '9'
+    NODE_VERSION: '22'
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 22
+    commands:
+      - echo "=== Installing pnpm ==="
+      - npm install -g pnpm@$PNPM_VERSION
+      - pnpm --version
+
+      # Restore pnpm store cache (CodeBuild cache tự động qua cache config)
+      - echo "=== Installing dependencies ==="
+      - git config --global url."https://github.com/".insteadOf git://github.com/
+      - pnpm install --frozen-lockfile
+
+  pre_build:
+    commands:
+      - echo "=== Computing affected services ==="
+      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - IMAGE_TAG=${COMMIT_HASH:-latest}
+
+      # Xác định BASE commit để so sánh affected
+      - |
+        if git rev-parse HEAD^ >/dev/null 2>&1; then
+          BASE="HEAD^"
+        else
+          BASE="HEAD"
+        fi
+        HEAD="HEAD"
+        echo "BASE=$BASE HEAD=$HEAD"
+
+      # Lấy danh sách file thay đổi (bỏ qua package.json và pnpm-lock.yaml)
+      - |
+        CHANGED_FILES=$(git diff --name-only --diff-filter=ACMRT "$BASE" "$HEAD" \
+          | grep -Ev '^(package\.json|pnpm-lock\.yaml)$' \
+          | paste -sd, - || true)
+        echo "Changed files: $CHANGED_FILES"
+
+      # Dùng nx affected để lấy danh sách app bị ảnh hưởng
+      - |
+        if [ -z "$CHANGED_FILES" ]; then
+          echo "No relevant file changes detected."
+          AFFECTED_APPS=""
+        else
+          AFFECTED_APPS=$(pnpm nx show projects --affected --files="$CHANGED_FILES" --type=app 2>/dev/null || true)
+        fi
+        echo "Affected apps: $AFFECTED_APPS"
+
+      # Mapping: app-name -> dockerfile|container-name
+      # Cập nhật danh sách này khi thêm/bớt service
+      - |
+        declare -A DOCKERFILE_MAP
+        DOCKERFILE_MAP["admin-bff"]="apps/bffs/admin-bff/Dockerfile|admin-bff-container"
+        DOCKERFILE_MAP["customer-bff"]="apps/bffs/customer-bff/Dockerfile|customer-bff-container"
+        DOCKERFILE_MAP["catalog-service"]="apps/services/catalog-service/Dockerfile|catalog-service-container"
+        DOCKERFILE_MAP["iam-service"]="apps/services/iam-service/Dockerfile|iam-service-container"
+        DOCKERFILE_MAP["order-service"]="apps/services/order-service/Dockerfile|order-service-container"
+        DOCKERFILE_MAP["payment-service"]="apps/services/payment-service/Dockerfile|payment-service-container"
+        DOCKERFILE_MAP["promotion-service"]="apps/services/promotion-service/Dockerfile|promotion-service-container"
+        DOCKERFILE_MAP["shop-service"]="apps/services/shop-service/Dockerfile|shop-service-container"
+        DOCKERFILE_MAP["utility-service"]="apps/services/utility-service/Dockerfile|utility-service-container"
+
+        # Ghi ra file để dùng ở phase build/post_build
+        echo "$AFFECTED_APPS" > /tmp/affected_apps.txt
+        declare -p DOCKERFILE_MAP > /tmp/dockerfile_map.sh
+        echo "IMAGE_TAG=$IMAGE_TAG" > /tmp/build_env.sh
+        echo "ECR_REGISTRY=$ECR_REGISTRY" >> /tmp/build_env.sh
+        echo "AWS_REGION=$AWS_REGION" >> /tmp/build_env.sh
+        echo "KEEP_COUNT=$KEEP_COUNT" >> /tmp/build_env.sh
+
+      # Auth ECR bằng IAM Role
+      - echo "=== Logging in to Amazon ECR ==="
+      - aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/h5u5b6t3
+
+  build:
+    commands:
+      - source /tmp/build_env.sh
+      - source /tmp/dockerfile_map.sh
+      - AFFECTED_APPS=$(cat /tmp/affected_apps.txt)
+
+      - |
+        if [ -z "$AFFECTED_APPS" ]; then
+          echo "ℹ️ No affected apps to build. Skipping."
+          exit 0
+        fi
+
+      - echo "=== Building affected services ==="
+      - |
+        IMAGE_DEFINITIONS="["
+        FIRST=true
+
+        for APP in $AFFECTED_APPS; do
+          CONFIG="${DOCKERFILE_MAP[$APP]:-}"
+          if [ -z "$CONFIG" ]; then
+            echo "⚠️ No Dockerfile mapping for '$APP', skipping."
+            continue
+          fi
+
+          DOCKERFILE=$(echo $CONFIG | cut -d'|' -f1)
+          CONTAINER_NAME=$(echo $CONFIG | cut -d'|' -f2)
+          REPOSITORY_URI=$ECR_REGISTRY/$APP
+
+          echo "--- Building $APP from $DOCKERFILE ---"
+
+          # Repo đã tạo sẵn trên ECR Public, chỉ kiểm tra
+          aws ecr-public describe-repositories --repository-names hacmieu/$APP --region us-east-1 2>/dev/null \
+            && echo "✅ ECR repo ready: hacmieu/$APP" \
+            || echo "⚠️ Repo hacmieu/$APP not found, please create it manually on ECR Public"
+
+          # Cleanup: giữ $KEEP_COUNT images mới nhất (ECR Public dùng ecr-public)
+          TOTAL=$(aws ecr-public describe-images \
+            --repository-name hacmieu/$APP \
+            --region us-east-1 \
+            --query 'length(imageDetails[?imageTags!=null])' \
+            --output text 2>/dev/null || echo "0")
+
+          if [ "$TOTAL" -gt "$KEEP_COUNT" ]; then
+            DELETE_COUNT=$((TOTAL - KEEP_COUNT))
+            OLD_DIGESTS=$(aws ecr-public describe-images \
+              --repository-name hacmieu/$APP \
+              --region us-east-1 \
+              --query "sort_by(imageDetails, &imagePushedAt)[:$DELETE_COUNT].imageDigest" \
+              --output json | jq '[.[] | {imageDigest: .}]')
+            if [ "$OLD_DIGESTS" != "[]" ] && [ -n "$OLD_DIGESTS" ]; then
+              aws ecr-public batch-delete-image \
+                --repository-name hacmieu/$APP \
+                --region us-east-1 \
+                --image-ids "$OLD_DIGESTS"
+              echo "✅ Cleaned up $DELETE_COUNT old images for $APP"
+            fi
+          fi
+
+          # Build với layer cache từ ECR
+          docker build \
+            --cache-from $REPOSITORY_URI:buildcache \
+            --build-arg BUILDKIT_INLINE_CACHE=1 \
+            -t $APP:latest \
+            -f $DOCKERFILE .
+
+          docker tag $APP:latest $REPOSITORY_URI:latest
+          docker tag $APP:latest $REPOSITORY_URI:$IMAGE_TAG
+          docker tag $APP:latest $REPOSITORY_URI:buildcache
+
+          # Push
+          docker push $REPOSITORY_URI:latest
+          docker push $REPOSITORY_URI:$IMAGE_TAG
+          docker push $REPOSITORY_URI:buildcache
+          echo "✅ Pushed $APP:$IMAGE_TAG"
+
+          # Tích lũy imagedefinitions
+          if [ "$FIRST" = true ]; then
+            FIRST=false
+          else
+            IMAGE_DEFINITIONS="$IMAGE_DEFINITIONS,"
+          fi
+          IMAGE_DEFINITIONS="$IMAGE_DEFINITIONS{\"name\":\"$CONTAINER_NAME\",\"imageUri\":\"$REPOSITORY_URI:$IMAGE_TAG\"}"
+        done
+
+        IMAGE_DEFINITIONS="$IMAGE_DEFINITIONS]"
+        echo "$IMAGE_DEFINITIONS" > imagedefinitions.json
+        echo "=== imagedefinitions.json ==="
+        cat imagedefinitions.json
+
+  post_build:
+    commands:
+      - echo "✅ Build completed on $(date)"
+      - |
+        if [ -f imagedefinitions.json ]; then
+          echo "=== Final imagedefinitions.json ==="
+          cat imagedefinitions.json
+        else
+          echo '[{"name":"no-op","imageUri":"no-op"}]' > imagedefinitions.json
+          echo "ℹ️ No services were built."
+        fi
+
+cache:
+  paths:
+    - '/root/.local/share/pnpm/store/**/*'
+    - 'node_modules/**/*'
+
+artifacts:
+  files:
+    - imagedefinitions.json

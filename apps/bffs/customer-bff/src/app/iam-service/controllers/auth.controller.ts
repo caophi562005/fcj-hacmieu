@@ -1,7 +1,13 @@
 import { IsPublic } from '@common/decorators/auth.decorator';
 import { ProcessId } from '@common/decorators/process-id.decorator';
+import {
+  ChangePasswordRequestDto,
+  ExchangeTokenRequestDto,
+  ExchangeTokenResponseDto,
+  MessageResponseDto,
+} from '@common/interfaces/dtos/iam';
 import { Body, Controller, Headers, Post } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { AuthService } from '../services/auth.service';
 
 @Controller('iam/auth')
@@ -10,15 +16,15 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('exchange')
-  // @ApiOkResponse({ type: LoginPostmanResponseDto })
   @IsPublic()
-  login(@Body() body: { code: string }, @ProcessId() processId: string) {
+  @ApiOkResponse({ type: ExchangeTokenResponseDto })
+  login(@Body() body: ExchangeTokenRequestDto, @ProcessId() processId: string) {
     return this.authService.exchangeCode({ ...body, processId });
   }
 
   @Post('refresh')
-  // @ApiOkResponse({ type: LoginPostmanResponseDto })
   @IsPublic()
+  @ApiOkResponse({ type: ExchangeTokenResponseDto })
   refreshSession(
     @ProcessId() processId: string,
     @Headers('x-refresh-token') refreshToken: string,
@@ -27,20 +33,20 @@ export class AuthController {
   }
 
   @Post('logout')
+  @ApiOkResponse({ type: MessageResponseDto })
   logout(
     @Headers('x-refresh-token') refreshToken: string,
     @ProcessId() processId: string,
+    @Headers('authorization') authorization: string,
   ) {
-    return this.authService.logout({ refreshToken, processId });
+    const accessToken = authorization.split(' ')[1];
+    return this.authService.logout({ refreshToken, accessToken, processId });
   }
 
   @Post('change-password')
+  @ApiOkResponse({ type: MessageResponseDto })
   changePassword(
-    @Body()
-    body: {
-      previousPassword: string;
-      proposedPassword: string;
-    },
+    @Body() body: ChangePasswordRequestDto,
     @Headers('authorization') authorization: string,
     @ProcessId() processId: string,
   ) {
@@ -49,6 +55,7 @@ export class AuthController {
   }
 
   @Post('validate')
+  @ApiOkResponse({ type: ExchangeTokenResponseDto })
   validateToken(
     @Headers('authorization') authorization: string,
     @ProcessId() processId: string,

@@ -8,7 +8,7 @@ import {
   GetPromotionResponseDto,
   PromotionResponseDto,
 } from '@common/interfaces/dtos/promotion';
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { PromotionService } from '../services/promotion.service';
 
@@ -31,6 +31,22 @@ export class PromotionController {
     });
   }
 
+  @Get('check')
+  @ApiOkResponse({
+    type: PromotionResponseDto,
+  })
+  async checkPromotion(
+    @Query() querries: CheckPromotionRequestDto,
+    @ProcessId() processId: string,
+    @UserData('userId') userId: string,
+  ) {
+    return this.promotionService.checkPromotion({
+      ...querries,
+      processId,
+      userId,
+    });
+  }
+
   @Get(':id')
   @ApiOkResponse({
     type: GetPromotionResponseDto,
@@ -42,22 +58,6 @@ export class PromotionController {
     return this.promotionService.getPromotion({
       ...params,
       processId,
-    });
-  }
-
-  @Post('check')
-  @ApiOkResponse({
-    type: PromotionResponseDto,
-  })
-  async checkPromotion(
-    @Body() body: CheckPromotionRequestDto,
-    @ProcessId() processId: string,
-    @UserData('userId') userId: string,
-  ) {
-    return this.promotionService.checkPromotion({
-      ...body,
-      processId,
-      userId,
     });
   }
 }

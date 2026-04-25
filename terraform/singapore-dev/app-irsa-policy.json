@@ -1,0 +1,33 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "SqsAccess",
+      "Effect": "Allow",
+      "Action": [
+        "sqs:SendMessage",
+        "sqs:ReceiveMessage",
+        "sqs:DeleteMessage",
+        "sqs:ChangeMessageVisibility",
+        "sqs:GetQueueAttributes",
+        "sqs:GetQueueUrl"
+      ],
+      "Resource": [
+        "arn:aws:sqs:ap-southeast-1:491333778094:send_notification_hacmieu",
+        "arn:aws:sqs:ap-southeast-1:491333778094:create_payment_hacmieu",
+        "arn:aws:sqs:ap-southeast-1:491333778094:create_redemption_hacmieu",
+        "arn:aws:sqs:ap-southeast-1:491333778094:create_order_hacmieu",
+        "arn:aws:sqs:ap-southeast-1:491333778094:delete_cart_item_hacmieu"
+      ]
+    },
+    {
+      "Sid": "S3Objects",
+      "Effect": "Allow",
+      "Action": ["s3:GetObject", "s3:PutObject"],
+      "Resource": [
+        "arn:aws:s3:::your-image-bucket/*",
+        "arn:aws:s3:::your-video-bucket/*"
+      ]
+    }
+  ]
+}

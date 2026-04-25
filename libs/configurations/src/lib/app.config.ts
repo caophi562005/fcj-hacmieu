@@ -1,16 +1,16 @@
 import z from 'zod';
 
 export const AppConfigurationSchema = z.object({
-  CUSTOMER_BFF_PORT: z.coerce.number(),
+  CUSTOMER_BFF_PORT: z.coerce.number().default(3100),
   // SELLER_BFF_PORT: z.coerce.number(),
-  ADMIN_BFF_PORT: z.coerce.number(),
-  CATALOG_SERVICE_PORT: z.coerce.number(),
-  ORDER_SERVICE_PORT: z.coerce.number(),
-  PROMOTION_SERVICE_PORT: z.coerce.number(),
-  PAYMENT_SERVICE_PORT: z.coerce.number(),
-  UTILITY_SERVICE_PORT: z.coerce.number(),
-  IAM_SERVICE_PORT: z.coerce.number(),
-  SHOP_SERVICE_PORT: z.coerce.number(),
+  ADMIN_BFF_PORT: z.coerce.number().default(3300),
+  CATALOG_SERVICE_PORT: z.coerce.number().default(3003),
+  ORDER_SERVICE_PORT: z.coerce.number().default(3004),
+  PROMOTION_SERVICE_PORT: z.coerce.number().default(3006),
+  PAYMENT_SERVICE_PORT: z.coerce.number().default(3005),
+  UTILITY_SERVICE_PORT: z.coerce.number().default(3007),
+  IAM_SERVICE_PORT: z.coerce.number().default(3001),
+  SHOP_SERVICE_PORT: z.coerce.number().default(3002),
 });
 
 const configServer = AppConfigurationSchema.safeParse(process.env);

@@ -93,9 +93,8 @@ message CreatePresignedUrlRequest {
 }
 
 message CreatePresignedUrlResponse {
-  string uploadUrl = 1;
-  string downloadUrl = 2;
-  int32 expiresIn = 3;
+  string presignedUrl = 1;
+  string url = 2;
 }
 
 //==================== REPORT SERVICE ====================//
@@ -248,4 +247,55 @@ message ReviewResponse {
   optional string deletedAt = 10;
   string createdAt = 11;
   string updatedAt = 12;
+}
+
+//==================== LOCATION SERVICE ====================//
+service LocationService {
+  rpc GetProvinces(GetProvincesRequest) returns (GetProvincesResponse);
+  rpc GetDistricts(GetDistrictsRequest) returns (GetDistrictsResponse);
+  rpc GetWards(GetWardsRequest) returns (GetWardsResponse);
+}
+
+message GetProvincesRequest {
+  optional string processId = 1;
+}
+
+message GetProvincesResponse {
+  repeated ProvinceResponse provinces = 1;
+}
+
+message GetDistrictsRequest {
+  optional string processId = 1;
+  int32 provinceId = 2;
+}
+
+message GetDistrictsResponse {
+  repeated DistrictResponse districts = 1;
+}
+
+message GetWardsRequest {
+  optional string processId = 1;
+  int32 districtId = 2;
+}
+
+message GetWardsResponse {
+  repeated WardResponse wards = 1;
+}
+
+message ProvinceResponse {
+  int32 id = 1;
+  string name = 2;
+}
+
+message DistrictResponse {
+  int32 id = 1;
+  string name = 2;
+  int32 provinceId = 3;
+}
+
+message WardResponse {
+  int32 id = 1;
+  string name = 2;
+  int32 districtId = 3;
+  int32 provinceId = 4;
 }

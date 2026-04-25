@@ -5,7 +5,7 @@ package IAM_SERVICE;
 service AuthModule {
   rpc ExchangeCode(ExchangeCodeRequest) returns (ExchangeCodeResponse);
   rpc RefreshSession(RefreshSessionRequest) returns (ExchangeCodeResponse);
-  rpc LogoutCurrentSession(LogoutCurrentSessionRequest) returns (Empty);
+  rpc LogoutCurrentSession(LogoutCurrentSessionRequest) returns (Message);
   rpc ChangePassword(ChangePasswordRequest) returns (Message);
   rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse);
 }
@@ -23,6 +23,7 @@ message RefreshSessionRequest {
 message LogoutCurrentSessionRequest {
   optional string processId = 1;
   string refreshToken = 2;
+  string accessToken = 3;
 }
 
 message ChangePasswordRequest {
@@ -45,8 +46,6 @@ message ExchangeCodeResponse {
   string tokenType = 5;
   string scope = 6;
 }
-
-message Empty {}
 
 message Message {
   string message = 1;

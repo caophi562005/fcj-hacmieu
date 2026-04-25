@@ -16,11 +16,18 @@ import {
   ValidateTokenRequest,
 } from '@common/interfaces/models/iam';
 import {
+  generateTokenBlacklistKey,
+  generateTokenCacheKey,
+} from '@common/utils/cache-key.util';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import {
   BadRequestException,
+  Inject,
   Injectable,
   InternalServerErrorException,
 } from '@nestjs/common';
 import { CognitoJwtVerifier } from 'aws-jwt-verify';
+import { Cache } from 'cache-manager';
 import { PermissionService } from '../../permission/services/permission.service';
 
 const client = new CognitoIdentityProviderClient({
@@ -29,7 +36,10 @@ const client = new CognitoIdentityProviderClient({
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly permissionService: PermissionService) {}
+  constructor(
+    private readonly permissionService: PermissionService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+  ) {}
 
   async exchangeCode(code: string): Promise<ExchangeTokenResponse> {
     if (!code) {
@@ -120,6 +130,25 @@ export class AuthService {
     });
 
     await client.send(command);
+
+    // Decode JWT để lấy exp (không cần verify lại)
+    const [, payloadB64] = data.accessToken.split('.');
+    const payload = JSON.parse(Buffer.from(payloadB64, 'base64url').toString());
+    const remainingTtl = Math.max(0, payload.exp * 1000 - Date.now());
+
+    // Xóa cache token
+    await this.cacheManager.del(generateTokenCacheKey(data.accessToken));
+
+    // Thêm vào blacklist với TTL = thời gian còn lại của token
+    if (remainingTtl > 0) {
+      await this.cacheManager.set(
+        generateTokenBlacklistKey(data.accessToken),
+        true,
+        remainingTtl,
+      );
+    }
+
+    return { message: 'Logout successfully' };
   }
 
   async changePassword(data: ChangePasswordRequest) {
@@ -138,6 +167,20 @@ export class AuthService {
   }
 
   async validateToken(data: ValidateTokenRequest) {
+    // Check blacklist trước
+    const isBlacklisted = await this.cacheManager.get(
+      generateTokenBlacklistKey(data.accessToken),
+    );
+    if (isBlacklisted) {
+      return {
+        isValid: false,
+        userId: '',
+        username: '',
+        groups: [],
+        permissions: [],
+      };
+    }
+
     const verifier = CognitoJwtVerifier.create({
       userPoolId: AuthConfiguration.USER_POOL_ID,
       tokenUse: 'access',

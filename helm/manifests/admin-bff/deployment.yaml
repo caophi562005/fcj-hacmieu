@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: admin-bff-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: admin-bff
+  template:
+    metadata:
+      labels:
+        app: admin-bff
+    spec:
+      serviceAccountName: hacmieu-sa
+      containers:
+        - name: admin-bff
+          image: public.ecr.aws/h5u5b6t3/hacmieu/admin-bff:latest
+          imagePullPolicy: Always
+          envFrom:
+            - secretRef:
+                name: hacmieu-secrets
+          ports:
+            - containerPort: 3300
+          resources:
+            requests:
+              cpu: '250m'
+              memory: '512Mi'
+            limits:
+              cpu: '500m'
+              memory: '1Gi'

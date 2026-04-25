@@ -12,6 +12,8 @@ export class AddressRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
   async list(data: GetManyAddressesRequest) {
+    const page = data.page ?? 1;
+    const limit = data.limit ?? 10;
     const skip = (data.page - 1) * data.limit;
     const take = data.limit;
 
@@ -33,8 +35,8 @@ export class AddressRepository {
     return {
       addresses,
       totalItems,
-      page: data.page,
-      limit: data.limit,
+      page,
+      limit,
       totalPages: Math.ceil(totalItems / data.limit),
     };
   }

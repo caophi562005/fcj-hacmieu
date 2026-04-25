@@ -9,7 +9,7 @@ export class MediaService {
   constructor(private readonly s3Service: S3Service) {}
 
   async createPresignedUrl(body: CreatePresignedUrlRequest) {
-    const randomFilename = generateRandomFileName(body.filename);
+    const randomFilename = generateRandomFileName(body.fileName);
     const presignedUrl =
       await this.s3Service.createPresignedUrlWithClient(randomFilename);
 

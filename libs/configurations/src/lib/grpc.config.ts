@@ -7,16 +7,18 @@ const grpcUrlSchema = z
   .string()
   .transform((val) => val.replace(/^https?:\/\//, ''));
 
-export const GrpcConfigurationSchema = z.object({
-  PROTO_PATH: z.string(),
+const defaultGrpcUrl = '127.0.0.1:65535';
 
-  IAM_SERVICE_GRPC_URL: grpcUrlSchema,
-  CATALOG_SERVICE_GRPC_URL: grpcUrlSchema,
-  SHOP_SERVICE_GRPC_URL: grpcUrlSchema,
-  PROMOTION_SERVICE_GRPC_URL: grpcUrlSchema,
-  ORDER_SERVICE_GRPC_URL: grpcUrlSchema,
-  PAYMENT_SERVICE_GRPC_URL: grpcUrlSchema,
-  UTILITY_SERVICE_GRPC_URL: grpcUrlSchema,
+export const GrpcConfigurationSchema = z.object({
+  PROTO_PATH: z.string().default('./proto/'),
+
+  IAM_SERVICE_GRPC_URL: grpcUrlSchema.default('0.0.0.0:5001'),
+  CATALOG_SERVICE_GRPC_URL: grpcUrlSchema.default(defaultGrpcUrl),
+  SHOP_SERVICE_GRPC_URL: grpcUrlSchema.default(defaultGrpcUrl),
+  PROMOTION_SERVICE_GRPC_URL: grpcUrlSchema.default(defaultGrpcUrl),
+  ORDER_SERVICE_GRPC_URL: grpcUrlSchema.default(defaultGrpcUrl),
+  PAYMENT_SERVICE_GRPC_URL: grpcUrlSchema.default(defaultGrpcUrl),
+  UTILITY_SERVICE_GRPC_URL: grpcUrlSchema.default(defaultGrpcUrl),
 });
 
 const configServer = GrpcConfigurationSchema.safeParse(process.env);

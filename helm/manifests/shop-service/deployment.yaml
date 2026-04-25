@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shop-service-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shop-service
+  template:
+    metadata:
+      labels:
+        app: shop-service
+    spec:
+      serviceAccountName: hacmieu-sa
+      containers:
+        - name: shop-service
+          image: public.ecr.aws/h5u5b6t3/hacmieu/shop-service:latest
+          imagePullPolicy: Always
+          env:
+            - name: SHOP_SERVICE_GRPC_URL
+              value: '0.0.0.0:5003'
+          envFrom:
+            - secretRef:
+                name: hacmieu-secrets
+          ports:
+            - containerPort: 3002
+            - containerPort: 5003
+          resources:
+            requests:
+              cpu: '250m'
+              memory: '512Mi'
+            limits:
+              cpu: '500m'
+              memory: '1Gi'

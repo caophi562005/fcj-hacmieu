@@ -11,21 +11,21 @@ import {
 import { createZodDto } from 'nestjs-zod';
 
 export class GetManyReviewsRequestDto extends createZodDto(
-  GetManyReviewsRequestSchema,
+  GetManyReviewsRequestSchema.omit({ processId: true }),
 ) {}
 
 export class GetReviewRequestDto extends createZodDto(GetReviewRequestSchema) {}
 
 export class CreateReviewRequestDto extends createZodDto(
-  CreateReviewRequestSchema,
+  CreateReviewRequestSchema.omit({ processId: true }),
 ) {}
 
 export class UpdateReviewRequestDto extends createZodDto(
-  UpdateReviewRequestSchema,
+  UpdateReviewRequestSchema.omit({ processId: true }),
 ) {}
 
 export class DeleteReviewRequestDto extends createZodDto(
-  DeleteReviewRequestSchema,
+  DeleteReviewRequestSchema.omit({ processId: true }),
 ) {}
 
 export class GetManyReviewsResponseDto extends createZodDto(

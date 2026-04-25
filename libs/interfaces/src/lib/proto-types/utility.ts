@@ -5,10 +5,10 @@
 // source: utility.proto
 
 /* eslint-disable */
-import { GrpcMethod, GrpcStreamMethod } from '@nestjs/microservices';
-import { Observable } from 'rxjs';
+import { GrpcMethod, GrpcStreamMethod } from "@nestjs/microservices";
+import { Observable } from "rxjs";
 
-export const protobufPackage = 'UTILITY_SERVICE';
+export const protobufPackage = "UTILITY_SERVICE";
 
 export interface GetManyNotificationsRequest {
   processId?: string | undefined;
@@ -87,9 +87,8 @@ export interface CreatePresignedUrlRequest {
 }
 
 export interface CreatePresignedUrlResponse {
-  uploadUrl: string;
-  downloadUrl: string;
-  expiresIn: number;
+  presignedUrl: string;
+  url: string;
 }
 
 export interface GetManyReportsRequest {
@@ -225,30 +224,64 @@ export interface ReviewResponse {
   updatedAt: string;
 }
 
-export const UTILITY_SERVICE_PACKAGE_NAME = 'UTILITY_SERVICE';
+export interface GetProvincesRequest {
+  processId?: string | undefined;
+}
+
+export interface GetProvincesResponse {
+  provinces: ProvinceResponse[];
+}
+
+export interface GetDistrictsRequest {
+  processId?: string | undefined;
+  provinceId: number;
+}
+
+export interface GetDistrictsResponse {
+  districts: DistrictResponse[];
+}
+
+export interface GetWardsRequest {
+  processId?: string | undefined;
+  districtId: number;
+}
+
+export interface GetWardsResponse {
+  wards: WardResponse[];
+}
+
+export interface ProvinceResponse {
+  id: number;
+  name: string;
+}
+
+export interface DistrictResponse {
+  id: number;
+  name: string;
+  provinceId: number;
+}
+
+export interface WardResponse {
+  id: number;
+  name: string;
+  districtId: number;
+  provinceId: number;
+}
+
+export const UTILITY_SERVICE_PACKAGE_NAME = "UTILITY_SERVICE";
 
 /** ==================== NOTIFICATION SERVICE ====================// */
 
 export interface NotificationServiceClient {
-  getManyNotifications(
-    request: GetManyNotificationsRequest,
-  ): Observable<GetManyNotificationsResponse>;
+  getManyNotifications(request: GetManyNotificationsRequest): Observable<GetManyNotificationsResponse>;
 
-  getNotification(
-    request: GetNotificationRequest,
-  ): Observable<NotificationResponse>;
+  getNotification(request: GetNotificationRequest): Observable<NotificationResponse>;
 
-  createNotification(
-    request: CreateNotificationRequest,
-  ): Observable<NotificationResponse>;
+  createNotification(request: CreateNotificationRequest): Observable<NotificationResponse>;
 
-  readNotification(
-    request: ReadNotificationRequest,
-  ): Observable<ReadNotificationResponse>;
+  readNotification(request: ReadNotificationRequest): Observable<ReadNotificationResponse>;
 
-  deleteNotification(
-    request: DeleteNotificationRequest,
-  ): Observable<NotificationResponse>;
+  deleteNotification(request: DeleteNotificationRequest): Observable<NotificationResponse>;
 }
 
 /** ==================== NOTIFICATION SERVICE ====================// */
@@ -256,83 +289,52 @@ export interface NotificationServiceClient {
 export interface NotificationServiceController {
   getManyNotifications(
     request: GetManyNotificationsRequest,
-  ):
-    | Promise<GetManyNotificationsResponse>
-    | Observable<GetManyNotificationsResponse>
-    | GetManyNotificationsResponse;
+  ): Promise<GetManyNotificationsResponse> | Observable<GetManyNotificationsResponse> | GetManyNotificationsResponse;
 
   getNotification(
     request: GetNotificationRequest,
-  ):
-    | Promise<NotificationResponse>
-    | Observable<NotificationResponse>
-    | NotificationResponse;
+  ): Promise<NotificationResponse> | Observable<NotificationResponse> | NotificationResponse;
 
   createNotification(
     request: CreateNotificationRequest,
-  ):
-    | Promise<NotificationResponse>
-    | Observable<NotificationResponse>
-    | NotificationResponse;
+  ): Promise<NotificationResponse> | Observable<NotificationResponse> | NotificationResponse;
 
   readNotification(
     request: ReadNotificationRequest,
-  ):
-    | Promise<ReadNotificationResponse>
-    | Observable<ReadNotificationResponse>
-    | ReadNotificationResponse;
+  ): Promise<ReadNotificationResponse> | Observable<ReadNotificationResponse> | ReadNotificationResponse;
 
   deleteNotification(
     request: DeleteNotificationRequest,
-  ):
-    | Promise<NotificationResponse>
-    | Observable<NotificationResponse>
-    | NotificationResponse;
+  ): Promise<NotificationResponse> | Observable<NotificationResponse> | NotificationResponse;
 }
 
 export function NotificationServiceControllerMethods() {
   return function (constructor: Function) {
     const grpcMethods: string[] = [
-      'getManyNotifications',
-      'getNotification',
-      'createNotification',
-      'readNotification',
-      'deleteNotification',
+      "getManyNotifications",
+      "getNotification",
+      "createNotification",
+      "readNotification",
+      "deleteNotification",
     ];
     for (const method of grpcMethods) {
-      const descriptor: any = Reflect.getOwnPropertyDescriptor(
-        constructor.prototype,
-        method,
-      );
-      GrpcMethod('NotificationService', method)(
-        constructor.prototype[method],
-        method,
-        descriptor,
-      );
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcMethod("NotificationService", method)(constructor.prototype[method], method, descriptor);
     }
     const grpcStreamMethods: string[] = [];
     for (const method of grpcStreamMethods) {
-      const descriptor: any = Reflect.getOwnPropertyDescriptor(
-        constructor.prototype,
-        method,
-      );
-      GrpcStreamMethod('NotificationService', method)(
-        constructor.prototype[method],
-        method,
-        descriptor,
-      );
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcStreamMethod("NotificationService", method)(constructor.prototype[method], method, descriptor);
     }
   };
 }
 
-export const NOTIFICATION_SERVICE_NAME = 'NotificationService';
+export const NOTIFICATION_SERVICE_NAME = "NotificationService";
 
 /** ==================== MEDIA SERVICE ====================// */
 
 export interface MediaServiceClient {
-  createPresignedUrl(
-    request: CreatePresignedUrlRequest,
-  ): Observable<CreatePresignedUrlResponse>;
+  createPresignedUrl(request: CreatePresignedUrlRequest): Observable<CreatePresignedUrlResponse>;
 }
 
 /** ==================== MEDIA SERVICE ====================// */
@@ -340,49 +342,30 @@ export interface MediaServiceClient {
 export interface MediaServiceController {
   createPresignedUrl(
     request: CreatePresignedUrlRequest,
-  ):
-    | Promise<CreatePresignedUrlResponse>
-    | Observable<CreatePresignedUrlResponse>
-    | CreatePresignedUrlResponse;
+  ): Promise<CreatePresignedUrlResponse> | Observable<CreatePresignedUrlResponse> | CreatePresignedUrlResponse;
 }
 
 export function MediaServiceControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = ['createPresignedUrl'];
+    const grpcMethods: string[] = ["createPresignedUrl"];
     for (const method of grpcMethods) {
-      const descriptor: any = Reflect.getOwnPropertyDescriptor(
-        constructor.prototype,
-        method,
-      );
-      GrpcMethod('MediaService', method)(
-        constructor.prototype[method],
-        method,
-        descriptor,
-      );
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcMethod("MediaService", method)(constructor.prototype[method], method, descriptor);
     }
     const grpcStreamMethods: string[] = [];
     for (const method of grpcStreamMethods) {
-      const descriptor: any = Reflect.getOwnPropertyDescriptor(
-        constructor.prototype,
-        method,
-      );
-      GrpcStreamMethod('MediaService', method)(
-        constructor.prototype[method],
-        method,
-        descriptor,
-      );
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcStreamMethod("MediaService", method)(constructor.prototype[method], method, descriptor);
     }
   };
 }
 
-export const MEDIA_SERVICE_NAME = 'MediaService';
+export const MEDIA_SERVICE_NAME = "MediaService";
 
 /** ==================== REPORT SERVICE ====================// */
 
 export interface ReportServiceClient {
-  getManyReports(
-    request: GetManyReportsRequest,
-  ): Observable<GetManyReportsResponse>;
+  getManyReports(request: GetManyReportsRequest): Observable<GetManyReportsResponse>;
 
   getReport(request: GetReportRequest): Observable<ReportResponse>;
 
@@ -400,76 +383,47 @@ export interface ReportServiceClient {
 export interface ReportServiceController {
   getManyReports(
     request: GetManyReportsRequest,
-  ):
-    | Promise<GetManyReportsResponse>
-    | Observable<GetManyReportsResponse>
-    | GetManyReportsResponse;
+  ): Promise<GetManyReportsResponse> | Observable<GetManyReportsResponse> | GetManyReportsResponse;
 
-  getReport(
-    request: GetReportRequest,
-  ): Promise<ReportResponse> | Observable<ReportResponse> | ReportResponse;
+  getReport(request: GetReportRequest): Promise<ReportResponse> | Observable<ReportResponse> | ReportResponse;
 
-  createReport(
-    request: CreateReportRequest,
-  ): Promise<ReportResponse> | Observable<ReportResponse> | ReportResponse;
+  createReport(request: CreateReportRequest): Promise<ReportResponse> | Observable<ReportResponse> | ReportResponse;
 
-  updateReport(
-    request: UpdateReportRequest,
-  ): Promise<ReportResponse> | Observable<ReportResponse> | ReportResponse;
+  updateReport(request: UpdateReportRequest): Promise<ReportResponse> | Observable<ReportResponse> | ReportResponse;
 
-  resolveReport(
-    request: ResolveReportRequest,
-  ): Promise<ReportResponse> | Observable<ReportResponse> | ReportResponse;
+  resolveReport(request: ResolveReportRequest): Promise<ReportResponse> | Observable<ReportResponse> | ReportResponse;
 
-  deleteReport(
-    request: DeleteReportRequest,
-  ): Promise<ReportResponse> | Observable<ReportResponse> | ReportResponse;
+  deleteReport(request: DeleteReportRequest): Promise<ReportResponse> | Observable<ReportResponse> | ReportResponse;
 }
 
 export function ReportServiceControllerMethods() {
   return function (constructor: Function) {
     const grpcMethods: string[] = [
-      'getManyReports',
-      'getReport',
-      'createReport',
-      'updateReport',
-      'resolveReport',
-      'deleteReport',
+      "getManyReports",
+      "getReport",
+      "createReport",
+      "updateReport",
+      "resolveReport",
+      "deleteReport",
     ];
     for (const method of grpcMethods) {
-      const descriptor: any = Reflect.getOwnPropertyDescriptor(
-        constructor.prototype,
-        method,
-      );
-      GrpcMethod('ReportService', method)(
-        constructor.prototype[method],
-        method,
-        descriptor,
-      );
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcMethod("ReportService", method)(constructor.prototype[method], method, descriptor);
     }
     const grpcStreamMethods: string[] = [];
     for (const method of grpcStreamMethods) {
-      const descriptor: any = Reflect.getOwnPropertyDescriptor(
-        constructor.prototype,
-        method,
-      );
-      GrpcStreamMethod('ReportService', method)(
-        constructor.prototype[method],
-        method,
-        descriptor,
-      );
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcStreamMethod("ReportService", method)(constructor.prototype[method], method, descriptor);
     }
   };
 }
 
-export const REPORT_SERVICE_NAME = 'ReportService';
+export const REPORT_SERVICE_NAME = "ReportService";
 
 /** ==================== REVIEW SERVICE ====================// */
 
 export interface ReviewServiceClient {
-  getManyReviews(
-    request: GetManyReviewsRequest,
-  ): Observable<GetManyReviewsResponse>;
+  getManyReviews(request: GetManyReviewsRequest): Observable<GetManyReviewsResponse>;
 
   getReview(request: GetReviewRequest): Observable<ReviewResponse>;
 
@@ -485,61 +439,71 @@ export interface ReviewServiceClient {
 export interface ReviewServiceController {
   getManyReviews(
     request: GetManyReviewsRequest,
-  ):
-    | Promise<GetManyReviewsResponse>
-    | Observable<GetManyReviewsResponse>
-    | GetManyReviewsResponse;
+  ): Promise<GetManyReviewsResponse> | Observable<GetManyReviewsResponse> | GetManyReviewsResponse;
 
-  getReview(
-    request: GetReviewRequest,
-  ): Promise<ReviewResponse> | Observable<ReviewResponse> | ReviewResponse;
+  getReview(request: GetReviewRequest): Promise<ReviewResponse> | Observable<ReviewResponse> | ReviewResponse;
 
-  createReview(
-    request: CreateReviewRequest,
-  ): Promise<ReviewResponse> | Observable<ReviewResponse> | ReviewResponse;
+  createReview(request: CreateReviewRequest): Promise<ReviewResponse> | Observable<ReviewResponse> | ReviewResponse;
 
-  updateReview(
-    request: UpdateReviewRequest,
-  ): Promise<ReviewResponse> | Observable<ReviewResponse> | ReviewResponse;
+  updateReview(request: UpdateReviewRequest): Promise<ReviewResponse> | Observable<ReviewResponse> | ReviewResponse;
 
-  deleteReview(
-    request: DeleteReviewRequest,
-  ): Promise<ReviewResponse> | Observable<ReviewResponse> | ReviewResponse;
+  deleteReview(request: DeleteReviewRequest): Promise<ReviewResponse> | Observable<ReviewResponse> | ReviewResponse;
 }
 
 export function ReviewServiceControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = [
-      'getManyReviews',
-      'getReview',
-      'createReview',
-      'updateReview',
-      'deleteReview',
-    ];
+    const grpcMethods: string[] = ["getManyReviews", "getReview", "createReview", "updateReview", "deleteReview"];
     for (const method of grpcMethods) {
-      const descriptor: any = Reflect.getOwnPropertyDescriptor(
-        constructor.prototype,
-        method,
-      );
-      GrpcMethod('ReviewService', method)(
-        constructor.prototype[method],
-        method,
-        descriptor,
-      );
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcMethod("ReviewService", method)(constructor.prototype[method], method, descriptor);
     }
     const grpcStreamMethods: string[] = [];
     for (const method of grpcStreamMethods) {
-      const descriptor: any = Reflect.getOwnPropertyDescriptor(
-        constructor.prototype,
-        method,
-      );
-      GrpcStreamMethod('ReviewService', method)(
-        constructor.prototype[method],
-        method,
-        descriptor,
-      );
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcStreamMethod("ReviewService", method)(constructor.prototype[method], method, descriptor);
     }
   };
 }
 
-export const REVIEW_SERVICE_NAME = 'ReviewService';
+export const REVIEW_SERVICE_NAME = "ReviewService";
+
+/** ==================== LOCATION SERVICE ====================// */
+
+export interface LocationServiceClient {
+  getProvinces(request: GetProvincesRequest): Observable<GetProvincesResponse>;
+
+  getDistricts(request: GetDistrictsRequest): Observable<GetDistrictsResponse>;
+
+  getWards(request: GetWardsRequest): Observable<GetWardsResponse>;
+}
+
+/** ==================== LOCATION SERVICE ====================// */
+
+export interface LocationServiceController {
+  getProvinces(
+    request: GetProvincesRequest,
+  ): Promise<GetProvincesResponse> | Observable<GetProvincesResponse> | GetProvincesResponse;
+
+  getDistricts(
+    request: GetDistrictsRequest,
+  ): Promise<GetDistrictsResponse> | Observable<GetDistrictsResponse> | GetDistrictsResponse;
+
+  getWards(request: GetWardsRequest): Promise<GetWardsResponse> | Observable<GetWardsResponse> | GetWardsResponse;
+}
+
+export function LocationServiceControllerMethods() {
+  return function (constructor: Function) {
+    const grpcMethods: string[] = ["getProvinces", "getDistricts", "getWards"];
+    for (const method of grpcMethods) {
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcMethod("LocationService", method)(constructor.prototype[method], method, descriptor);
+    }
+    const grpcStreamMethods: string[] = [];
+    for (const method of grpcStreamMethods) {
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcStreamMethod("LocationService", method)(constructor.prototype[method], method, descriptor);
+    }
+  };
+}
+
+export const LOCATION_SERVICE_NAME = "LocationService";

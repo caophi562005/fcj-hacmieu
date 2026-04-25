@@ -25,7 +25,6 @@ export const S3Configuration = configServer.data;
 
 export const S3Provider = (bucketName: S3Bucket) => {
   const client = new S3Client({
-    endpoint: BaseConfiguration.AWS_REGION,
     region: BaseConfiguration.AWS_REGION,
   });
 

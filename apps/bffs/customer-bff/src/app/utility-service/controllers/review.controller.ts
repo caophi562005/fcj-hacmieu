@@ -5,7 +5,6 @@ import {
   DeleteReviewRequestDto,
   GetManyReviewsRequestDto,
   GetManyReviewsResponseDto,
-  GetReviewRequestDto,
   ReviewResponseDto,
   UpdateReviewRequestDto,
 } from '@common/interfaces/dtos/utility';
@@ -41,20 +40,6 @@ export class ReviewController {
     });
   }
 
-  @Get(':id')
-  @ApiOkResponse({
-    type: ReviewResponseDto,
-  })
-  async getReview(
-    @Param() params: GetReviewRequestDto,
-    @ProcessId() processId: string,
-  ) {
-    return this.reviewService.getReview({
-      ...params,
-      processId,
-    });
-  }
-
   @Post()
   @ApiOkResponse({
     type: ReviewResponseDto,
@@ -71,24 +56,21 @@ export class ReviewController {
     });
   }
 
-  @Put(':id')
+  @Put()
   @ApiOkResponse({
     type: ReviewResponseDto,
   })
   async updateReview(
-    @Param('id') id: string,
     @Body() body: UpdateReviewRequestDto,
     @ProcessId() processId: string,
     @UserData('userId') userId: string,
   ) {
     return this.reviewService.updateReview({
-      id,
+      ...body,
       userId,
       processId,
-      content: body.content,
-      rating: body.rating,
       mediaUrls: body.mediaUrls || [],
-    } as any);
+    });
   }
 
   @Delete(':id')

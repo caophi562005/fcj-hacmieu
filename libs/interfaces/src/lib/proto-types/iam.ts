@@ -23,6 +23,7 @@ export interface RefreshSessionRequest {
 export interface LogoutCurrentSessionRequest {
   processId?: string | undefined;
   refreshToken: string;
+  accessToken: string;
 }
 
 export interface ChangePasswordRequest {
@@ -44,9 +45,6 @@ export interface ExchangeCodeResponse {
   expiresIn: number;
   tokenType: string;
   scope: string;
-}
-
-export interface Empty {
 }
 
 export interface Message {
@@ -276,7 +274,7 @@ export interface AuthModuleClient {
 
   refreshSession(request: RefreshSessionRequest): Observable<ExchangeCodeResponse>;
 
-  logoutCurrentSession(request: LogoutCurrentSessionRequest): Observable<Empty>;
+  logoutCurrentSession(request: LogoutCurrentSessionRequest): Observable<Message>;
 
   changePassword(request: ChangePasswordRequest): Observable<Message>;
 
@@ -292,7 +290,7 @@ export interface AuthModuleController {
     request: RefreshSessionRequest,
   ): Promise<ExchangeCodeResponse> | Observable<ExchangeCodeResponse> | ExchangeCodeResponse;
 
-  logoutCurrentSession(request: LogoutCurrentSessionRequest): Promise<Empty> | Observable<Empty> | Empty;
+  logoutCurrentSession(request: LogoutCurrentSessionRequest): Promise<Message> | Observable<Message> | Message;
 
   changePassword(request: ChangePasswordRequest): Promise<Message> | Observable<Message> | Message;
 

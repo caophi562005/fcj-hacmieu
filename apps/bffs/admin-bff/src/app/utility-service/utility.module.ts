@@ -13,10 +13,7 @@ import { ReviewService } from './services/review.service';
 
 @Module({
   imports: [
-    ClientsModule.register([
-      GrpcClientProvider(GrpcService.NOTIFICATION_SERVICE),
-      GrpcClientProvider(GrpcService.MEDIA_SERVICE),
-    ]),
+    ClientsModule.register([GrpcClientProvider(GrpcService.UTILITY_SERVICE)]),
   ],
   controllers: [
     NotificationController,

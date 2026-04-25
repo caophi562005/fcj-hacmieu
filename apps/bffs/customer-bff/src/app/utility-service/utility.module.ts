@@ -5,10 +5,12 @@ import { GrpcService } from '@common/constants/grpc.constant';
 import { Module } from '@nestjs/common';
 import { ClientsModule } from '@nestjs/microservices';
 import { SqsModule } from '@ssut/nestjs-sqs';
+import { LocationController } from './controllers/location.controller';
 import { MediaController } from './controllers/media.controller';
 import { NotificationController } from './controllers/notification.controller';
 import { ReportController } from './controllers/report.controller';
 import { ReviewController } from './controllers/review.controller';
+import { LocationService } from './services/location.service';
 import { MediaService } from './services/media.service';
 import { NotificationConsumerService } from './services/notification-consumer.service';
 import { NotificationStreamService } from './services/notification-stream.service';
@@ -34,6 +36,7 @@ import { ReviewService } from './services/review.service';
     MediaController,
     ReportController,
     ReviewController,
+    LocationController,
   ],
   providers: [
     NotificationService,
@@ -42,6 +45,7 @@ import { ReviewService } from './services/review.service';
     MediaService,
     ReportService,
     ReviewService,
+    LocationService,
   ],
 })
 export class UtilityModule {}

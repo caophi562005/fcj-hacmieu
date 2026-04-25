@@ -1,13 +1,13 @@
 import z from 'zod';
 
 export const DatabaseConfigurationSchema = z.object({
-  CATALOG_SERVICE_DATABASE_URL: z.string(),
-  ORDER_SERVICE_DATABASE_URL: z.string(),
-  PROMOTION_SERVICE_DATABASE_URL: z.string(),
-  PAYMENT_SERVICE_DATABASE_URL: z.string(),
-  UTILITY_SERVICE_DATABASE_URL: z.string(),
+  CATALOG_SERVICE_DATABASE_URL: z.string().default(''),
+  ORDER_SERVICE_DATABASE_URL: z.string().default(''),
+  PROMOTION_SERVICE_DATABASE_URL: z.string().default(''),
+  PAYMENT_SERVICE_DATABASE_URL: z.string().default(''),
+  UTILITY_SERVICE_DATABASE_URL: z.string().default(''),
   IAM_SERVICE_DATABASE_URL: z.string(),
-  SHOP_SERVICE_DATABASE_URL: z.string(),
+  SHOP_SERVICE_DATABASE_URL: z.string().default(''),
 });
 
 const configServer = DatabaseConfigurationSchema.safeParse(process.env);

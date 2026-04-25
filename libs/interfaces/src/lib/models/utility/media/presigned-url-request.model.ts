@@ -2,7 +2,9 @@ import z from 'zod';
 
 export const CreatePresignedUrlRequestSchema = z
   .object({
-    filename: z.string(),
+    fileName: z.string(),
+    fileType: z.string().optional(),
+    fileSize: z.number().optional(),
   })
   .strict();
 

@@ -23,8 +23,8 @@ export const GrpcModuleName = {
   },
 
   PROMOTION: {
-    PROMOTION: 'PromotionService',
-    REDEMPTION: 'RedemptionService',
+    PROMOTION: 'PromotionModule',
+    REDEMPTION: 'RedemptionModule',
   },
 
   PAYMENT: {
@@ -38,6 +38,7 @@ export const GrpcModuleName = {
     MEDIA: 'MediaService',
     REPORT: 'ReportService',
     REVIEW: 'ReviewService',
+    LOCATION: 'LocationService',
   },
 
   IAM: {

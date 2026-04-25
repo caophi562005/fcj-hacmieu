@@ -22,6 +22,7 @@ if (!configServer.success) {
 export const RedisConfiguration = configServer.data;
 
 export const CacheProvider = CacheModule.register({
+  isGlobal: true,
   stores: [createKeyv(RedisConfiguration.REDIS_URL)],
   ttl: ms(RedisConfiguration.REDIS_TTL as StringValue), // 30 minutes
 });

@@ -14,7 +14,13 @@ export const RefreshSessionRequestSchema = z
   })
   .strict();
 
-export const LogoutCurrentSessionRequestSchema = RefreshSessionRequestSchema;
+export const LogoutCurrentSessionRequestSchema = z
+  .object({
+    processId: z.uuid().optional(),
+    refreshToken: z.string(),
+    accessToken: z.string(),
+  })
+  .strict();
 
 export const ChangePasswordRequestSchema = z
   .object({
