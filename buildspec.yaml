@@ -14,14 +14,16 @@ phases:
       nodejs: 22
     commands:
       - echo "=== Installing pnpm ==="
-      - corepack enable
-      - corepack prepare pnpm@$PNPM_VERSION --activate
-      - pnpm --version
+      - |
+        npm install -g pnpm@$PNPM_VERSION
+        export PATH="$(npm bin -g):$PATH"
+        pnpm --version
 
-      # Restore pnpm store cache (CodeBuild cache tự động qua cache config)
       - echo "=== Installing dependencies ==="
-      - git config --global url."https://github.com/".insteadOf git://github.com/
-      - pnpm install --frozen-lockfile
+      - |
+        export PATH="$(npm bin -g):$PATH"
+        git config --global url."https://github.com/".insteadOf git://github.com/
+        pnpm install --frozen-lockfile
 
   pre_build:
     commands:
@@ -52,6 +54,7 @@ phases:
           echo "No relevant file changes detected."
           AFFECTED_APPS=""
         else
+          export PATH="$(npm bin -g):$PATH"
           AFFECTED_APPS=$(pnpm nx show projects --affected --files="$CHANGED_FILES" --type=app 2>/dev/null || true)
         fi
         echo "Affected apps: $AFFECTED_APPS"
