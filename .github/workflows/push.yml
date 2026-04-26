@@ -16,6 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
+      affected_apps: ${{ steps.set-matrix.outputs.affected_apps }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -28,18 +29,21 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: 'pnpm'
 
       - name: Configure Git protocol
         run: git config --global url."https://github.com/".insteadOf git://github.com/
 
       - name: Cache pnpm store
+        id: cache-pnpm-store
         uses: actions/cache@v4
         with:
           path: |
             ~/.pnpm-store
             node_modules
           key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: ${{ runner.os }}-pnpm-
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -70,7 +74,8 @@ jobs:
             | paste -sd, -)
 
           if [ -z "$FILTERED_FILES" ]; then
-            echo "No relevant file changes."
+            echo "Only package.json / pnpm-lock.yaml changed (or no relevant files)."
+            echo 'affected_apps=[]' >> "$GITHUB_OUTPUT"
             echo 'matrix={"include":[]}' >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -79,14 +84,15 @@ jobs:
 
           if [ -z "$AFFECTED_LINES" ]; then
             echo "No affected apps."
+            echo 'affected_apps=[]' >> "$GITHUB_OUTPUT"
             echo 'matrix={"include":[]}' >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
           AFFECTED_APPS_JSON=$(printf '%s\n' "$AFFECTED_LINES" | jq -R -s -c 'split("\n") | map(select(length>0))')
           echo "Affected apps: $AFFECTED_APPS_JSON"
+          echo "affected_apps=$AFFECTED_APPS_JSON" >> "$GITHUB_OUTPUT"
 
-          # Mapping service -> dockerfile (ECR Public repo = hacmieu/<name>)
           SERVICES_JSON='[
             {"name":"admin-bff","dockerfile":"apps/bffs/admin-bff/Dockerfile"},
             {"name":"customer-bff","dockerfile":"apps/bffs/customer-bff/Dockerfile"},
@@ -104,6 +110,7 @@ jobs:
             --argjson services "$SERVICES_JSON" \
             '{include: ($services | map(select(.name as $n | $affected | index($n) != null)))}')
 
+          echo "matrix=$MATRIX"
           echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
 
       - name: Upload node_modules
@@ -135,7 +142,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: us-east-1 # ECR Public bắt buộc us-east-1
+          aws-region: us-east-1
 
       - name: Login to Amazon ECR Public
         uses: aws-actions/amazon-ecr-login@v2
@@ -147,6 +154,7 @@ jobs:
 
       - name: Generate tag
         id: tag
+        shell: bash
         run: echo "TAG=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
 
       - name: Build and Push to ECR Public
