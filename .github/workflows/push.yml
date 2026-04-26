@@ -120,51 +120,51 @@ jobs:
           path: node_modules
           retention-days: 1
 
-  # docker:
-  #   runs-on: ubuntu-latest
-  #   needs: install
-  #   if: ${{ fromJson(needs.install.outputs.matrix).include[0] != null }}
-  #   strategy:
-  #     fail-fast: false
-  #     matrix: ${{ fromJson(needs.install.outputs.matrix) }}
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #       with:
-  #         fetch-depth: 0
+  docker:
+    runs-on: ubuntu-latest
+    needs: install
+    if: ${{ fromJson(needs.install.outputs.matrix).include[0] != null }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.install.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-  #     - name: Download node_modules
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         name: node_modules
-  #         path: .
+      - name: Download node_modules
+        uses: actions/download-artifact@v4
+        with:
+          name: node_modules
+          path: .
 
-  #     - name: Configure AWS credentials via OIDC
-  #       uses: aws-actions/configure-aws-credentials@v4
-  #       with:
-  #         role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-  #         aws-region: us-east-1
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
 
-  #     - name: Login to Amazon ECR Public
-  #       uses: aws-actions/amazon-ecr-login@v2
-  #       with:
-  #         registry-type: public
+      - name: Login to Amazon ECR Public
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          registry-type: public
 
-  #     - name: Set up Docker Buildx
-  #       uses: docker/setup-buildx-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-  #     - name: Generate tag
-  #       id: tag
-  #       shell: bash
-  #       run: echo "TAG=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+      - name: Generate tag
+        id: tag
+        shell: bash
+        run: echo "TAG=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
 
-  #     - name: Build and Push to ECR Public
-  #       uses: docker/build-push-action@v6
-  #       with:
-  #         context: .
-  #         file: ${{ matrix.dockerfile }}
-  #         push: ${{ github.event_name != 'pull_request' }}
-  #         tags: |
-  #           public.ecr.aws/h5u5b6t3/hacmieu/${{ matrix.name }}:latest
-  #           public.ecr.aws/h5u5b6t3/hacmieu/${{ matrix.name }}:${{ steps.tag.outputs.TAG }}
-  #         cache-from: type=registry,ref=public.ecr.aws/h5u5b6t3/hacmieu/${{ matrix.name }}:buildcache
-  #         cache-to: type=registry,ref=public.ecr.aws/h5u5b6t3/hacmieu/${{ matrix.name }}:buildcache,mode=max
+      - name: Build and Push to ECR Public
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: |
+            public.ecr.aws/h5u5b6t3/hacmieu/${{ matrix.name }}:latest
+            public.ecr.aws/h5u5b6t3/hacmieu/${{ matrix.name }}:${{ steps.tag.outputs.TAG }}
+          cache-from: type=registry,ref=public.ecr.aws/h5u5b6t3/hacmieu/${{ matrix.name }}:buildcache
+          cache-to: type=registry,ref=public.ecr.aws/h5u5b6t3/hacmieu/${{ matrix.name }}:buildcache,mode=max
