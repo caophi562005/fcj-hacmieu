@@ -3,7 +3,7 @@ name: CI/CD
 on:
   push:
     branches:
-      - sauvole565
+      - main
   pull_request:
 
 permissions:
