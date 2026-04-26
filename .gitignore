@@ -72,3 +72,11 @@ override.tf.json
 *.tfplan
 
 secret.yaml
+
+# Next.js
+.next
+out
+
+.agent
+
+design_stitch
