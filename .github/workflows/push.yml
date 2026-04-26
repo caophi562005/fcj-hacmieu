@@ -28,7 +28,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'pnpm'
 
       - name: Configure Git protocol
         run: git config --global url."https://github.com/".insteadOf git://github.com/

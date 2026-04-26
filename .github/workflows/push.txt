@@ -1,0 +1,195 @@
+name: CI/CD
+
+on:
+  push:
+    branches:
+      - sauvole565
+  pull_request:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      affected_apps: ${{ steps.set-matrix.outputs.affected_apps }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "pnpm"
+
+      - name: Configure Git protocol
+        run: git config --global url."https://github.com/".insteadOf git://github.com/
+
+      - name: Cache pnpm store
+        id: cache-pnpm-store
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pnpm-store
+            node_modules
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Compute affected apps + matrix (docker + deploy)
+        id: set-matrix
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # 1) base/head theo event
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE="${{ github.event.pull_request.base.sha }}"
+            HEAD="${{ github.event.pull_request.head.sha }}"
+          else
+            BASE="${{ github.event.before }}"
+            HEAD="${{ github.sha }}"
+            if [ -z "$BASE" ] || [ "$BASE" = "0000000000000000000000000000000000000000" ]; then
+              BASE="HEAD^"
+              HEAD="HEAD"
+            fi
+          fi
+
+          echo "Using BASE=$BASE HEAD=$HEAD"
+
+          # 2) affected apps
+          CHANGED_FILES=$(git diff --name-only --diff-filter=ACMRT "$BASE" "$HEAD" || true)
+
+          FILTERED_FILES=$(printf '%s\n' "$CHANGED_FILES" \
+            | grep -Ev '^(package\.json|pnpm-lock\.yaml)$' \
+            | paste -sd, -)
+
+          # nếu sau khi lọc không còn file nào, coi như không affected
+          if [ -z "$FILTERED_FILES" ]; then
+            echo "Only package.json / pnpm-lock.yaml changed (or no relevant files)."
+            echo 'affected_apps=[]' >> "$GITHUB_OUTPUT"
+            echo 'matrix={"include":[]}' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          AFFECTED_LINES=$(pnpm nx show projects --affected --files="$FILTERED_FILES" --type=app || true)
+
+          if [ -z "$AFFECTED_LINES" ]; then
+            echo "No affected apps."
+            echo 'affected_apps=[]' >> "$GITHUB_OUTPUT"
+            echo 'matrix={"include":[]}' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          AFFECTED_APPS_JSON=$(printf '%s\n' "$AFFECTED_LINES" | jq -R -s -c 'split("\n") | map(select(length>0))')
+          echo "Affected apps: $AFFECTED_APPS_JSON"
+          echo "affected_apps=$AFFECTED_APPS_JSON" >> "$GITHUB_OUTPUT"
+
+          # 3) 1 nguồn truth: mapping dockerfile + Coolify secret (lấy đúng theo sync.yml)
+          SERVICES_JSON='[
+            {"name":"admin","dockerfile":"apps/bffs/admin/Dockerfile","secret":"COOLIFY_APP_ADMIN"},
+            {"name":"web","dockerfile":"apps/bffs/web/Dockerfile","secret":"COOLIFY_APP_WEB"},
+            {"name":"seller","dockerfile":"apps/bffs/seller/Dockerfile","secret":"COOLIFY_APP_SELLER"},
+
+            {"name":"cart","dockerfile":"apps/services/cart/Dockerfile","secret":"COOLIFY_APP_CART"},
+            {"name":"chat","dockerfile":"apps/services/chat/Dockerfile","secret":"COOLIFY_APP_CHAT"},
+            {"name":"media","dockerfile":"apps/services/media/Dockerfile","secret":"COOLIFY_APP_MEDIA"},
+            {"name":"notification","dockerfile":"apps/services/notification/Dockerfile","secret":"COOLIFY_APP_NOTIFICATION"},
+            {"name":"order","dockerfile":"apps/services/order/Dockerfile","secret":"COOLIFY_APP_ORDER"},
+            {"name":"payment","dockerfile":"apps/services/payment/Dockerfile","secret":"COOLIFY_APP_PAYMENT"},
+            {"name":"product","dockerfile":"apps/services/product/Dockerfile","secret":"COOLIFY_APP_PRODUCT"},
+            {"name":"query","dockerfile":"apps/services/query/Dockerfile","secret":"COOLIFY_APP_QUERY"},
+            {"name":"role","dockerfile":"apps/services/role/Dockerfile","secret":"COOLIFY_APP_ROLE"},
+            {"name":"user-access","dockerfile":"apps/services/user-access/Dockerfile","secret":"COOLIFY_APP_USER_ACCESS"},
+            {"name":"promotion","dockerfile":"apps/services/promotion/Dockerfile","secret":"COOLIFY_APP_PROMOTION"},
+            {"name":"review","dockerfile":"apps/services/review/Dockerfile","secret":"COOLIFY_APP_REVIEW"},
+            {"name":"report","dockerfile":"apps/services/report/Dockerfile","secret":"COOLIFY_APP_REPORT"}
+          ]'
+
+          # 4) filter theo affected để tạo matrix.include
+          MATRIX=$(jq -nc \
+            --argjson affected "$AFFECTED_APPS_JSON" \
+            --argjson services "$SERVICES_JSON" \
+            '{include: ($services | map(select(.name as $n | $affected | index($n) != null)))}')
+
+          echo "matrix=$MATRIX"
+          echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
+
+      - name: Upload node_modules
+        uses: actions/upload-artifact@v4
+        with:
+          name: node_modules
+          path: node_modules
+          retention-days: 1
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: install
+    if: ${{ fromJson(needs.install.outputs.matrix).include[0] != null }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.install.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download node_modules
+        uses: actions/download-artifact@v4
+        with:
+          name: node_modules
+          path: . # ✅ để ra ./node_modules, không bị node_modules/node_modules
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Generate tag
+        id: tag
+        shell: bash
+        run: echo "TAG=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      - name: Build and Push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/trustmebro-${{ matrix.name }}:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/trustmebro-${{ matrix.name }}:${{ steps.tag.outputs.TAG }}
+          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/trustmebro-${{ matrix.name }}:buildcache
+          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/trustmebro-${{ matrix.name }}:buildcache,mode=max
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [install, docker]
+    if: ${{ github.event_name != 'pull_request' && fromJson(needs.install.outputs.matrix).include[0] != null }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.install.outputs.matrix) }}
+    steps:
+      - name: Deploy affected app on Coolify
+        uses: fjogeleit/http-request-action@v1
+        with:
+          url: ${{ secrets.COOLIFY_URL }}/api/v1/deploy?uuid=${{ secrets[matrix.secret] }}&force=true
+          method: GET
+          bearerToken: ${{ secrets.COOLIFY_API_TOKEN }}
+          retry: 10
+          retryWait: 5000
