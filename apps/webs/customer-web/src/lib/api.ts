@@ -1,6 +1,7 @@
+import { AppConfiguration } from '@common/configurations/app.config';
 import axios, { type AxiosInstance, type AxiosRequestConfig } from 'axios';
 
-const BFF_BASE_URL = 'http://localhost:3100/api/v1';
+const BFF_BASE_URL = AppConfiguration.CUSTOMER_BFF_URL;
 
 export type CreateApiOptions = {
   accessToken?: string | null;

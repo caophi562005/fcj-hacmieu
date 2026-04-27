@@ -1,23 +1,23 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: customer-bff-ingress
+  name: customer-web-ingress
   annotations:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
-    alb.ingress.kubernetes.io/healthcheck-path: /api/v1/docs
+    alb.ingress.kubernetes.io/healthcheck-path: /
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
     alb.ingress.kubernetes.io/group.name: hacmieu-public
-    alb.ingress.kubernetes.io/group.order: '10'
+    alb.ingress.kubernetes.io/group.order: '100'
 spec:
   ingressClassName: alb
   rules:
     - http:
         paths:
           - pathType: Prefix
-            path: /api/v1
+            path: /
             backend:
               service:
-                name: customer-bff
+                name: customer-web
                 port:
-                  number: 3100
+                  number: 3000

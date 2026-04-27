@@ -96,6 +96,7 @@ jobs:
           SERVICES_JSON='[
             {"name":"admin-bff","dockerfile":"apps/bffs/admin-bff/Dockerfile"},
             {"name":"customer-bff","dockerfile":"apps/bffs/customer-bff/Dockerfile"},
+            {"name":"customer-web","dockerfile":"apps/webs/customer-web/Dockerfile"},
             {"name":"catalog-service","dockerfile":"apps/services/catalog-service/Dockerfile"},
             {"name":"iam-service","dockerfile":"apps/services/iam-service/Dockerfile"},
             {"name":"order-service","dockerfile":"apps/services/order-service/Dockerfile"},

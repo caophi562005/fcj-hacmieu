@@ -1,3 +1,4 @@
+import { AppConfiguration } from '@common/configurations/app.config';
 import { NextResponse, type NextRequest } from 'next/server';
 
 /**
@@ -17,7 +18,7 @@ const ACCESS_TOKEN_COOKIE = 'access_token';
 const REFRESH_TOKEN_COOKIE = 'refresh_token';
 const REFRESH_THRESHOLD_SECONDS = 5 * 60; // Refresh khi còn <5 phút
 
-const BFF_BASE_URL = 'http://localhost:3100/api/v1';
+const BFF_BASE_URL = AppConfiguration.CUSTOMER_BFF_URL;
 
 type RefreshResponse = {
   data?: {

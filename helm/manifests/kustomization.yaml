@@ -35,3 +35,7 @@ resources:
   - admin-bff/service.yaml
   - admin-bff/deployment.yaml
   - admin-bff/ingress.yaml
+  # Customer Web
+  - customer-web/service.yaml
+  - customer-web/deployment.yaml
+  - customer-web/ingress.yaml
