@@ -1,6 +1,9 @@
+import { GenderType } from '@common/constants/user.constant';
 import { cookies } from 'next/headers';
+import { cache } from 'react';
+import { getCurrentUser } from './iam';
 
-export const AUTH_COOKIE = 'vshop_auth';
+export const ACCESS_TOKEN_COOKIE = 'access_token';
 
 export type MockUser = {
   id: string;
@@ -8,35 +11,46 @@ export type MockUser = {
   email: string;
   phone: string;
   avatar: string;
-  gender: 'male' | 'female' | 'other';
+  gender: GenderType;
   birthday: string;
-  address: string;
   vXu: number;
   vouchers: number;
-  membership: 'Đồng' | 'Bạc' | 'Vàng' | 'Kim cương';
 };
 
-export const MOCK_USER: MockUser = {
-  id: 'u1',
-  name: 'Nguyễn Văn A',
-  email: 'nguyenvana@email.vn',
-  phone: '+84 901 234 567',
-  avatar: 'https://i.pravatar.cc/200?img=12',
-  gender: 'male',
-  birthday: '1995-08-15',
-  address: '123 Lê Lợi, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh',
-  vXu: 2450,
-  vouchers: 8,
-  membership: 'Vàng',
-};
+const DEFAULT_AVATAR = 'https://i.pravatar.cc/200?img=12';
 
-export async function getAuth(): Promise<MockUser | null> {
-  const c = await cookies();
-  const has = c.get(AUTH_COOKIE)?.value;
-  return has ? MOCK_USER : null;
+// Convert backend birthday (Date | ISO string | null) to `yyyy-MM-dd` for <input type="date">.
+function formatBirthday(raw: unknown): string {
+  if (!raw) return '';
+  const d = raw instanceof Date ? raw : new Date(String(raw));
+  if (Number.isNaN(d.getTime())) return '';
+  return d.toISOString().slice(0, 10);
 }
+
+// Per-request memoization: nhiều server component (Header, Layout, Page)
+// cùng gọi `getAuth()` trong 1 render → dedupe thành 1 BFF call duy nhất.
+export const getAuth = cache(async (): Promise<MockUser | null> => {
+  const c = await cookies();
+  const accessToken = c.get(ACCESS_TOKEN_COOKIE)?.value;
+  if (!accessToken) return null;
+
+  const user = await getCurrentUser({ accessToken });
+  if (!user) return null;
+
+  return {
+    id: user.id,
+    name: user.username ?? user.email?.split('@')[0] ?? 'Khách hàng',
+    email: user.email ?? '',
+    phone: user.phoneNumber ?? '',
+    avatar: user.avatar ?? DEFAULT_AVATAR,
+    gender: user.gender,
+    birthday: formatBirthday(user.birthday),
+    vXu: 0,
+    vouchers: 0,
+  };
+});
 
 export async function isAuthed(): Promise<boolean> {
   const c = await cookies();
-  return Boolean(c.get(AUTH_COOKIE)?.value);
+  return Boolean(c.get(ACCESS_TOKEN_COOKIE)?.value);
 }

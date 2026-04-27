@@ -1,0 +1,117 @@
+name: CI/CD (Build All)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+  id-token: write # bắt buộc cho OIDC
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Configure Git protocol
+        run: git config --global url."https://github.com/".insteadOf git://github.com/
+
+      - name: Cache pnpm store
+        id: cache-pnpm-store
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pnpm-store
+            node_modules
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Upload node_modules
+        uses: actions/upload-artifact@v4
+        with:
+          name: node_modules
+          path: node_modules
+          retention-days: 1
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: install
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: admin-bff
+            dockerfile: apps/bffs/admin-bff/Dockerfile
+          - name: customer-bff
+            dockerfile: apps/bffs/customer-bff/Dockerfile
+          - name: catalog-service
+            dockerfile: apps/services/catalog-service/Dockerfile
+          - name: iam-service
+            dockerfile: apps/services/iam-service/Dockerfile
+          - name: order-service
+            dockerfile: apps/services/order-service/Dockerfile
+          - name: payment-service
+            dockerfile: apps/services/payment-service/Dockerfile
+          - name: promotion-service
+            dockerfile: apps/services/promotion-service/Dockerfile
+          - name: shop-service
+            dockerfile: apps/services/shop-service/Dockerfile
+          - name: utility-service
+            dockerfile: apps/services/utility-service/Dockerfile
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download node_modules
+        uses: actions/download-artifact@v4
+        with:
+          name: node_modules
+          path: .
+
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Login to Amazon ECR Public
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          registry-type: public
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Generate tag
+        id: tag
+        shell: bash
+        run: echo "TAG=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      - name: Build and Push to ECR Public
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: true
+          tags: |
+            public.ecr.aws/h5u5b6t3/hacmieu/${{ matrix.name }}:latest
+            public.ecr.aws/h5u5b6t3/hacmieu/${{ matrix.name }}:${{ steps.tag.outputs.TAG }}
+          cache-from: type=registry,ref=public.ecr.aws/h5u5b6t3/hacmieu/${{ matrix.name }}:buildcache
+          cache-to: type=registry,ref=public.ecr.aws/h5u5b6t3/hacmieu/${{ matrix.name }}:buildcache,mode=max

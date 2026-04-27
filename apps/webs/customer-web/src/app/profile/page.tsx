@@ -1,8 +1,11 @@
-import { Camera, Coins, TicketPercent, Package } from 'lucide-react';
+import { Camera, Coins, Package, TicketPercent } from 'lucide-react';
+import { redirect } from 'next/navigation';
 import { getAuth } from '../../lib/auth';
+import { ProfileForm } from './ProfileForm';
 
 export default async function ProfilePage() {
-  const user = (await getAuth())!;
+  const user = await getAuth();
+  if (!user) redirect('/login?next=/profile');
 
   return (
     <>
@@ -18,13 +21,20 @@ export default async function ProfilePage() {
         <div className="flex-1 min-w-[200px]">
           <h1 className="text-lg font-semibold">Xin chào, {user.name}!</h1>
           <p className="text-sm text-ink-muted">
-            Hạng thành viên:{' '}
-            <span className="text-primary font-semibold">{user.membership}</span>
+            Chào mừng bạn quay trở lại V-Shop.
           </p>
         </div>
         <div className="grid grid-cols-3 gap-3 w-full sm:w-auto">
-          <Stat icon={Coins} label="V-Xu" value={user.vXu.toLocaleString('vi-VN')} />
-          <Stat icon={TicketPercent} label="Voucher" value={String(user.vouchers)} />
+          <Stat
+            icon={Coins}
+            label="V-Xu"
+            value={user.vXu.toLocaleString('vi-VN')}
+          />
+          <Stat
+            icon={TicketPercent}
+            label="Voucher"
+            value={String(user.vouchers)}
+          />
           <Stat icon={Package} label="Đơn mua" value="12" />
         </div>
       </div>
@@ -37,36 +47,13 @@ export default async function ProfilePage() {
       </div>
 
       <div className="card p-5 grid md:grid-cols-[1fr_220px] gap-6">
-        <form className="space-y-4 order-2 md:order-1">
-          <Field label="Họ và tên" defaultValue={user.name} />
-          <Field label="Email" type="email" defaultValue={user.email} />
-          <Field label="Số điện thoại" defaultValue={user.phone} />
-          <div>
-            <span className="text-sm font-medium block mb-1">Giới tính</span>
-            <div className="flex gap-4 text-sm">
-              {[
-                { v: 'male', l: 'Nam' },
-                { v: 'female', l: 'Nữ' },
-                { v: 'other', l: 'Khác' },
-              ].map((g) => (
-                <label key={g.v} className="inline-flex items-center gap-2">
-                  <input
-                    type="radio"
-                    name="gender"
-                    defaultChecked={user.gender === g.v}
-                    className="accent-primary"
-                  />
-                  {g.l}
-                </label>
-              ))}
-            </div>
-          </div>
-          <Field label="Ngày sinh" type="date" defaultValue={user.birthday} />
-          <Field label="Địa chỉ" defaultValue={user.address} />
-          <div className="pt-2">
-            <button className="btn-primary btn-md">Lưu thay đổi</button>
-          </div>
-        </form>
+        <ProfileForm
+          name={user.name}
+          email={user.email}
+          phone={user.phone}
+          gender={user.gender}
+          birthday={user.birthday}
+        />
 
         <div className="order-1 md:order-2 flex flex-col items-center text-center md:border-l md:border-border-subtle md:pl-6">
           <div className="relative">
@@ -90,23 +77,6 @@ export default async function ProfilePage() {
         </div>
       </div>
     </>
-  );
-}
-
-function Field({
-  label,
-  type = 'text',
-  defaultValue,
-}: {
-  label: string;
-  type?: string;
-  defaultValue?: string;
-}) {
-  return (
-    <label className="block">
-      <span className="text-sm font-medium">{label}</span>
-      <input type={type} defaultValue={defaultValue} className="input mt-1" />
-    </label>
   );
 }
 

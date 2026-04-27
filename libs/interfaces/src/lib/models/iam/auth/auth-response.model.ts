@@ -1,6 +1,6 @@
 import z from 'zod';
 
-export const ExchangeTokenResponseSchema = z.object({
+export const RefreshSessionResponseSchema = z.object({
   accessToken: z.string(),
   idToken: z.string(),
   refreshToken: z.string().optional(),
@@ -9,4 +9,6 @@ export const ExchangeTokenResponseSchema = z.object({
   scope: z.string().optional(),
 });
 
-export type ExchangeTokenResponse = z.infer<typeof ExchangeTokenResponseSchema>;
+export type RefreshSessionResponse = z.infer<
+  typeof RefreshSessionResponseSchema
+>;

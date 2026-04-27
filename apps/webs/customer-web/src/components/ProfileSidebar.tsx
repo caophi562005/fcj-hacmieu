@@ -1,17 +1,17 @@
 'use client';
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import type { LucideIcon } from 'lucide-react';
 import {
-  UserRound,
-  Lock,
   Bell,
+  Coins,
+  Lock,
+  LogOut,
   Package,
   TicketPercent,
-  Coins,
-  LogOut,
+  UserRound,
 } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { logoutAction } from '../app/login/actions';
 import type { MockUser } from '../lib/auth';
 
@@ -38,9 +38,6 @@ export function ProfileSidebar({ user }: { user: MockUser }) {
         <div className="min-w-0">
           <div className="text-xs text-ink-subtle">Tài khoản</div>
           <div className="font-semibold truncate">{user.name}</div>
-          <div className="mt-0.5 inline-flex items-center gap-1 text-[10px] font-semibold text-primary bg-primary-50 rounded px-1.5 py-0.5">
-            Hạng {user.membership}
-          </div>
         </div>
       </div>
       <nav className="card p-2">

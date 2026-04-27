@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react';
 import { redirect } from 'next/navigation';
+import type { ReactNode } from 'react';
 import { MainShell } from '../../components/MainShell';
 import { ProfileSidebar } from '../../components/ProfileSidebar';
 import { getAuth } from '../../lib/auth';

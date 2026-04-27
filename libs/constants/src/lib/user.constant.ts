@@ -12,6 +12,8 @@ export const GenderEnums = z.enum([
   GenderValues.OTHER,
 ]);
 
+export type GenderType = z.infer<typeof GenderEnums>;
+
 // ====================================================================================================
 
 export const UserStatusValues = {

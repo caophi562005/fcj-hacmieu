@@ -2,9 +2,7 @@ import {
   AUTH_MODULE_SERVICE_NAME,
   AuthModuleClient,
   ChangePasswordRequest,
-  ExchangeCodeRequest,
   IAM_SERVICE_PACKAGE_NAME,
-  LogoutCurrentSessionRequest,
   RefreshSessionRequest,
   ValidateTokenRequest,
 } from '@common/interfaces/proto-types/iam';
@@ -27,16 +25,8 @@ export class AuthService implements OnModuleInit {
     );
   }
 
-  async exchangeCode(data: ExchangeCodeRequest) {
-    return firstValueFrom(this.authModule.exchangeCode(data));
-  }
-
   async refreshSession(data: RefreshSessionRequest) {
     return firstValueFrom(this.authModule.refreshSession(data));
-  }
-
-  async logout(data: LogoutCurrentSessionRequest) {
-    return firstValueFrom(this.authModule.logoutCurrentSession(data));
   }
 
   async changePassword(data: ChangePasswordRequest) {

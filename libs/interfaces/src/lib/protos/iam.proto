@@ -3,27 +3,14 @@ syntax = "proto3";
 package IAM_SERVICE;
 
 service AuthModule {
-  rpc ExchangeCode(ExchangeCodeRequest) returns (ExchangeCodeResponse);
-  rpc RefreshSession(RefreshSessionRequest) returns (ExchangeCodeResponse);
-  rpc LogoutCurrentSession(LogoutCurrentSessionRequest) returns (Message);
+  rpc RefreshSession(RefreshSessionRequest) returns (RefreshSessionResponse);
   rpc ChangePassword(ChangePasswordRequest) returns (Message);
   rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse);
-}
-
-message ExchangeCodeRequest {
-  optional string processId = 1;
-  string code = 2;
 }
 
 message RefreshSessionRequest {
   optional string processId = 1;
   string refreshToken = 2;
-}
-
-message LogoutCurrentSessionRequest {
-  optional string processId = 1;
-  string refreshToken = 2;
-  string accessToken = 3;
 }
 
 message ChangePasswordRequest {
@@ -38,7 +25,7 @@ message ValidateTokenRequest {
   string accessToken = 2;
 }
 
-message ExchangeCodeResponse {
+message RefreshSessionResponse {
   string accessToken = 1;
   string idToken = 2;
   string refreshToken = 3;
