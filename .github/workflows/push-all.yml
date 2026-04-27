@@ -99,20 +99,22 @@ jobs:
         with:
           registry-type: public
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
       - name: Generate tag
         id: tag
         shell: bash
         run: echo "TAG=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
 
       - name: Build and Push to ECR Public
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ${{ matrix.dockerfile }}
-          push: true
-          tags: |
-            public.ecr.aws/h5u5b6t3/hacmieu/${{ matrix.name }}:latest
-            public.ecr.aws/h5u5b6t3/hacmieu/${{ matrix.name }}:${{ steps.tag.outputs.TAG }}
+        shell: bash
+        env:
+          IMAGE: public.ecr.aws/h5u5b6t3/hacmieu/${{ matrix.name }}
+          TAG: ${{ steps.tag.outputs.TAG }}
+        run: |
+          set -euo pipefail
+          docker build \
+            -f "${{ matrix.dockerfile }}" \
+            -t "$IMAGE:latest" \
+            -t "$IMAGE:$TAG" \
+            .
+          docker push "$IMAGE:latest"
+          docker push "$IMAGE:$TAG"
