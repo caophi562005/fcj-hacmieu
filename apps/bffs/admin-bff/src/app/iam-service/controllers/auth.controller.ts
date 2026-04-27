@@ -9,13 +9,6 @@ import { AuthService } from '../services/auth.service';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post('exchange')
-  // @ApiOkResponse({ type: LoginPostmanResponseDto })
-  @IsPublic()
-  login(@Body() body: { code: string }, @ProcessId() processId: string) {
-    return this.authService.exchangeCode({ ...body, processId });
-  }
-
   @Post('refresh')
   // @ApiOkResponse({ type: LoginPostmanResponseDto })
   @IsPublic()
@@ -24,14 +17,6 @@ export class AuthController {
     @Headers('x-refresh-token') refreshToken: string,
   ) {
     return this.authService.refreshSession({ refreshToken, processId });
-  }
-
-  @Post('logout')
-  logout(
-    @Headers('x-refresh-token') refreshToken: string,
-    @ProcessId() processId: string,
-  ) {
-    return this.authService.logout({ refreshToken, processId });
   }
 
   @Post('change-password')

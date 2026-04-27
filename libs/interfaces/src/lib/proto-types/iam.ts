@@ -10,20 +10,9 @@ import { Observable } from "rxjs";
 
 export const protobufPackage = "IAM_SERVICE";
 
-export interface ExchangeCodeRequest {
-  processId?: string | undefined;
-  code: string;
-}
-
 export interface RefreshSessionRequest {
   processId?: string | undefined;
   refreshToken: string;
-}
-
-export interface LogoutCurrentSessionRequest {
-  processId?: string | undefined;
-  refreshToken: string;
-  accessToken: string;
 }
 
 export interface ChangePasswordRequest {
@@ -38,7 +27,7 @@ export interface ValidateTokenRequest {
   accessToken: string;
 }
 
-export interface ExchangeCodeResponse {
+export interface RefreshSessionResponse {
   accessToken: string;
   idToken: string;
   refreshToken: string;
@@ -270,11 +259,7 @@ export interface UserBasicInfo {
 export const IAM_SERVICE_PACKAGE_NAME = "IAM_SERVICE";
 
 export interface AuthModuleClient {
-  exchangeCode(request: ExchangeCodeRequest): Observable<ExchangeCodeResponse>;
-
-  refreshSession(request: RefreshSessionRequest): Observable<ExchangeCodeResponse>;
-
-  logoutCurrentSession(request: LogoutCurrentSessionRequest): Observable<Message>;
+  refreshSession(request: RefreshSessionRequest): Observable<RefreshSessionResponse>;
 
   changePassword(request: ChangePasswordRequest): Observable<Message>;
 
@@ -282,15 +267,9 @@ export interface AuthModuleClient {
 }
 
 export interface AuthModuleController {
-  exchangeCode(
-    request: ExchangeCodeRequest,
-  ): Promise<ExchangeCodeResponse> | Observable<ExchangeCodeResponse> | ExchangeCodeResponse;
-
   refreshSession(
     request: RefreshSessionRequest,
-  ): Promise<ExchangeCodeResponse> | Observable<ExchangeCodeResponse> | ExchangeCodeResponse;
-
-  logoutCurrentSession(request: LogoutCurrentSessionRequest): Promise<Message> | Observable<Message> | Message;
+  ): Promise<RefreshSessionResponse> | Observable<RefreshSessionResponse> | RefreshSessionResponse;
 
   changePassword(request: ChangePasswordRequest): Promise<Message> | Observable<Message> | Message;
 
@@ -301,13 +280,7 @@ export interface AuthModuleController {
 
 export function AuthModuleControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = [
-      "exchangeCode",
-      "refreshSession",
-      "logoutCurrentSession",
-      "changePassword",
-      "validateToken",
-    ];
+    const grpcMethods: string[] = ["refreshSession", "changePassword", "validateToken"];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
       GrpcMethod("AuthModule", method)(constructor.prototype[method], method, descriptor);
