@@ -6,13 +6,16 @@ metadata:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/healthcheck-path: /
-    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}, {"HTTPS":443}]'
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:ap-southeast-1:491333778094:certificate/3d25da07-5ca5-4b75-a4b0-4d3ebe99f37d
+    alb.ingress.kubernetes.io/ssl-redirect: '443'
     alb.ingress.kubernetes.io/group.name: hacmieu-public
     alb.ingress.kubernetes.io/group.order: '100'
 spec:
   ingressClassName: alb
   rules:
-    - http:
+    - host: vshop.hacmieu.com
+      http:
         paths:
           - pathType: Prefix
             path: /

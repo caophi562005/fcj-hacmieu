@@ -12,7 +12,7 @@ export async function logoutAction() {
   c.delete('oidc_nonce');
   c.delete('oidc_state');
 
-  const logoutUri = 'http://localhost:3000';
+  const logoutUri = AuthConfiguration.LOGOUT_URI;
 
   const url = new URL(`https://${AuthConfiguration.COGNITO_DOMAIN}/logout`);
   url.searchParams.set('client_id', AuthConfiguration.CLIENT_ID);
