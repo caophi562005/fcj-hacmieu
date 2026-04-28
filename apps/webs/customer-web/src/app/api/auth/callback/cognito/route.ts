@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
   const appUrl = AppConfiguration.CUSTOMER_WEB_URL;
   const error = searchParams.get('error');
   if (error) {
-    console.error('[OIDC callback] Cognito error:', error);
+    console.error('[OIDC] Cognito error:', error);
     return NextResponse.redirect(
       `${appUrl}/?auth_error=${encodeURIComponent(error)}`,
     );
@@ -34,9 +34,7 @@ export async function GET(request: NextRequest) {
   const cookieState = cookieJar.get('oidc_state')?.value;
 
   if (!cookieNonce || !cookieState) {
-    console.error(
-      '[OIDC callback] Missing nonce/state cookie — session expired?',
-    );
+    console.error('[OIDC] Missing nonce/state cookie — session expired?');
     return NextResponse.redirect(`${appUrl}/?auth_error=session_expired`);
   }
 
@@ -90,7 +88,7 @@ export async function GET(request: NextRequest) {
 
     return res;
   } catch (err) {
-    console.error('[OIDC callback] Token exchange failed:', err);
+    console.error('[OIDC] Token exchange failed:', err);
     return NextResponse.redirect(`${appUrl}/?auth_error=callback_failed`);
   }
 }
