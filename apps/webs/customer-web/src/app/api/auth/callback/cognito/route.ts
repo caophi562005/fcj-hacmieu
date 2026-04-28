@@ -1,3 +1,4 @@
+import { AppConfiguration } from '@common/configurations/app.config';
 import { AuthConfiguration } from '@common/configurations/auth.config';
 import { NextResponse, type NextRequest } from 'next/server';
 import { ACCESS_TOKEN_COOKIE } from '../../../../../lib/auth';
@@ -18,12 +19,13 @@ import { getOidcClient } from '../../../../../lib/oidc';
  *   6. Redirect /profile
  */
 export async function GET(request: NextRequest) {
-  const { searchParams, origin } = request.nextUrl;
+  const { searchParams } = request.nextUrl;
+  const appUrl = AppConfiguration.CUSTOMER_WEB_URL;
   const error = searchParams.get('error');
   if (error) {
     console.error('[OIDC callback] Cognito error:', error);
     return NextResponse.redirect(
-      `${origin}/?auth_error=${encodeURIComponent(error)}`,
+      `${appUrl}/?auth_error=${encodeURIComponent(error)}`,
     );
   }
 
@@ -35,7 +37,7 @@ export async function GET(request: NextRequest) {
     console.error(
       '[OIDC callback] Missing nonce/state cookie — session expired?',
     );
-    return NextResponse.redirect(`${origin}/?auth_error=session_expired`);
+    return NextResponse.redirect(`${appUrl}/?auth_error=session_expired`);
   }
 
   try {
@@ -61,7 +63,7 @@ export async function GET(request: NextRequest) {
     // expires_in (giây) — fallback 1 giờ nếu Cognito không trả
     const expiresIn = tokenSet.expires_in ?? 3600;
 
-    const res = NextResponse.redirect(`${origin}/profile`);
+    const res = NextResponse.redirect(`${appUrl}/profile`);
 
     // Set cookie access_token httpOnly để getAuth() đọc + forward Bearer cho BFF
     res.cookies.set(ACCESS_TOKEN_COOKIE, tokenSet.access_token, {
@@ -89,6 +91,6 @@ export async function GET(request: NextRequest) {
     return res;
   } catch (err) {
     console.error('[OIDC callback] Token exchange failed:', err);
-    return NextResponse.redirect(`${origin}/?auth_error=callback_failed`);
+    return NextResponse.redirect(`${appUrl}/?auth_error=callback_failed`);
   }
 }

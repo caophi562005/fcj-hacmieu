@@ -13,6 +13,7 @@ export const AppConfigurationSchema = z.object({
   SHOP_SERVICE_PORT: z.coerce.number().default(3002),
 
   CUSTOMER_BFF_URL: z.string(),
+  CUSTOMER_WEB_URL: z.string(),
 });
 
 const configServer = AppConfigurationSchema.safeParse(process.env);

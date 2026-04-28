@@ -12,7 +12,7 @@ permissions:
   id-token: write # bắt buộc cho OIDC
 
 jobs:
-  install:
+  check:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
@@ -21,32 +21,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: 'pnpm'
-
-      - name: Configure Git protocol
-        run: git config --global url."https://github.com/".insteadOf git://github.com/
-
-      - name: Cache pnpm store
-        id: cache-pnpm-store
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.pnpm-store
-            node_modules
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
 
       - name: Compute affected apps matrix
         id: set-matrix
@@ -69,75 +43,65 @@ jobs:
           echo "Using BASE=$BASE HEAD=$HEAD"
 
           CHANGED_FILES=$(git diff --name-only --diff-filter=ACMRT "$BASE" "$HEAD" || true)
-          FILTERED_FILES=$(printf '%s\n' "$CHANGED_FILES" \
-            | grep -Ev '^(package\.json|pnpm-lock\.yaml)$' \
-            | paste -sd, -)
+          echo "Changed files:"
+          printf '%s\n' "$CHANGED_FILES"
 
-          if [ -z "$FILTERED_FILES" ]; then
-            echo "Only package.json / pnpm-lock.yaml changed (or no relevant files)."
-            echo 'affected_apps=[]' >> "$GITHUB_OUTPUT"
-            echo 'matrix={"include":[]}' >> "$GITHUB_OUTPUT"
-            exit 0
+          # Service registry: name + dockerfile + path
+          SERVICES_JSON='[
+            {"name":"admin-bff","dockerfile":"apps/bffs/admin-bff/Dockerfile","path":"apps/bffs/admin-bff"},
+            {"name":"customer-bff","dockerfile":"apps/bffs/customer-bff/Dockerfile","path":"apps/bffs/customer-bff"},
+            {"name":"customer-web","dockerfile":"apps/webs/customer-web/Dockerfile","path":"apps/webs/customer-web"},
+            {"name":"catalog-service","dockerfile":"apps/services/catalog-service/Dockerfile","path":"apps/services/catalog-service"},
+            {"name":"iam-service","dockerfile":"apps/services/iam-service/Dockerfile","path":"apps/services/iam-service"},
+            {"name":"order-service","dockerfile":"apps/services/order-service/Dockerfile","path":"apps/services/order-service"},
+            {"name":"payment-service","dockerfile":"apps/services/payment-service/Dockerfile","path":"apps/services/payment-service"},
+            {"name":"promotion-service","dockerfile":"apps/services/promotion-service/Dockerfile","path":"apps/services/promotion-service"},
+            {"name":"shop-service","dockerfile":"apps/services/shop-service/Dockerfile","path":"apps/services/shop-service"},
+            {"name":"utility-service","dockerfile":"apps/services/utility-service/Dockerfile","path":"apps/services/utility-service"}
+          ]'
+
+          # Nếu có file thay đổi dưới libs/ hoặc root config quan trọng → affect tất cả services
+          GLOBAL_CHANGED=$(printf '%s\n' "$CHANGED_FILES" \
+            | grep -E '^(libs/|tsconfig\.|nx\.json|pnpm-workspace\.yaml)' || true)
+
+          if [ -n "$GLOBAL_CHANGED" ]; then
+            echo "Global file changed → affect ALL services."
+            AFFECTED_APPS_JSON=$(echo "$SERVICES_JSON" | jq -c '[.[].name]')
+          else
+            # Path-based: mỗi service check xem có file thay đổi nảo nằm dưới path của nó không
+            AFFECTED_APPS_JSON=$(echo "$SERVICES_JSON" | jq -c \
+              --arg files "$CHANGED_FILES" \
+              '[.[] | select(.path as $p | $files | split("\n") | any(startswith($p + "/"))) | .name]')
           fi
 
-          AFFECTED_LINES=$(pnpm nx show projects --affected --files="$FILTERED_FILES" --type=app || true)
-
-          if [ -z "$AFFECTED_LINES" ]; then
-            echo "No affected apps."
-            echo 'affected_apps=[]' >> "$GITHUB_OUTPUT"
-            echo 'matrix={"include":[]}' >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          AFFECTED_APPS_JSON=$(printf '%s\n' "$AFFECTED_LINES" | jq -R -s -c 'split("\n") | map(select(length>0))')
           echo "Affected apps: $AFFECTED_APPS_JSON"
           echo "affected_apps=$AFFECTED_APPS_JSON" >> "$GITHUB_OUTPUT"
 
-          SERVICES_JSON='[
-            {"name":"admin-bff","dockerfile":"apps/bffs/admin-bff/Dockerfile"},
-            {"name":"customer-bff","dockerfile":"apps/bffs/customer-bff/Dockerfile"},
-            {"name":"customer-web","dockerfile":"apps/webs/customer-web/Dockerfile"},
-            {"name":"catalog-service","dockerfile":"apps/services/catalog-service/Dockerfile"},
-            {"name":"iam-service","dockerfile":"apps/services/iam-service/Dockerfile"},
-            {"name":"order-service","dockerfile":"apps/services/order-service/Dockerfile"},
-            {"name":"payment-service","dockerfile":"apps/services/payment-service/Dockerfile"},
-            {"name":"promotion-service","dockerfile":"apps/services/promotion-service/Dockerfile"},
-            {"name":"shop-service","dockerfile":"apps/services/shop-service/Dockerfile"},
-            {"name":"utility-service","dockerfile":"apps/services/utility-service/Dockerfile"}
-          ]'
+          if [ "$AFFECTED_APPS_JSON" = "[]" ]; then
+            echo "No affected apps."
+            echo 'matrix={"include":[]}' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
 
           MATRIX=$(jq -nc \
             --argjson affected "$AFFECTED_APPS_JSON" \
             --argjson services "$SERVICES_JSON" \
-            '{include: ($services | map(select(.name as $n | $affected | index($n) != null)))}')
+            '{include: ($services | map(select(.name as $n | $affected | index($n) != null) | {name, dockerfile}))}')
 
           echo "matrix=$MATRIX"
           echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
 
-      - name: Upload node_modules
-        uses: actions/upload-artifact@v4
-        with:
-          name: node_modules
-          path: node_modules
-          retention-days: 1
-
   docker:
     runs-on: ubuntu-latest
-    needs: install
-    if: ${{ fromJson(needs.install.outputs.matrix).include[0] != null }}
+    needs: check
+    if: ${{ fromJson(needs.check.outputs.matrix).include[0] != null }}
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.install.outputs.matrix) }}
+      matrix: ${{ fromJson(needs.check.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Download node_modules
-        uses: actions/download-artifact@v4
-        with:
-          name: node_modules
-          path: .
 
       - name: Configure AWS credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v4
