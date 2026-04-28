@@ -1,0 +1,56 @@
+# Build context optimization for payment-service
+# Đảm bảo build reproducible giữa local và CI
+
+node_modules
+**/node_modules
+dist
+**/dist
+.next
+**/.next
+.nx
+**/.cache
+
+# Prisma generated client — buộc generate-prisma chạy trong container
+**/generated
+**/prisma-client
+
+# Env & secrets
+.env
+.env.*
+!.env.example
+
+# Git / IDE / OS
+.git
+.gitignore
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+
+# Logs / test
+*.log
+**/*.log
+coverage
+**/coverage
+
+# Docs / misc
+*.md
+!README.md
+.github
+.windsurf
+.claude
+
+# Infra
+helm
+terraform
+
+# Other apps không cần
+apps/bffs
+apps/webs
+apps/services/admin-bff
+apps/services/iam-service
+apps/services/catalog-service
+apps/services/order-service
+apps/services/promotion-service
+apps/services/shop-service
+apps/services/utility-service

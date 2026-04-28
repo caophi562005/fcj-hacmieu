@@ -1,0 +1,51 @@
+# Build context optimization for customer-web (Next.js)
+# Đảm bảo build reproducible giữa local và CI
+
+node_modules
+**/node_modules
+dist
+**/dist
+.next
+**/.next
+.nx
+**/.cache
+
+# Generated artifacts
+**/generated
+**/prisma-client
+
+# Env & secrets (giữ lại .env.example vì Dockerfile dùng làm .env build-time)
+.env
+.env.local
+.env.development
+.env.production
+!.env.example
+
+# Git / IDE / OS
+.git
+.gitignore
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+
+# Logs / test
+*.log
+**/*.log
+coverage
+**/coverage
+
+# Docs / misc
+*.md
+!README.md
+.github
+.windsurf
+.claude
+
+# Infra
+helm
+terraform
+
+# Other apps không cần
+apps/bffs
+apps/services

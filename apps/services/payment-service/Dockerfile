@@ -35,10 +35,7 @@ ENV NODE_ENV=production
 COPY --from=builder /workspace/dist/apps/services/payment-service/package.json ./package.json
 
 RUN pnpm install --prod --no-frozen-lockfile \
-	&& pnpm add tslib --prod
-
-COPY --from=builder /workspace/node_modules/prisma ./node_modules/prisma
-COPY --from=builder /workspace/node_modules/@prisma ./node_modules/@prisma
+	&& pnpm add tslib @prisma/client --prod
 
 COPY --from=builder /workspace/dist/apps/services/payment-service ./dist/apps/services/payment-service
 

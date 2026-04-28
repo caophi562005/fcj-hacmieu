@@ -1,0 +1,66 @@
+# Loại trừ artifact build local để build context giống CI
+# Đảm bảo build reproducible giữa local và GitHub Actions
+
+# Node modules — Dockerfile sẽ tự pnpm install trong builder
+node_modules
+**/node_modules
+
+# Build output cũ
+dist
+**/dist
+.next
+**/.next
+
+# Nx cache
+.nx
+**/.cache
+
+# Prisma generated client — buộc generate-prisma chạy trong container
+**/generated
+**/prisma-client
+
+# Env & secrets
+.env
+.env.*
+!.env.example
+
+# Git
+.git
+.gitignore
+
+# IDE / OS
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+**/*.log
+
+# Test artifacts
+coverage
+**/coverage
+
+# Docs / misc
+*.md
+!README.md
+.github
+.windsurf
+.claude
+
+# Helm / K8s manifests (không cần cho build app)
+helm
+terraform
+
+# Other apps không cần cho iam-service (giảm context size)
+apps/bffs
+apps/webs
+apps/services/admin-bff
+apps/services/catalog-service
+apps/services/order-service
+apps/services/payment-service
+apps/services/promotion-service
+apps/services/shop-service
+apps/services/utility-service
+apps/services/customer-bff
