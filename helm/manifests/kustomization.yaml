@@ -10,31 +10,31 @@ resources:
   - iam-service/service.yaml
   - iam-service/deployment.yaml
   # Catalog Service
-  - catalog-service/service.yaml
-  - catalog-service/deployment.yaml
-  # Shop Service
-  - shop-service/service.yaml
-  - shop-service/deployment.yaml
-  # Order Service
-  - order-service/service.yaml
-  - order-service/deployment.yaml
-  # Payment Service
-  - payment-service/service.yaml
-  - payment-service/deployment.yaml
-  # Promotion Service
-  - promotion-service/service.yaml
-  - promotion-service/deployment.yaml
-  # Utility Service
-  - utility-service/service.yaml
-  - utility-service/deployment.yaml
+  # - catalog-service/service.yaml
+  # - catalog-service/deployment.yaml
+  # # Shop Service
+  # - shop-service/service.yaml
+  # - shop-service/deployment.yaml
+  # # Order Service
+  # - order-service/service.yaml
+  # - order-service/deployment.yaml
+  # # Payment Service
+  # - payment-service/service.yaml
+  # - payment-service/deployment.yaml
+  # # Promotion Service
+  # - promotion-service/service.yaml
+  # - promotion-service/deployment.yaml
+  # # Utility Service
+  # - utility-service/service.yaml
+  # - utility-service/deployment.yaml
   # Customer BFF
   - customer-bff/service.yaml
   - customer-bff/deployment.yaml
   - customer-bff/ingress.yaml
-  # Admin BFF
-  - admin-bff/service.yaml
-  - admin-bff/deployment.yaml
-  - admin-bff/ingress.yaml
+  # # Admin BFF
+  # - admin-bff/service.yaml
+  # - admin-bff/deployment.yaml
+  # - admin-bff/ingress.yaml
   # Customer Web
   - customer-web/service.yaml
   - customer-web/deployment.yaml

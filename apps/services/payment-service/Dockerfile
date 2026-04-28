@@ -37,6 +37,9 @@ COPY --from=builder /workspace/dist/apps/services/payment-service/package.json .
 RUN pnpm install --prod --no-frozen-lockfile \
 	&& pnpm add tslib --prod
 
+COPY --from=builder /workspace/node_modules/prisma ./node_modules/prisma
+COPY --from=builder /workspace/node_modules/@prisma ./node_modules/@prisma
+
 COPY --from=builder /workspace/dist/apps/services/payment-service ./dist/apps/services/payment-service
 
 USER node

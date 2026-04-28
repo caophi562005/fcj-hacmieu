@@ -37,6 +37,9 @@ COPY --from=builder /workspace/dist/apps/services/shop-service/package.json ./pa
 RUN pnpm install --prod --no-frozen-lockfile \
 	&& pnpm add tslib --prod
 
+COPY --from=builder /workspace/node_modules/prisma ./node_modules/prisma
+COPY --from=builder /workspace/node_modules/@prisma ./node_modules/@prisma
+
 COPY --from=builder /workspace/dist/apps/services/shop-service ./dist/apps/services/shop-service
 
 USER node
