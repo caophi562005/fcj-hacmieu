@@ -14,6 +14,8 @@ export const PromotionStatusEnums = z.enum([
   PromotionStatusValues.ENDED,
 ]);
 
+// ====================================================================================================
+
 export const DiscountTypeValues = {
   PERCENT: 'PERCENT',
   AMOUNT: 'AMOUNT',
@@ -24,6 +26,8 @@ export const DiscountTypeEnums = z.enum([
   DiscountTypeValues.AMOUNT,
 ]);
 
+// ====================================================================================================
+
 export const PromotionScopeValues = {
   ORDER: 'ORDER',
   SHIPPING: 'SHIPPING',
@@ -33,3 +37,19 @@ export const PromotionScopeEnums = z.enum([
   PromotionScopeValues.ORDER,
   PromotionScopeValues.SHIPPING,
 ]);
+
+// ====================================================================================================
+
+export const RedemptionStatusValues = {
+  AVAILABLE: 'AVAILABLE',
+  USED: 'USED',
+  CANCELLED: 'CANCELLED',
+} as const;
+
+export const RedemptionStatusEnums = z.enum([
+  RedemptionStatusValues.AVAILABLE,
+  RedemptionStatusValues.USED,
+  RedemptionStatusValues.CANCELLED,
+]);
+
+export type RedemptionStatusType = z.infer<typeof RedemptionStatusEnums>;

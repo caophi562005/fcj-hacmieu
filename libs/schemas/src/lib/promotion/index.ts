@@ -32,6 +32,7 @@ export const PromotionRedemptionSchema = z.object({
   discountValue: z.number().int(),
   minOrderSubtotal: z.number().int(),
   maxDiscount: z.number().int().optional(),
+  claimedAt: z.any(),
   usedAt: z.any(),
   cancelledAt: z.any(),
   createdAt: z.any(),

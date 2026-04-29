@@ -127,3 +127,46 @@ message CheckPromotionRequest {
 }
 
 //============================================ Redemption Messages ===================================//
+
+service RedemptionModule {
+  rpc ClaimPromotion(ClaimPromotionRequest) returns (PromotionRedemptionResponse);
+  rpc GetMyVouchers(GetMyVouchersRequest) returns (GetMyVouchersResponse);
+}
+
+message ClaimPromotionRequest {
+  optional string processId = 1;
+  string promotionId = 2;
+  string userId = 3;
+}
+
+message GetMyVouchersRequest {
+  optional string processId = 1;
+  string userId = 2;
+  int32 page = 3;
+  int32 limit = 4;
+  optional string status = 5;
+}
+
+message PromotionRedemptionResponse {
+  string id = 1;
+  string promotionId = 2;
+  string userId = 3;
+  repeated string orderIds = 4;
+  string code = 5;
+  string discountType = 6;
+  int32 discountValue = 7;
+  int32 minOrderSubtotal = 8;
+  optional int32 maxDiscount = 9;
+  string claimedAt = 10;
+  optional string usedAt = 11;
+  optional string cancelledAt = 12;
+  string createdAt = 13;
+}
+
+message GetMyVouchersResponse {
+  int32 page = 1;
+  int32 limit = 2;
+  int32 totalItems = 3;
+  int32 totalPages = 4;
+  repeated PromotionRedemptionResponse redemptions = 5;
+}

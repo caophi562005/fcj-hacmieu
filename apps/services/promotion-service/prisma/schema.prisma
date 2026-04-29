@@ -85,8 +85,12 @@ model Redemption {
     minOrderSubtotal Int
     maxDiscount      Int?
 
-    // trạng thái redemption
-    usedAt      DateTime? // lúc order paid/confirmed
+    // Vòng đời voucher của user:
+    //  1. claimedAt  — user thu thập voucher (mặc định = now)
+    //  2. usedAt     — user áp voucher vào đơn hàng đã thanh toán
+    //  3. cancelledAt — user / hệ thống huỷ voucher
+    claimedAt   DateTime  @default(now())
+    usedAt      DateTime?
     cancelledAt DateTime?
     createdAt   DateTime  @default(now())
 

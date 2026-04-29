@@ -124,6 +124,48 @@ export interface CheckPromotionRequest {
   userId: string;
 }
 
+export interface ClaimPromotionRequest {
+  processId?: string | undefined;
+  promotionId: string;
+  userId: string;
+}
+
+export interface GetMyVouchersRequest {
+  processId?: string | undefined;
+  userId: string;
+  page: number;
+  limit: number;
+  /**
+   * Filter trạng thái: "available" (chưa dùng & chưa huỷ), "used", "cancelled".
+   * Bỏ trống → trả tất cả.
+   */
+  status?: string | undefined;
+}
+
+export interface PromotionRedemptionResponse {
+  id: string;
+  promotionId: string;
+  userId: string;
+  orderIds: string[];
+  code: string;
+  discountType: string;
+  discountValue: number;
+  minOrderSubtotal: number;
+  maxDiscount?: number | undefined;
+  claimedAt: string;
+  usedAt?: string | undefined;
+  cancelledAt?: string | undefined;
+  createdAt: string;
+}
+
+export interface GetMyVouchersResponse {
+  page: number;
+  limit: number;
+  totalItems: number;
+  totalPages: number;
+  redemptions: PromotionRedemptionResponse[];
+}
+
 export const PROMOTION_SERVICE_PACKAGE_NAME = "PROMOTION_SERVICE";
 
 export interface PromotionModuleClient {
@@ -189,3 +231,36 @@ export function PromotionModuleControllerMethods() {
 }
 
 export const PROMOTION_MODULE_SERVICE_NAME = "PromotionModule";
+
+export interface RedemptionModuleClient {
+  claimPromotion(request: ClaimPromotionRequest): Observable<PromotionRedemptionResponse>;
+
+  getMyVouchers(request: GetMyVouchersRequest): Observable<GetMyVouchersResponse>;
+}
+
+export interface RedemptionModuleController {
+  claimPromotion(
+    request: ClaimPromotionRequest,
+  ): Promise<PromotionRedemptionResponse> | Observable<PromotionRedemptionResponse> | PromotionRedemptionResponse;
+
+  getMyVouchers(
+    request: GetMyVouchersRequest,
+  ): Promise<GetMyVouchersResponse> | Observable<GetMyVouchersResponse> | GetMyVouchersResponse;
+}
+
+export function RedemptionModuleControllerMethods() {
+  return function (constructor: Function) {
+    const grpcMethods: string[] = ["claimPromotion", "getMyVouchers"];
+    for (const method of grpcMethods) {
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcMethod("RedemptionModule", method)(constructor.prototype[method], method, descriptor);
+    }
+    const grpcStreamMethods: string[] = [];
+    for (const method of grpcStreamMethods) {
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcStreamMethod("RedemptionModule", method)(constructor.prototype[method], method, descriptor);
+    }
+  };
+}
+
+export const REDEMPTION_MODULE_SERVICE_NAME = "RedemptionModule";

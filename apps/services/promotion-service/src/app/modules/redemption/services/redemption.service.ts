@@ -1,29 +1,43 @@
 import { PrismaErrorValues } from '@common/constants/prisma.constant';
 import {
-  CreatePromotionRedemptionRequest,
+  ClaimPromotionRequest,
+  GetMyVouchersRequest,
+  GetMyVouchersResponse,
   PromotionRedemptionResponse,
 } from '@common/interfaces/models/promotion';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { RedemptionRepository } from '../repositories/redemption.repository';
 
 @Injectable()
 export class RedemptionService {
   constructor(private readonly redemptionRepository: RedemptionRepository) {}
 
-  async create({
-    processId,
+  async claim({
+    processId: _,
     ...data
-  }: CreatePromotionRedemptionRequest): Promise<PromotionRedemptionResponse> {
+  }: ClaimPromotionRequest): Promise<PromotionRedemptionResponse> {
     try {
-      const createdPromotionRedemption = await this.redemptionRepository.create(
-        data
-      );
-      return createdPromotionRedemption;
+      return await this.redemptionRepository.claim(data);
     } catch (error) {
       if (error.code === PrismaErrorValues.UNIQUE_CONSTRAINT_VIOLATION) {
-        throw new NotFoundException('Error.PromotionRedemptionAlreadyExists');
+        throw new ConflictException('Error.PromotionAlreadyClaimed');
       }
       throw error;
     }
+  }
+
+  async getMyVouchers({
+    processId: _,
+    ...data
+  }: GetMyVouchersRequest): Promise<GetMyVouchersResponse> {
+    const result = await this.redemptionRepository.listByUser(data);
+    if (result.totalItems === 0) {
+      throw new NotFoundException('Error.PromotionRedemptionNotFound');
+    }
+    return result;
   }
 }
