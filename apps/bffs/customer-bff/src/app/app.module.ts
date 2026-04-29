@@ -16,6 +16,7 @@ import { PaymentModule } from './payment-service/payment.module';
 import { PromotionModule } from './promotion-service/promotion.module';
 import { ShopModule } from './shop-service/shop.module';
 import { UtilityModule } from './utility-service/utility.module';
+import { WalletModule } from './wallet-service/wallet.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { UtilityModule } from './utility-service/utility.module';
     PromotionModule,
     ShopModule,
     UtilityModule,
+    WalletModule,
     ClientsModule.register([GrpcClientProvider(GrpcService.IAM_SERVICE)]),
   ],
   providers: [

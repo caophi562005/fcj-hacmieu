@@ -21,7 +21,7 @@ const ITEMS: { href: string; label: string; icon: LucideIcon }[] = [
   { href: '/profile/notifications', label: 'Thông báo', icon: Bell },
   { href: '/profile/orders', label: 'Đơn mua', icon: Package },
   { href: '/profile/voucher', label: 'Kho voucher', icon: TicketPercent },
-  { href: '/profile/xu', label: 'V-Xu', icon: Coins },
+  { href: '/profile/coin', label: 'V-Xu', icon: Coins },
 ];
 
 export function ProfileSidebar({ user }: { user: MockUser }) {

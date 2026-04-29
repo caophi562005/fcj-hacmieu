@@ -1,0 +1,57 @@
+generator client {
+    provider      = "prisma-client"
+    output        = "../src/generated/prisma-client"
+    moduleFormat  = "cjs"
+    binaryTargets = ["native", "debian-openssl-1.1.x"]
+}
+
+datasource db {
+    provider = "postgresql"
+}
+
+enum WalletTransactionType {
+    CREDIT // tăng xu (nhận, nạp, hoàn)
+    DEBIT // giảm xu (sử dụng, trừ)
+}
+
+enum WalletTransactionSource {
+    ORDER_REWARD // tích xu từ đơn hàng hoàn tất
+    REVIEW_REWARD // thưởng đánh giá sản phẩm
+    PROMOTION_GIFT // quà sự kiện / sinh nhật / khuyến mãi
+    REFERRAL // giới thiệu bạn bè
+    TOPUP // nạp xu
+    REFUND // hoàn xu khi huỷ đơn
+    ORDER_PAYMENT // dùng xu thanh toán đơn
+    SYSTEM // điều chỉnh thủ công bởi hệ thống / admin
+    OTHER // khác
+}
+
+model Wallet {
+    id        String   @id @default(uuid())
+    userId    String   @unique
+    balance   Int      @default(0)
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    transactions WalletTransaction[]
+
+    @@index([userId])
+}
+
+model WalletTransaction {
+    id           String                  @id @default(uuid())
+    walletId     String
+    wallet       Wallet                  @relation(fields: [walletId], references: [id], onDelete: Cascade)
+    userId       String
+    type         WalletTransactionType
+    source       WalletTransactionSource @default(OTHER)
+    referenceId  String? // orderId / reviewId / promotionId / paymentId...
+    amount       Int // luôn dương
+    balanceAfter Int
+    description  String
+    createdAt    DateTime                @default(now())
+
+    @@index([userId, createdAt])
+    @@index([walletId, createdAt])
+    @@index([userId, source])
+}

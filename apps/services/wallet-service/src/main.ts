@@ -18,9 +18,9 @@ async function bootstrap() {
 
   const globalPrefix = BaseConfiguration.GLOBAL_PREFIX || 'api';
   app.setGlobalPrefix(globalPrefix);
-  const port = AppConfiguration.UTILITY_SERVICE_PORT || 3007;
+  const port = AppConfiguration.WALLET_SERVICE_PORT || 3008;
 
-  app.connectMicroservice(GrpcServerOptions(GrpcService.UTILITY_SERVICE));
+  app.connectMicroservice(GrpcServerOptions(GrpcService.WALLET_SERVICE));
   await app.startAllMicroservices();
 
   await app.listen(port);

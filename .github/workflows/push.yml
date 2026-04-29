@@ -57,7 +57,8 @@ jobs:
             {"name":"payment-service","dockerfile":"apps/services/payment-service/Dockerfile","path":"apps/services/payment-service"},
             {"name":"promotion-service","dockerfile":"apps/services/promotion-service/Dockerfile","path":"apps/services/promotion-service"},
             {"name":"shop-service","dockerfile":"apps/services/shop-service/Dockerfile","path":"apps/services/shop-service"},
-            {"name":"utility-service","dockerfile":"apps/services/utility-service/Dockerfile","path":"apps/services/utility-service"}
+            {"name":"utility-service","dockerfile":"apps/services/utility-service/Dockerfile","path":"apps/services/utility-service"},
+            {"name":"wallet-service","dockerfile":"apps/services/wallet-service/Dockerfile","path":"apps/services/wallet-service"}
           ]'
 
           # Nếu có file thay đổi dưới libs/ hoặc root config quan trọng → affect tất cả services
@@ -134,6 +135,48 @@ jobs:
             .
           docker push "$IMAGE:latest"
           docker push "$IMAGE:$TAG"
+
+      - name: Prune old ECR images (keep 3 latest)
+        if: ${{ github.event_name != 'pull_request' }}
+        shell: bash
+        env:
+          REPO: hacmieu/${{ matrix.name }}
+          KEEP: 3
+        run: |
+          set -euo pipefail
+
+          # ECR Public chạy trên us-east-1 (global endpoint)
+          ALL_DIGESTS=$(aws ecr-public describe-images \
+            --repository-name "$REPO" \
+            --region us-east-1 \
+            --query 'sort_by(imageDetails,&imagePushedAt)[*].imageDigest' \
+            --output text | tr '\t' '\n' | sed '/^$/d')
+
+          TOTAL=$(printf '%s\n' "$ALL_DIGESTS" | grep -c . || true)
+          echo "Total images in $REPO: $TOTAL (keep latest $KEEP)"
+
+          if [ "$TOTAL" -le "$KEEP" ]; then
+            echo "Nothing to prune."
+            exit 0
+          fi
+
+          DELETE_COUNT=$((TOTAL - KEEP))
+          # Sorted ascending (cũ nhất trước) → lấy phần đầu để xoá
+          TO_DELETE=$(printf '%s\n' "$ALL_DIGESTS" | head -n "$DELETE_COUNT")
+          echo "Deleting $DELETE_COUNT old image(s):"
+          printf '%s\n' "$TO_DELETE"
+
+          # Build --image-ids args dạng imageDigest=sha256:...
+          IDS=()
+          while IFS= read -r digest; do
+            [ -z "$digest" ] && continue
+            IDS+=("imageDigest=$digest")
+          done <<< "$TO_DELETE"
+
+          aws ecr-public batch-delete-image \
+            --repository-name "$REPO" \
+            --region us-east-1 \
+            --image-ids "${IDS[@]}"
 
       - name: Build only (PR validation)
         if: ${{ github.event_name == 'pull_request' }}

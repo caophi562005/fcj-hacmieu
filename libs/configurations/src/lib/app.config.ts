@@ -11,6 +11,7 @@ export const AppConfigurationSchema = z.object({
   UTILITY_SERVICE_PORT: z.coerce.number().default(3007),
   IAM_SERVICE_PORT: z.coerce.number().default(3001),
   SHOP_SERVICE_PORT: z.coerce.number().default(3002),
+  WALLET_SERVICE_PORT: z.coerce.number().default(3008),
 
   CUSTOMER_BFF_URL: z.string(),
   CUSTOMER_WEB_URL: z.string(),

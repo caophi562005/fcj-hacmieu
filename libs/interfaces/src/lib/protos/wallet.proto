@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+package WALLET_SERVICE;
+
+service WalletModule {
+  rpc GetMyWallet(GetMyWalletRequest) returns (WalletResponse);
+  rpc AdjustWallet(AdjustWalletRequest) returns (WalletResponse);
+  rpc GetMyTransactions(GetMyTransactionsRequest) returns (GetMyTransactionsResponse);
+}
+
+// Request Messages
+message GetMyWalletRequest {
+  optional string processId = 1;
+  string userId = 2;
+}
+
+message AdjustWalletRequest {
+  optional string processId = 1;
+  string userId = 2;
+  string type = 3; // CREDIT | DEBIT
+  string source = 4; // ORDER_REWARD | REVIEW_REWARD | PROMOTION_GIFT | REFERRAL | TOPUP | REFUND | ORDER_PAYMENT | SYSTEM | OTHER
+  optional string referenceId = 5;
+  int32 amount = 6;
+  string description = 7;
+}
+
+message GetMyTransactionsRequest {
+  optional string processId = 1;
+  string userId = 2;
+  int32 page = 3;
+  int32 limit = 4;
+  optional string type = 5;
+  optional string source = 6;
+}
+
+// Response Messages
+message WalletResponse {
+  string id = 1;
+  string userId = 2;
+  int32 balance = 3;
+  string createdAt = 4;
+  string updatedAt = 5;
+}
+
+message WalletTransactionResponse {
+  string id = 1;
+  string walletId = 2;
+  string userId = 3;
+  string type = 4;
+  string source = 5;
+  optional string referenceId = 6;
+  int32 amount = 7;
+  int32 balanceAfter = 8;
+  string description = 9;
+  string createdAt = 10;
+}
+
+message GetMyTransactionsResponse {
+  int32 page = 1;
+  int32 limit = 2;
+  int32 totalItems = 3;
+  int32 totalPages = 4;
+  repeated WalletTransactionResponse transactions = 5;
+}

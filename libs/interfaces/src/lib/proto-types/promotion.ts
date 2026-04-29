@@ -135,10 +135,6 @@ export interface GetMyVouchersRequest {
   userId: string;
   page: number;
   limit: number;
-  /**
-   * Filter trạng thái: "available" (chưa dùng & chưa huỷ), "used", "cancelled".
-   * Bỏ trống → trả tất cả.
-   */
   status?: string | undefined;
 }
 

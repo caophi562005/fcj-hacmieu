@@ -21,12 +21,12 @@ resources:
   # # Payment Service
   # - payment-service/service.yaml
   # - payment-service/deployment.yaml
-  # # Promotion Service
-  # - promotion-service/service.yaml
-  # - promotion-service/deployment.yaml
-  # # Utility Service
-  # - utility-service/service.yaml
-  # - utility-service/deployment.yaml
+  # Promotion Service
+  - promotion-service/service.yaml
+  - promotion-service/deployment.yaml
+  # Utility Service
+  - utility-service/service.yaml
+  - utility-service/deployment.yaml
   # Customer BFF
   - customer-bff/service.yaml
   - customer-bff/deployment.yaml
