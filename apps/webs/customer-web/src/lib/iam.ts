@@ -4,6 +4,10 @@ import type {
   UpdateUserRequest,
   UserResponse,
 } from '@common/interfaces/models/iam';
+import type {
+  CreatePresignedUrlRequest,
+  CreatePresignedUrlResponse,
+} from '@common/interfaces/models/utility';
 import { createApi, type CreateApiOptions } from './api';
 
 export async function getCurrentUser(
@@ -41,4 +45,19 @@ export async function changePassword(
 ): Promise<void> {
   const api = createApi(options);
   await api.post('/iam/auth/change-password', payload);
+}
+
+export async function createPresignedUrl(
+  options: CreateApiOptions,
+  payload: Omit<CreatePresignedUrlRequest, 'processId' | 'userId'>,
+): Promise<CreatePresignedUrlResponse> {
+  const api = createApi(options);
+  const { data } = await api.post<ApiResponse<CreatePresignedUrlResponse>>(
+    '/utility/media/presigned-url',
+    payload,
+  );
+  if (!data?.data) {
+    throw new Error('Failed to create presigned URL');
+  }
+  return data.data;
 }

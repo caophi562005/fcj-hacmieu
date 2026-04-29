@@ -6,7 +6,7 @@ import {
 import { createZodDto } from 'nestjs-zod';
 
 export class CreatePresignedUrlRequestDto extends createZodDto(
-  CreatePresignedUrlRequestSchema,
+  CreatePresignedUrlRequestSchema.omit({ processId: true }),
 ) {}
 
 export class CreatePresignedUrlResponseDto extends createZodDto(

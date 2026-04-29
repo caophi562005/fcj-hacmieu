@@ -1,10 +1,12 @@
+import { ImageTypeEnums } from '@common/constants/media.constant';
 import z from 'zod';
 
 export const CreatePresignedUrlRequestSchema = z
   .object({
     fileName: z.string(),
-    fileType: z.string().optional(),
-    fileSize: z.number().optional(),
+    type: ImageTypeEnums,
+    userId: z.uuid(),
+    processId: z.uuid().optional(),
   })
   .strict();
 

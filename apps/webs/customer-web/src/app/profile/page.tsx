@@ -1,6 +1,7 @@
-import { Camera, Coins, Package, TicketPercent } from 'lucide-react';
+import { Coins, Package, TicketPercent } from 'lucide-react';
 import { redirect } from 'next/navigation';
 import { getAuth } from '../../lib/auth';
+import { AvatarUploader } from './AvatarUploader';
 import { ProfileForm } from './ProfileForm';
 
 export default async function ProfilePage() {
@@ -55,25 +56,8 @@ export default async function ProfilePage() {
           birthday={user.birthday}
         />
 
-        <div className="order-1 md:order-2 flex flex-col items-center text-center md:border-l md:border-border-subtle md:pl-6">
-          <div className="relative">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={user.avatar}
-              alt="Avatar"
-              className="w-28 h-28 rounded-full object-cover bg-surface-muted"
-            />
-            <button
-              type="button"
-              className="absolute bottom-1 right-1 w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center shadow-card hover:bg-primary-600 transition-colors"
-              aria-label="Đổi ảnh đại diện"
-            >
-              <Camera className="w-4 h-4" />
-            </button>
-          </div>
-          <p className="text-xs text-ink-subtle mt-3">
-            Ảnh JPG/PNG, tối đa 2MB.
-          </p>
+        <div className="order-1 md:order-2">
+          <AvatarUploader src={user.avatar} alt="Avatar" />
         </div>
       </div>
     </>

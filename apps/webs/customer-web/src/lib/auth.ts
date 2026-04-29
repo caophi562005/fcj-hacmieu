@@ -27,6 +27,18 @@ function formatBirthday(raw: unknown): string {
   return d.toISOString().slice(0, 10);
 }
 
+// Avatar trên S3 dùng key cố định (`{userId}/avatar/avatar.{ext}`) nên URL không
+// đổi sau khi user upload ảnh mới → browser memory-cache phục vụ ảnh cũ.
+// Thêm query `?v={updatedAt-timestamp}` làm cache-busting: URL khác → bypass cache.
+function withCacheBust(url: string, version: unknown): string {
+  if (!url) return url;
+  if (!version) return url;
+
+  const v = new Date(String(version)).getTime();
+  const sep = url.includes('?') ? '&' : '?';
+  return `${url}${sep}v=${v}`;
+}
+
 // Per-request memoization: nhiều server component (Header, Layout, Page)
 // cùng gọi `getAuth()` trong 1 render → dedupe thành 1 BFF call duy nhất.
 export const getAuth = cache(async (): Promise<MockUser | null> => {
@@ -42,7 +54,9 @@ export const getAuth = cache(async (): Promise<MockUser | null> => {
     name: user.username ?? user.email?.split('@')[0] ?? 'Khách hàng',
     email: user.email ?? '',
     phone: user.phoneNumber ?? '',
-    avatar: user.avatar ?? DEFAULT_AVATAR,
+    avatar: user.avatar
+      ? withCacheBust(user.avatar, user.updatedAt)
+      : DEFAULT_AVATAR,
     gender: user.gender,
     birthday: formatBirthday(user.birthday),
     vXu: 0,

@@ -82,8 +82,7 @@ export interface CreatePresignedUrlRequest {
   processId?: string | undefined;
   userId: string;
   fileName: string;
-  fileType: string;
-  fileSize: number;
+  type: string;
 }
 
 export interface CreatePresignedUrlResponse {
