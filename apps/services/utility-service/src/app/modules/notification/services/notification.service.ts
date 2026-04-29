@@ -46,7 +46,11 @@ export class NotificationService {
     processId,
     ...data
   }: GetManyNotificationsRequest): Promise<GetManyNotificationsResponse> {
-    return this.notificationRepository.list(data);
+    const notifications = await this.notificationRepository.list(data);
+    if (notifications.totalItems === 0) {
+      throw new NotFoundException('Error.NotificationNotFound');
+    }
+    return notifications;
   }
 
   async findById({
@@ -66,25 +70,34 @@ export class NotificationService {
     processId,
     ...data
   }: CreateNotificationRequest): Promise<NotificationResponse> {
-    const createdNotification = await this.notificationRepository.create(data);
-    // this.kafkaService.emit(
-    //   QueueTopics.NOTIFICATION.CREATE_NOTIFICATION,
-    //   createdNotification
-    // );
-    const unreadCount = await this.notificationRepository.getUnreadCount(
-      data.userId,
-    );
+    try {
+      const createdNotification =
+        await this.notificationRepository.create(data);
+      // this.kafkaService.emit(
+      //   QueueTopics.NOTIFICATION.CREATE_NOTIFICATION,
+      //   createdNotification
+      // );
+      const unreadCount = await this.notificationRepository.getUnreadCount(
+        data.userId,
+      );
 
-    await this.sendQueueMessage(SqsConfiguration.SEND_NOTIFICATION_QUEUE_NAME, {
-      ...createdNotification,
-      unreadCount,
-    });
+      await this.sendQueueMessage(
+        SqsConfiguration.SEND_NOTIFICATION_QUEUE_NAME,
+        {
+          userId: createdNotification.userId,
+          unreadCount,
+        },
+      );
 
-    // await this.redisService.publish(
-    //   RedisChannel.NOTIFICATION_CHANNEL,
-    //   JSON.stringify({ unreadCount, userId: data.userId })
-    // );
-    return createdNotification;
+      // await this.redisService.publish(
+      //   RedisChannel.NOTIFICATION_CHANNEL,
+      //   JSON.stringify({ unreadCount, userId: data.userId })
+      // );
+      return createdNotification;
+    } catch (error) {
+      console.error('Error creating notification:', error);
+      throw new InternalServerErrorException('Error.CreateNotificationFailed');
+    }
   }
 
   async read({

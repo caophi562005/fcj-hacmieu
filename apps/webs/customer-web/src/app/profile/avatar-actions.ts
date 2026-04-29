@@ -2,8 +2,7 @@
 
 import { ImageTypeValues } from '@common/constants/media.constant';
 import { revalidatePath } from 'next/cache';
-import { cookies } from 'next/headers';
-import { ACCESS_TOKEN_COOKIE, getAuth } from '../../lib/auth';
+import { getAuth } from '../../lib/auth';
 import { createPresignedUrl, updateCurrentUser } from '../../lib/iam';
 
 export type UploadAvatarState = {
@@ -18,12 +17,6 @@ export async function uploadAvatarAction(
   _prev: UploadAvatarState,
   formData: FormData,
 ): Promise<UploadAvatarState> {
-  const c = await cookies();
-  const accessToken = c.get(ACCESS_TOKEN_COOKIE)?.value;
-  if (!accessToken) {
-    return { ok: false, message: 'Phiên đăng nhập đã hết hạn.' };
-  }
-
   const file = formData.get('avatar');
   if (!(file instanceof File) || file.size === 0) {
     return { ok: false, message: 'Vui lòng chọn ảnh.' };
@@ -44,13 +37,10 @@ export async function uploadAvatarAction(
 
   try {
     // 1. Lấy presigned URL từ BFF
-    const { presignedUrl, url } = await createPresignedUrl(
-      { accessToken },
-      {
-        fileName: file.name,
-        type: ImageTypeValues.AVATAR,
-      },
-    );
+    const { presignedUrl, url } = await createPresignedUrl({
+      fileName: file.name,
+      type: ImageTypeValues.AVATAR,
+    });
 
     // 2. PUT file lên S3 qua presigned URL
     // Doc: https://docs.aws.amazon.com/AmazonS3/latest/userguide/PresignedUrlUploadObject.html
@@ -68,7 +58,7 @@ export async function uploadAvatarAction(
     }
 
     // 3. Update user.avatar = url public của S3 object
-    await updateCurrentUser({ accessToken }, { avatar: url });
+    await updateCurrentUser({ avatar: url });
 
     // 4. Revalidate /profile để page render lại với avatar mới
     revalidatePath('/profile');

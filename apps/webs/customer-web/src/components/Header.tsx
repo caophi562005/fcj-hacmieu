@@ -1,9 +1,22 @@
+import { MessageCircle, Search, ShoppingCart } from 'lucide-react';
 import Link from 'next/link';
-import { Search, ShoppingCart, Bell, MessageCircle } from 'lucide-react';
 import { getAuth } from '../lib/auth';
+import { getManyNotifications } from '../lib/notifications';
+import { NotificationBell } from './NotificationBell';
 
 export async function Header({ cartCount = 3 }: { cartCount?: number }) {
   const user = await getAuth();
+
+  // BFF trả `unreadCount` chính xác (count từ DB)
+  let initialUnreadCount = 0;
+  if (user) {
+    // Dùng cùng query với NotificationsPage (page=1, limit=10) để
+    // `React.cache` dedupe → khi user vào /profile/notifications tab "Tất cả"
+    // chỉ cần 1 BFF call cho cả Header và Page.
+    const { unreadCount } = await getManyNotifications({ page: 1, limit: 10 });
+    initialUnreadCount = unreadCount;
+  }
+
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur shadow-card">
       <div className="container-page flex items-center gap-3 md:gap-6 h-14 md:h-16">
@@ -53,16 +66,20 @@ export async function Header({ cartCount = 3 }: { cartCount?: number }) {
               </span>
             )}
           </Link>
-          <Link
-            href={user ? '/profile/notifications' : '/login'}
-            className="relative inline-flex items-center justify-center w-10 h-10 rounded text-ink-muted hover:text-primary hover:bg-surface-muted transition-colors"
-            aria-label="Thông báo"
-          >
-            <Bell className="w-5 h-5" />
-            {user && (
-              <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-danger" />
-            )}
-          </Link>
+          {user ? (
+            <NotificationBell
+              href="/profile/notifications"
+              initialUnreadCount={initialUnreadCount}
+            />
+          ) : (
+            <Link
+              href="/login"
+              className="relative inline-flex items-center justify-center w-10 h-10 rounded text-ink-muted hover:text-primary hover:bg-surface-muted transition-colors"
+              aria-label="Thông báo"
+            >
+              <span className="sr-only">Thông báo</span>
+            </Link>
+          )}
           <Link
             href="/chat"
             className="inline-flex items-center justify-center w-10 h-10 rounded text-ink-muted hover:text-primary hover:bg-surface-muted transition-colors"

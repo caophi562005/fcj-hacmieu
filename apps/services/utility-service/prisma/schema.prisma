@@ -17,7 +17,7 @@ enum NotificationType {
     ORDER_UPDATE
     PROMOTION
     WALLET_UPDATE
-    TRUST_ME_BRO_UPDATE
+    OTHER
 }
 
 model Notification {

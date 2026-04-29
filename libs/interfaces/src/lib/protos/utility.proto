@@ -25,6 +25,7 @@ message GetManyNotificationsResponse {
   int32 totalItems = 3;
   int32 totalPages = 4;
   repeated NotificationResponse notifications = 5;
+  int32 unreadCount = 6;
 }
 
 message GetNotificationRequest {

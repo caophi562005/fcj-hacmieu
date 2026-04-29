@@ -8,13 +8,11 @@ import type {
   CreatePresignedUrlRequest,
   CreatePresignedUrlResponse,
 } from '@common/interfaces/models/utility';
-import { createApi, type CreateApiOptions } from './api';
+import { createServerApi } from './api';
 
-export async function getCurrentUser(
-  options: CreateApiOptions,
-): Promise<UserResponse | null> {
+export async function getCurrentUser(): Promise<UserResponse | null> {
   try {
-    const api = createApi(options);
+    const api = await createServerApi();
     const { data } = await api.get<ApiResponse<UserResponse>>('/iam/user');
     return data?.data ?? null;
   } catch {
@@ -28,10 +26,9 @@ export type UpdateCurrentUserPayload = Omit<
 >;
 
 export async function updateCurrentUser(
-  options: CreateApiOptions,
   payload: UpdateCurrentUserPayload,
 ): Promise<UserResponse | null> {
-  const api = createApi(options);
+  const api = await createServerApi();
   const { data } = await api.put<ApiResponse<UserResponse>>(
     '/iam/user',
     payload,
@@ -40,18 +37,16 @@ export async function updateCurrentUser(
 }
 
 export async function changePassword(
-  options: CreateApiOptions,
   payload: Omit<ChangePasswordRequest, 'accessToken'>,
 ): Promise<void> {
-  const api = createApi(options);
+  const api = await createServerApi();
   await api.post('/iam/auth/change-password', payload);
 }
 
 export async function createPresignedUrl(
-  options: CreateApiOptions,
   payload: Omit<CreatePresignedUrlRequest, 'processId' | 'userId'>,
 ): Promise<CreatePresignedUrlResponse> {
-  const api = createApi(options);
+  const api = await createServerApi();
   const { data } = await api.post<ApiResponse<CreatePresignedUrlResponse>>(
     '/utility/media/presigned-url',
     payload,

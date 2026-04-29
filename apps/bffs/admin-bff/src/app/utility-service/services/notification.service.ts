@@ -7,8 +7,6 @@ import {
   NOTIFICATION_SERVICE_NAME,
   NotificationResponse,
   NotificationServiceClient,
-  ReadNotificationRequest,
-  ReadNotificationResponse,
   UTILITY_SERVICE_PACKAGE_NAME,
 } from '@common/interfaces/proto-types/utility';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
@@ -47,12 +45,6 @@ export class NotificationService implements OnModuleInit {
     data: CreateNotificationRequest,
   ): Promise<NotificationResponse> {
     return firstValueFrom(this.notificationModule.createNotification(data));
-  }
-
-  async readNotification(
-    data: ReadNotificationRequest,
-  ): Promise<ReadNotificationResponse> {
-    return firstValueFrom(this.notificationModule.readNotification(data));
   }
 
   async deleteNotification(

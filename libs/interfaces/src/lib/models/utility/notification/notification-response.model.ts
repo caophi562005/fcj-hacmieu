@@ -21,6 +21,7 @@ export const GetNotificationResponseSchema = NotificationResponseSchema.pick({
 export const GetManyNotificationsResponseSchema =
   PaginationQueryResponseSchema.extend({
     notifications: z.array(GetNotificationResponseSchema),
+    unreadCount: z.number().int().nonnegative(),
   });
 
 export const ReadNotificationResponseSchema = z

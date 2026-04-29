@@ -1,7 +1,5 @@
 'use server';
 
-import { cookies } from 'next/headers';
-import { ACCESS_TOKEN_COOKIE } from '../../../lib/auth';
 import { changePassword } from '../../../lib/iam';
 
 export type ChangePasswordState = {
@@ -16,12 +14,6 @@ export async function changePasswordAction(
   _prev: ChangePasswordState,
   formData: FormData,
 ): Promise<ChangePasswordState> {
-  const c = await cookies();
-  const accessToken = c.get(ACCESS_TOKEN_COOKIE)?.value;
-  if (!accessToken) {
-    return { ok: false, message: 'Phiên đăng nhập đã hết hạn.' };
-  }
-
   const previousPassword = String(formData.get('previousPassword') ?? '');
   const proposedPassword = String(formData.get('proposedPassword') ?? '');
   const confirmPassword = String(formData.get('confirmPassword') ?? '');
@@ -50,10 +42,7 @@ export async function changePasswordAction(
   }
 
   try {
-    await changePassword(
-      { accessToken },
-      { previousPassword, proposedPassword },
-    );
+    await changePassword({ previousPassword, proposedPassword });
     return { ok: true, message: 'Đổi mật khẩu thành công.' };
   } catch (err) {
     const data = (err as { response?: { data?: { message?: string } } })

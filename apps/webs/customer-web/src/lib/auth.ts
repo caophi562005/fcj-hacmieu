@@ -46,7 +46,7 @@ export const getAuth = cache(async (): Promise<MockUser | null> => {
   const accessToken = c.get(ACCESS_TOKEN_COOKIE)?.value;
   if (!accessToken) return null;
 
-  const user = await getCurrentUser({ accessToken });
+  const user = await getCurrentUser();
   if (!user) return null;
 
   return {

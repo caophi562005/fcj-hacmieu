@@ -6,8 +6,6 @@ import {
   GetManyNotificationsResponseDto,
   GetNotificationRequestDto,
   GetNotificationResponseDto,
-  ReadNotificationRequestDto,
-  ReadNotificationResponseDto,
 } from '@common/interfaces/dtos/utility';
 import {
   Body,
@@ -16,7 +14,6 @@ import {
   Get,
   Param,
   Post,
-  Put,
   Query,
 } from '@nestjs/common';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
@@ -73,22 +70,6 @@ export class NotificationController {
       processId,
       createdById: userId,
       metadata: body.metadata ? JSON.stringify(body.metadata) : undefined,
-    });
-  }
-
-  @Put('read')
-  @ApiOkResponse({
-    type: ReadNotificationResponseDto,
-  })
-  async readNotification(
-    @Body() body: ReadNotificationRequestDto,
-    @ProcessId() processId: string,
-    @UserData('userId') userId: string,
-  ) {
-    return this.notificationService.readNotification({
-      ...body,
-      processId,
-      updatedById: userId,
     });
   }
 

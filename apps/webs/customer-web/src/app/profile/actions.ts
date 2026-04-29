@@ -2,8 +2,6 @@
 
 import { GenderEnums } from '@common/constants/user.constant';
 import { revalidatePath } from 'next/cache';
-import { cookies } from 'next/headers';
-import { ACCESS_TOKEN_COOKIE } from '../../lib/auth';
 import {
   updateCurrentUser,
   type UpdateCurrentUserPayload,
@@ -18,11 +16,6 @@ export async function updateProfileAction(
   _prev: UpdateProfileState,
   formData: FormData,
 ): Promise<UpdateProfileState> {
-  const c = await cookies();
-  const accessToken = c.get(ACCESS_TOKEN_COOKIE)?.value;
-  if (!accessToken)
-    return { ok: false, message: 'Phiên đăng nhập đã hết hạn.' };
-
   // Pull values; only the 3 editable fields per skill guidance.
   const phoneRaw = formData.get('phoneNumber');
   const genderRaw = formData.get('gender');
@@ -49,7 +42,7 @@ export async function updateProfileAction(
   }
 
   try {
-    await updateCurrentUser({ accessToken }, payload);
+    await updateCurrentUser(payload);
     revalidatePath('/profile');
     return { ok: true, message: 'Cập nhật hồ sơ thành công.' };
   } catch (err) {

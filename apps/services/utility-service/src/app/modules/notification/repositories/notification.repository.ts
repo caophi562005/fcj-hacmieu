@@ -16,7 +16,7 @@ export class NotificationRepository {
     const limit = data.limit || 10;
     const skip = (page - 1) * limit;
 
-    const [notifications, totalItems] = await Promise.all([
+    const [notifications, totalItems, unreadCount] = await Promise.all([
       this.prismaService.notification.findMany({
         where: {
           userId: data.userId,
@@ -34,6 +34,12 @@ export class NotificationRepository {
           deletedAt: null,
         },
       }),
+      this.prismaService.notification.count({
+        where: {
+          userId: data.userId,
+          isRead: false,
+        },
+      }),
     ]);
 
     return {
@@ -42,6 +48,7 @@ export class NotificationRepository {
       totalItems,
       totalPages: Math.ceil(totalItems / limit),
       notifications,
+      unreadCount,
     };
   }
 

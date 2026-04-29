@@ -24,6 +24,7 @@ export interface GetManyNotificationsResponse {
   totalItems: number;
   totalPages: number;
   notifications: NotificationResponse[];
+  unreadCount: number;
 }
 
 export interface GetNotificationRequest {

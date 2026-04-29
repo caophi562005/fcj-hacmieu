@@ -1,12 +1,23 @@
 import { AppConfiguration } from '@common/configurations/app.config';
 import axios, { type AxiosInstance, type AxiosRequestConfig } from 'axios';
+import { cookies } from 'next/headers';
 
 const BFF_BASE_URL = AppConfiguration.CUSTOMER_BFF_URL;
+const ACCESS_TOKEN_COOKIE = 'access_token';
 
 export type CreateApiOptions = {
   accessToken?: string | null;
   cookie?: string | null;
 };
+
+// Server-only helper: tự đọc httpOnly cookie `access_token` rồi tạo axios kèm Bearer.
+// Dùng trong server components / server actions / route handlers — caller không
+// cần lấy token thủ công.
+export async function createServerApi(): Promise<AxiosInstance> {
+  const c = await cookies();
+  const accessToken = c.get(ACCESS_TOKEN_COOKIE)?.value ?? null;
+  return createApi({ accessToken });
+}
 
 export function createApi(options: CreateApiOptions = {}): AxiosInstance {
   const { accessToken, cookie } = options;

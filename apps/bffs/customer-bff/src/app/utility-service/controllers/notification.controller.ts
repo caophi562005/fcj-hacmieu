@@ -34,6 +34,17 @@ export class NotificationController {
     private readonly notificationStreamService: NotificationStreamService,
   ) {}
 
+  @Sse('sse')
+  handle(@UserData('userId') userId: string): Observable<MessageEvent> {
+    return this.notificationStreamService.stream().pipe(
+      filter((evt) => (evt.data as any)?.userId === userId),
+      map((evt) => ({
+        ...evt,
+        data: evt.data,
+      })),
+    );
+  }
+
   @Get()
   @ApiOkResponse({
     type: GetManyNotificationsResponseDto,
@@ -114,16 +125,5 @@ export class NotificationController {
       processId,
       deletedById: userId,
     });
-  }
-
-  @Sse('sse')
-  handle(@UserData('userId') userId: string): Observable<MessageEvent> {
-    return this.notificationStreamService.stream().pipe(
-      filter((evt) => (evt.data as any)?.userId === userId),
-      map((evt) => ({
-        ...evt,
-        data: evt.data,
-      })),
-    );
   }
 }
