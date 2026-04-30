@@ -1,3 +1,7 @@
+import {
+  GetCategoryRequest,
+  GetManyCategoriesRequest,
+} from '@common/interfaces/models/catalog';
 import { Injectable } from '@nestjs/common';
 import { Category, Prisma } from '@prisma-client/catalog-service';
 import { PrismaService } from '../../../prisma/prisma.service';
@@ -56,19 +60,15 @@ export class CategoryRepository {
         });
   }
 
-  async list(data: any) {
-    const page = data.page || 1;
-    const limit = data.limit || 10;
-    const skip = (page - 1) * limit;
+  async list(data: GetManyCategoriesRequest) {
+    const where: Prisma.CategoryWhereInput = {
+      deletedAt: null,
+      parentCategoryId: data.parentCategoryId ?? null,
+    };
 
     const [categories, totalItems] = await Promise.all([
       this.prismaService.category.findMany({
-        where: {
-          deletedAt: null,
-          name: data.name ? { contains: data.name } : undefined,
-        },
-        skip,
-        take: limit,
+        where,
         include: {
           parentCategory: {
             select: {
@@ -78,26 +78,16 @@ export class CategoryRepository {
           },
         },
       }),
-      this.prismaService.category.count({
-        where: {
-          deletedAt: null,
-          name: data.name ? { contains: data.name } : undefined,
-        },
-      }),
+      this.prismaService.category.count({ where }),
     ]);
 
-    const totalPages = Math.ceil(totalItems / limit);
-
     return {
-      page,
-      limit,
       totalItems,
-      totalPages,
       categories,
     };
   }
 
-  async findById(data: any) {
+  async findById(data: GetCategoryRequest) {
     return this.prismaService.category.findFirst({
       where: {
         id: data.id,

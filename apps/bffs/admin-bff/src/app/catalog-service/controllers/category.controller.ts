@@ -32,8 +32,6 @@ export class CategoryController {
     @ProcessId() processId: string,
   ) {
     return this.categoryService.getManyCategories({
-      page: 1,
-      limit: 10,
       ...queries,
       processId,
     });

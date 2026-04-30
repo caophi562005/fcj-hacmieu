@@ -1,8 +1,16 @@
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
-import { Search as SearchIcon } from 'lucide-react';
+import { FilterForm } from '../../components/FilterForm';
 import { MainShell } from '../../components/MainShell';
-import { ProductBrowser } from '../../components/ProductBrowser';
-import { PRODUCTS } from '../../components/mockData';
+import { ProductCard, type Product } from '../../components/ProductCard';
+import { SearchBar } from '../../components/SearchBar';
+import {
+  getManyProducts,
+  getRootCategories,
+  type ProductListItem,
+} from '../../lib/catalog';
+
+export const dynamic = 'force-dynamic';
 
 const POPULAR = [
   'Áo thun nam',
@@ -12,16 +20,136 @@ const POPULAR = [
   'Son lì',
 ];
 
+type SortKey = 'newest' | 'sale' | 'price_asc' | 'price_desc';
+
+const SORTS: {
+  key: SortKey;
+  label: string;
+  sortBy: 'createdAt' | 'sale' | 'price';
+  orderBy: 'asc' | 'desc';
+}[] = [
+  { key: 'newest', label: 'Mới nhất', sortBy: 'createdAt', orderBy: 'desc' },
+  { key: 'sale', label: 'Bán chạy', sortBy: 'sale', orderBy: 'desc' },
+  { key: 'price_asc', label: 'Giá tăng', sortBy: 'price', orderBy: 'asc' },
+  { key: 'price_desc', label: 'Giá giảm', sortBy: 'price', orderBy: 'desc' },
+];
+
+type SearchParams = {
+  q?: string;
+  categories?: string | string[];
+  minPrice?: string;
+  maxPrice?: string;
+  sortBy?: string;
+  orderBy?: string;
+  page?: string;
+};
+
+function toArray(v: string | string[] | undefined): string[] {
+  if (!v) return [];
+  return Array.isArray(v) ? v : [v];
+}
+
+function toPositiveInt(v: string | undefined): number | undefined {
+  if (!v) return undefined;
+  const n = Number(v);
+  return Number.isFinite(n) && n > 0 ? Math.floor(n) : undefined;
+}
+
+function currentSortKey(sortBy?: string, orderBy?: string): SortKey {
+  if (sortBy === 'price' && orderBy === 'asc') return 'price_asc';
+  if (sortBy === 'price' && orderBy === 'desc') return 'price_desc';
+  if (sortBy === 'sale') return 'sale';
+  return 'newest';
+}
+
+function buildSearchUrl(
+  base: SearchParams,
+  overrides: Partial<SearchParams> & { categories?: string[] },
+): string {
+  const sp = new URLSearchParams();
+  const merged: Record<string, string | string[] | undefined> = {
+    q: overrides.q ?? base.q,
+    minPrice: overrides.minPrice ?? base.minPrice,
+    maxPrice: overrides.maxPrice ?? base.maxPrice,
+    sortBy: overrides.sortBy ?? base.sortBy,
+    orderBy: overrides.orderBy ?? base.orderBy,
+    page: overrides.page ?? base.page,
+    categories:
+      overrides.categories !== undefined
+        ? overrides.categories
+        : toArray(base.categories),
+  };
+  for (const [k, v] of Object.entries(merged)) {
+    if (v == null || v === '') continue;
+    if (Array.isArray(v)) v.forEach((x) => sp.append(k, x));
+    else sp.append(k, v);
+  }
+  const qs = sp.toString();
+  return qs ? `/search?${qs}` : '/search';
+}
+
+function formatCount(n: number): string {
+  if (n >= 1_000_000)
+    return (n / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
+  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+  return String(n);
+}
+
+function toCardProduct(p: ProductListItem): Product {
+  const hasOld =
+    typeof p.virtualPrice === 'number' && p.virtualPrice > p.basePrice;
+  const discount = hasOld
+    ? Math.round(((p.virtualPrice - p.basePrice) / p.virtualPrice) * 100)
+    : undefined;
+  return {
+    id: p.id,
+    name: p.name,
+    price: p.basePrice,
+    oldPrice: hasOld ? p.virtualPrice : undefined,
+    discount,
+    rating:
+      typeof p.averageRate === 'number' && p.averageRate > 0
+        ? p.averageRate
+        : undefined,
+    sold:
+      typeof p.soldCount === 'number' && p.soldCount > 0
+        ? formatCount(p.soldCount)
+        : undefined,
+    image: p.images?.[0] ?? '/placeholder.png',
+  };
+}
+
 export default async function SearchPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<SearchParams>;
 }) {
-  const sp = await searchParams;
-  const q = (sp?.q ?? '').trim();
-  const results = q
-    ? PRODUCTS.filter((p) => p.name.toLowerCase().includes(q.toLowerCase()))
-    : PRODUCTS;
+  const sp = (await searchParams) ?? {};
+  const q = (sp.q ?? '').trim();
+  const selectedCategories = toArray(sp.categories);
+  const minPrice = toPositiveInt(sp.minPrice);
+  const maxPrice = toPositiveInt(sp.maxPrice);
+  const page = toPositiveInt(sp.page) ?? 1;
+  const sortKey = currentSortKey(sp.sortBy, sp.orderBy);
+  const activeSort = SORTS.find((s) => s.key === sortKey) ?? SORTS[0];
+
+  const [categories, productsRes] = await Promise.all([
+    getRootCategories(),
+    getManyProducts({
+      name: q || undefined,
+      categories: selectedCategories.length ? selectedCategories : undefined,
+      minPrice,
+      maxPrice,
+      sortBy: activeSort.sortBy,
+      orderBy: activeSort.orderBy,
+      page,
+      limit: 12,
+    }),
+  ]);
+
+  const products = productsRes.products ?? [];
+  const totalItems = productsRes.totalItems ?? 0;
+  const totalPages = productsRes.totalPages ?? 0;
 
   return (
     <MainShell>
@@ -36,30 +164,18 @@ export default async function SearchPage({
           </span>
         </nav>
 
-        <ProductBrowser
-          products={results}
-          topSlot={
+        <div className="grid md:grid-cols-[260px_1fr] gap-4">
+          <FilterForm
+            categories={categories}
+            selectedCategories={selectedCategories}
+            minPrice={minPrice}
+            maxPrice={maxPrice}
+          />
+
+          <div className="min-w-0">
+            {/* Search bar — Client Component dùng router.push để soft-nav */}
             <div className="card p-4 mb-3">
-              <form
-                action="/search"
-                className="flex items-center h-11 rounded border border-border focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 overflow-hidden"
-              >
-                <SearchIcon className="w-5 h-5 text-ink-subtle ml-3" />
-                <input
-                  type="search"
-                  name="q"
-                  defaultValue={q}
-                  placeholder="Tìm sản phẩm…"
-                  className="flex-1 bg-transparent border-0 outline-none px-3 text-sm"
-                  aria-label="Từ khóa tìm kiếm"
-                />
-                <button
-                  type="submit"
-                  className="bg-primary text-white h-full px-5 font-medium hover:bg-primary-600 transition-colors"
-                >
-                  Tìm
-                </button>
-              </form>
+              <SearchBar variant="page" defaultValue={q} preserveFilters />
               {!q && (
                 <div className="mt-3">
                   <div className="text-xs font-medium mb-2 text-ink-muted">
@@ -69,7 +185,7 @@ export default async function SearchPage({
                     {POPULAR.map((kw) => (
                       <Link
                         key={kw}
-                        href={`/search?q=${encodeURIComponent(kw)}`}
+                        href={buildSearchUrl(sp, { q: kw, page: '1' })}
                         className="chip cursor-pointer hover:bg-primary-50 hover:text-primary transition-colors"
                       >
                         {kw}
@@ -79,32 +195,175 @@ export default async function SearchPage({
                 </div>
               )}
             </div>
-          }
-          resultLabel={
-            q ? (
-              <>
+
+            {/* Sort row */}
+            <div className="card p-3 mb-3 flex flex-wrap items-center gap-2">
+              <span className="text-sm text-ink-muted mr-1">Sắp xếp theo</span>
+              {SORTS.map((s) => {
+                const active = s.key === sortKey;
+                return (
+                  <Link
+                    key={s.key}
+                    href={buildSearchUrl(sp, {
+                      sortBy: s.sortBy,
+                      orderBy: s.orderBy,
+                      page: '1',
+                    })}
+                    className={`btn-sm rounded border transition-colors cursor-pointer inline-flex items-center justify-center leading-none ${
+                      active
+                        ? 'bg-primary text-white border-primary'
+                        : 'bg-white border-border hover:border-primary hover:text-primary'
+                    }`}
+                  >
+                    {s.label}
+                  </Link>
+                );
+              })}
+              <span className="text-xs text-ink-subtle ml-auto">
+                {totalItems.toLocaleString('vi-VN')} sản phẩm
+              </span>
+            </div>
+
+            {q && (
+              <div className="text-sm text-ink-muted mb-3">
                 Kết quả cho{' '}
                 <span className="font-semibold text-ink">“{q}”</span> ·{' '}
                 <span className="font-semibold text-ink">
-                  {results.length}
+                  {totalItems.toLocaleString('vi-VN')}
                 </span>{' '}
                 sản phẩm
-              </>
-            ) : null
-          }
-          emptyState={
-            <div className="card p-10 text-center">
-              <div className="text-lg font-semibold mb-1">
-                Không tìm thấy sản phẩm
               </div>
-              <p className="text-sm text-ink-muted">
-                Hãy thử từ khóa khác hoặc kiểm tra lỗi chính tả.
-              </p>
-            </div>
-          }
-          showPagination={results.length > 0}
-        />
+            )}
+
+            {products.length === 0 ? (
+              <div className="card p-10 text-center">
+                <div className="text-lg font-semibold mb-1">
+                  Không tìm thấy sản phẩm
+                </div>
+                <p className="text-sm text-ink-muted">
+                  Hãy thử từ khóa khác hoặc thay đổi bộ lọc.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                {products.map((p) => (
+                  <ProductCard key={p.id} p={toCardProduct(p)} />
+                ))}
+              </div>
+            )}
+
+            {totalPages > 1 && (
+              <Pagination
+                page={page}
+                totalPages={totalPages}
+                buildHref={(n) => buildSearchUrl(sp, { page: String(n) })}
+              />
+            )}
+          </div>
+        </div>
       </div>
     </MainShell>
   );
+}
+
+function Pagination({
+  page,
+  totalPages,
+  buildHref,
+}: {
+  page: number;
+  totalPages: number;
+  buildHref: (n: number) => string;
+}) {
+  const pages = buildPageList(page, totalPages);
+
+  return (
+    <nav
+      className="mt-6 flex items-center justify-center gap-1"
+      aria-label="Phân trang"
+    >
+      <PageButton
+        href={buildHref(Math.max(1, page - 1))}
+        disabled={page <= 1}
+        ariaLabel="Trang trước"
+      >
+        <ChevronLeft className="w-4 h-4" />
+      </PageButton>
+
+      {pages.map((p, i) =>
+        p === '...' ? (
+          <span key={`gap-${i}`} className="px-2 text-ink-subtle">
+            …
+          </span>
+        ) : (
+          <PageButton key={p} href={buildHref(p)} active={p === page}>
+            {p}
+          </PageButton>
+        ),
+      )}
+
+      <PageButton
+        href={buildHref(Math.min(totalPages, page + 1))}
+        disabled={page >= totalPages}
+        ariaLabel="Trang sau"
+      >
+        <ChevronRight className="w-4 h-4" />
+      </PageButton>
+    </nav>
+  );
+}
+
+function PageButton({
+  href,
+  children,
+  active,
+  disabled,
+  ariaLabel,
+}: {
+  href: string;
+  children: React.ReactNode;
+  active?: boolean;
+  disabled?: boolean;
+  ariaLabel?: string;
+}) {
+  const base =
+    'inline-flex items-center justify-center w-9 h-9 rounded text-sm font-medium transition-colors';
+  if (disabled) {
+    return (
+      <span
+        aria-disabled="true"
+        className={`${base} bg-white border border-border text-ink-subtle opacity-50 cursor-not-allowed`}
+      >
+        {children}
+      </span>
+    );
+  }
+  return (
+    <Link
+      href={href}
+      aria-label={ariaLabel}
+      aria-current={active ? 'page' : undefined}
+      className={`${base} cursor-pointer ${
+        active
+          ? 'bg-primary text-white border border-primary'
+          : 'bg-white border border-border hover:border-primary hover:text-primary'
+      }`}
+    >
+      {children}
+    </Link>
+  );
+}
+
+function buildPageList(current: number, total: number): (number | '...')[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const set = new Set<number>([1, total, current, current - 1, current + 1]);
+  const sorted = [...set]
+    .filter((n) => n >= 1 && n <= total)
+    .sort((a, b) => a - b);
+  const out: (number | '...')[] = [];
+  for (let i = 0; i < sorted.length; i++) {
+    out.push(sorted[i]);
+    if (i < sorted.length - 1 && sorted[i + 1] - sorted[i] > 1) out.push('...');
+  }
+  return out;
 }

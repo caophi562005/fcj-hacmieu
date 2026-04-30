@@ -2,6 +2,8 @@ import { PrismaErrorValues } from '@common/constants/prisma.constant';
 import {
   CreateCategoryRequest,
   DeleteCategoryRequest,
+  GetCategoryRequest,
+  GetManyCategoriesRequest,
   UpdateCategoryRequest,
 } from '@common/interfaces/models/catalog';
 import { Injectable, NotFoundException } from '@nestjs/common';
@@ -11,7 +13,7 @@ import { CategoryRepository } from '../repositories/category.repository';
 export class CategoryService {
   constructor(private readonly categoryRepository: CategoryRepository) {}
 
-  async list(data: any) {
+  async list(data: GetManyCategoriesRequest) {
     const categories = await this.categoryRepository.list(data);
     if (categories.totalItems === 0) {
       throw new NotFoundException('Error.NoCategoriesFound');
@@ -19,7 +21,7 @@ export class CategoryService {
     return categories;
   }
 
-  async findById(data: any) {
+  async findById(data: GetCategoryRequest) {
     const category = await this.categoryRepository.findById(data);
     if (!category) {
       throw new NotFoundException('Error.CategoryNotFound');

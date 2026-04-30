@@ -1,8 +1,9 @@
-import { MessageCircle, Search, ShoppingCart } from 'lucide-react';
+import { MessageCircle, ShoppingCart } from 'lucide-react';
 import Link from 'next/link';
 import { getAuth } from '../lib/auth';
 import { getManyNotifications } from '../lib/notifications';
 import { NotificationBell } from './NotificationBell';
+import { SearchBar } from './SearchBar';
 
 export async function Header({ cartCount = 3 }: { cartCount?: number }) {
   const user = await getAuth();
@@ -33,25 +34,7 @@ export async function Header({ cartCount = 3 }: { cartCount?: number }) {
           </span>
         </Link>
 
-        <form
-          action="/search"
-          className="flex-1 flex items-center h-10 md:h-11 rounded bg-surface-muted hover:bg-white border border-transparent hover:border-primary focus-within:bg-white focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-colors"
-        >
-          <Search className="w-5 h-5 text-ink-subtle ml-3 shrink-0" />
-          <input
-            type="search"
-            name="q"
-            placeholder="Tìm sản phẩm, thương hiệu, cửa hàng…"
-            className="flex-1 bg-transparent border-0 outline-none text-sm px-3 placeholder:text-ink-subtle"
-            aria-label="Tìm kiếm"
-          />
-          <button
-            type="submit"
-            className="hidden sm:inline-flex items-center justify-center h-full px-4 bg-primary text-white text-sm font-medium rounded-r hover:bg-primary-600 transition-colors"
-          >
-            Tìm kiếm
-          </button>
-        </form>
+        <SearchBar variant="header" />
 
         <nav className="hidden md:flex items-center gap-1">
           <Link

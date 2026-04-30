@@ -160,18 +160,13 @@ message ParentCategoryResponse {
 //==================== GetManyCategoriesRequest ====================//
 message GetManyCategoriesRequest {
   optional string processId = 1;
-  int32 page = 2;
-  int32 limit = 3;
-  optional string name = 4;
+  optional string parentCategoryId = 2;
 }
 
 //==================== GetManyCategoriesResponse ====================//
 message GetManyCategoriesResponse {
-  int32 page = 1;
-  int32 limit = 2;
-  int32 totalItems = 3;
-  int32 totalPages = 4;
-  repeated CategoryResponse categories = 5;
+  int32 totalItems = 1;
+  repeated CategoryResponse categories = 2;
 }
 
 //==================== GetCategoryRequest ====================//
@@ -184,14 +179,13 @@ message CategoryResponse {
   string id = 1;
   string name = 2;
   string logo = 3;
-  string parentCategoryId = 4;
+  optional ParentCategoryResponse parentCategory = 4;
   string createdById = 5;
   string updatedById = 6;
   string deletedById = 7;
   string deletedAt = 8;
   string createdAt = 9;
   string updatedAt = 10;
-  optional ParentCategoryResponse parentCategory = 11;
 }
 
 message CreateCategoryRequest {

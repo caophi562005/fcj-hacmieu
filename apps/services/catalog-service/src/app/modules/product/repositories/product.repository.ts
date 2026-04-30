@@ -412,7 +412,9 @@ export class ProductRepository {
       this.prismaService.product.findMany({
         where: {
           deletedAt: null,
-          name: data.name ? { contains: data.name } : undefined,
+          name: data.name
+            ? { contains: data.name, mode: 'insensitive' }
+            : undefined,
           shopId: data.shopId ? data.shopId : undefined,
           isApproved:
             data.isApproved !== undefined ? data.isApproved : undefined,
@@ -426,7 +428,9 @@ export class ProductRepository {
       this.prismaService.product.count({
         where: {
           deletedAt: null,
-          name: data.name ? { contains: data.name } : undefined,
+          name: data.name
+            ? { contains: data.name, mode: 'insensitive' }
+            : undefined,
           shopId: data.shopId ? data.shopId : undefined,
           isApproved:
             data.isApproved !== undefined ? data.isApproved : undefined,

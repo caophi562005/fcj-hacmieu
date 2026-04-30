@@ -3,6 +3,8 @@ import { GrpcLoggingInterceptor } from '@common/interceptors/grpcLogging.interce
 import {
   CreateProductRequest,
   DeleteProductRequest,
+  GetManyProductsRequest,
+  GetProductRequest,
   UpdateProductRequest,
   ValidateProductsRequest,
 } from '@common/interfaces/models/catalog';
@@ -16,12 +18,12 @@ export class ProductGrpcController {
   constructor(private readonly productService: ProductService) {}
 
   @GrpcMethod(GrpcModuleName.CATALOG.PRODUCT, 'GetManyProducts')
-  getManyProducts(data: any) {
+  getManyProducts(data: GetManyProductsRequest) {
     return this.productService.list(data);
   }
 
   @GrpcMethod(GrpcModuleName.CATALOG.PRODUCT, 'GetProduct')
-  getProduct(data: any) {
+  getProduct(data: GetProductRequest) {
     return this.productService.findById(data);
   }
 

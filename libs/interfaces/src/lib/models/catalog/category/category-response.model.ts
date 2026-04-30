@@ -14,14 +14,18 @@ export const GetCategoryResponseSchema = z.object({
   id: z.uuid(),
   name: z.string(),
   logo: z.url(),
-  parentId: z.uuid().optional(),
-  path: z.string(),
-  level: z.number(),
+  parentCategory: z
+    .object({
+      id: z.uuid(),
+      name: z.string(),
+    })
+    .optional(),
   createdAt: z.any(),
   updatedAt: z.any(),
 });
 
 export const GetManyCategoriesResponseSchema = z.object({
+  totalItems: z.number(),
   categories: z.array(GetCategoryResponseSchema),
 });
 

@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react';
-import { BottomNav } from './BottomNav';
 import { Footer } from './Footer';
-import { Header } from './Header';
 
-export async function MainShell({
+// Header & BottomNav đã ở `app/layout.tsx` (persistent across navigation).
+// `MainShell` giờ chỉ wrap nội dung page + render Footer theo cờ `hideFooter`.
+export function MainShell({
   children,
   hideFooter,
 }: {
@@ -11,11 +11,9 @@ export async function MainShell({
   hideFooter?: boolean;
 }) {
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      <main className="flex-1 pb-16 md:pb-0">{children}</main>
+    <>
+      {children}
       {!hideFooter && <Footer />}
-      <BottomNav />
-    </div>
+    </>
   );
 }

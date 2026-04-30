@@ -141,17 +141,12 @@ export interface ParentCategoryResponse {
 /** ==================== GetManyCategoriesRequest ====================// */
 export interface GetManyCategoriesRequest {
   processId?: string | undefined;
-  page: number;
-  limit: number;
-  name?: string | undefined;
+  parentCategoryId?: string | undefined;
 }
 
 /** ==================== GetManyCategoriesResponse ====================// */
 export interface GetManyCategoriesResponse {
-  page: number;
-  limit: number;
   totalItems: number;
-  totalPages: number;
   categories: CategoryResponse[];
 }
 
@@ -165,14 +160,13 @@ export interface CategoryResponse {
   id: string;
   name: string;
   logo: string;
-  parentCategoryId: string;
+  parentCategory?: ParentCategoryResponse | undefined;
   createdById: string;
   updatedById: string;
   deletedById: string;
   deletedAt: string;
   createdAt: string;
   updatedAt: string;
-  parentCategory?: ParentCategoryResponse | undefined;
 }
 
 export interface CreateCategoryRequest {
