@@ -12,7 +12,6 @@ import {
   RefreshSessionRequest,
   ValidateTokenRequest,
 } from '@common/interfaces/models/iam';
-import { generateTokenBlacklistKey } from '@common/utils/cache-key.util';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import {
   Inject,
@@ -68,51 +67,67 @@ export class AuthService {
   }
 
   async validateToken(data: ValidateTokenRequest) {
-    // Check blacklist trước
-    const isBlacklisted = await this.cacheManager.get(
-      generateTokenBlacklistKey(data.accessToken),
-    );
-    if (isBlacklisted) {
-      return {
-        isValid: false,
-        userId: '',
-        username: '',
-        groups: [],
-        permissions: [],
-      };
-    }
-
-    const verifier = CognitoJwtVerifier.create({
+    const accessVerifier = CognitoJwtVerifier.create({
       userPoolId: AuthConfiguration.USER_POOL_ID,
       tokenUse: 'access',
       clientId: AuthConfiguration.CLIENT_ID,
     });
+    const idVerifier = CognitoJwtVerifier.create({
+      userPoolId: AuthConfiguration.USER_POOL_ID,
+      tokenUse: 'id',
+      clientId: AuthConfiguration.CLIENT_ID,
+    });
 
-    const payload = await verifier.verify(data.accessToken);
+    const invalidResponse = {
+      isValid: false,
+      userId: '',
+      username: '',
+      groups: [],
+      permissions: [],
+      shopId: '',
+      merchantId: '',
+    };
 
-    if (!payload) {
-      return {
-        isValid: false,
-        userId: '',
-        username: '',
-        groups: [],
-        permissions: [],
-      };
+    let accessPayload;
+    let idPayload;
+    try {
+      [accessPayload, idPayload] = await Promise.all([
+        accessVerifier.verify(data.accessToken),
+        idVerifier.verify(data.idToken),
+      ]);
+    } catch {
+      return invalidResponse;
     }
 
-    if (payload.exp && payload.exp * 1000 < Date.now()) {
+    if (!accessPayload || !idPayload) {
+      return invalidResponse;
+    }
+
+    // Bắt buộc 2 token cùng 1 user (chống ghép token chéo)
+    if (accessPayload.sub !== idPayload.sub) {
+      return invalidResponse;
+    }
+
+    const now = Date.now();
+    if (
+      (accessPayload.exp && accessPayload.exp * 1000 < now) ||
+      (idPayload.exp && idPayload.exp * 1000 < now)
+    ) {
       return {
-        isValid: false,
-        userId: payload.sub,
-        username: payload.username,
-        groups: [],
-        permissions: [],
+        ...invalidResponse,
+        userId: accessPayload.sub,
+        username: accessPayload.username,
       };
     }
 
     const groups = Array.from(
-      new Set((payload['cognito:groups'] as string[] | undefined) ?? []),
+      new Set((accessPayload['cognito:groups'] as string[] | undefined) ?? []),
     );
+
+    // shopId nằm ở custom attribute của idToken
+    const shopId = (idPayload['custom:shop_id'] as string | undefined) ?? null;
+    const merchantId =
+      (idPayload['custom:merchant_id'] as string | undefined) ?? null;
 
     const permissionsByGroup: GetAllPermissionsResponse[] = await Promise.all(
       groups.map((group) =>
@@ -135,10 +150,12 @@ export class AuthService {
 
     return {
       isValid: true,
-      userId: payload.sub,
-      username: payload.username,
+      userId: accessPayload.sub,
+      username: accessPayload.username,
       groups,
       permissions: uniquePermissions,
+      shopId,
+      merchantId,
     };
   }
 }

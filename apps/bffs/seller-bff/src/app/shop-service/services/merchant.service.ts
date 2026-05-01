@@ -1,6 +1,4 @@
 import {
-  CreateMerchantRequest,
-  DeleteMerchantRequest,
   GetMerchantRequest,
   MERCHANT_MODULE_SERVICE_NAME,
   MerchantModuleClient,
@@ -31,15 +29,7 @@ export class MerchantService implements OnModuleInit {
     return firstValueFrom(this.merchantModule.getMerchant(data));
   }
 
-  async createMerchant(data: CreateMerchantRequest): Promise<MerchantResponse> {
-    return firstValueFrom(this.merchantModule.createMerchant(data));
-  }
-
   async updateMerchant(data: UpdateMerchantRequest): Promise<MerchantResponse> {
     return firstValueFrom(this.merchantModule.updateMerchant(data));
-  }
-
-  async deleteMerchant(data: DeleteMerchantRequest): Promise<MerchantResponse> {
-    return firstValueFrom(this.merchantModule.deleteMerchant(data));
   }
 }

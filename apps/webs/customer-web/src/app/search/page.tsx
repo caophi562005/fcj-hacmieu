@@ -2,12 +2,12 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { FilterForm } from '../../components/FilterForm';
 import { MainShell } from '../../components/MainShell';
-import { ProductCard, type Product } from '../../components/ProductCard';
+import { ProductCard } from '../../components/ProductCard';
 import { SearchBar } from '../../components/SearchBar';
 import {
   getManyProducts,
   getRootCategories,
-  type ProductListItem,
+  toCardProduct,
 } from '../../lib/catalog';
 
 export const dynamic = 'force-dynamic';
@@ -86,37 +86,6 @@ function buildSearchUrl(
   }
   const qs = sp.toString();
   return qs ? `/search?${qs}` : '/search';
-}
-
-function formatCount(n: number): string {
-  if (n >= 1_000_000)
-    return (n / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
-  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
-  return String(n);
-}
-
-function toCardProduct(p: ProductListItem): Product {
-  const hasOld =
-    typeof p.virtualPrice === 'number' && p.virtualPrice > p.basePrice;
-  const discount = hasOld
-    ? Math.round(((p.virtualPrice - p.basePrice) / p.virtualPrice) * 100)
-    : undefined;
-  return {
-    id: p.id,
-    name: p.name,
-    price: p.basePrice,
-    oldPrice: hasOld ? p.virtualPrice : undefined,
-    discount,
-    rating:
-      typeof p.averageRate === 'number' && p.averageRate > 0
-        ? p.averageRate
-        : undefined,
-    sold:
-      typeof p.soldCount === 'number' && p.soldCount > 0
-        ? formatCount(p.soldCount)
-        : undefined,
-    image: p.images?.[0] ?? '/placeholder.png',
-  };
 }
 
 export default async function SearchPage({

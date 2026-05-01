@@ -10,7 +10,8 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   const cookieStore = request.cookies;
   const accessToken = cookieStore.get(ACCESS_TOKEN_COOKIE)?.value;
-  if (!accessToken) {
+  const idToken = cookieStore.get('id_token')?.value;
+  if (!accessToken || !idToken) {
     return new Response('Unauthorized', { status: 401 });
   }
 
@@ -20,6 +21,7 @@ export async function GET(request: NextRequest) {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${accessToken}`,
+        'x-id-token': idToken,
         Accept: 'text/event-stream',
       },
       // Quan trọng: signal để khi client disconnect → fetch upstream cũng abort.

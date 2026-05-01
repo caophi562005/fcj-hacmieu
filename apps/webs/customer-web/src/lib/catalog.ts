@@ -6,10 +6,44 @@ import type {
 } from '@common/interfaces/models/catalog';
 import type { Response as ApiResponse } from '@common/interfaces/models/common/response.model';
 import { cache } from 'react';
+import type { Product } from '../components/ProductCard';
 import { createServerApi } from './api';
 
 export type ProductListItem = GetManyProductsResponse['products'][number];
 export type CategoryItem = GetManyCategoriesResponse['categories'][number];
+
+// Format số lượng gọn: 1.2k / 3.4M
+export function formatCount(n: number): string {
+  if (n >= 1_000_000)
+    return (n / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
+  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+  return String(n);
+}
+
+// Map sản phẩm từ API sang shape của ProductCard.
+export function toCardProduct(p: ProductListItem): Product {
+  const hasOld =
+    typeof p.virtualPrice === 'number' && p.virtualPrice > p.basePrice;
+  const discount = hasOld
+    ? Math.round(((p.virtualPrice - p.basePrice) / p.virtualPrice) * 100)
+    : undefined;
+  return {
+    id: p.id,
+    name: p.name,
+    price: p.basePrice,
+    oldPrice: hasOld ? p.virtualPrice : undefined,
+    discount,
+    rating:
+      typeof p.averageRate === 'number' && p.averageRate > 0
+        ? p.averageRate
+        : undefined,
+    sold:
+      typeof p.soldCount === 'number' && p.soldCount > 0
+        ? formatCount(p.soldCount)
+        : undefined,
+    image: p.images?.[0] ?? '/placeholder.png',
+  };
+}
 
 const EMPTY_PRODUCTS: GetManyProductsResponse = {
   page: 1,
@@ -28,6 +62,7 @@ export type GetProductsQuery = {
   orderBy?: OrderBy;
   page?: number;
   limit?: number;
+  shopId?: string;
 };
 
 export async function getManyProducts(
@@ -46,6 +81,7 @@ export async function getManyProducts(
     params.minPrice = q.minPrice;
   if (typeof q.maxPrice === 'number' && q.maxPrice > 0)
     params.maxPrice = q.maxPrice;
+  if (q.shopId) params.shopId = q.shopId;
 
   const res = await api.get<ApiResponse<GetManyProductsResponse>>(
     '/catalog/product',

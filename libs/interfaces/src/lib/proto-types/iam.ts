@@ -25,6 +25,7 @@ export interface ChangePasswordRequest {
 export interface ValidateTokenRequest {
   processId?: string | undefined;
   accessToken: string;
+  idToken: string;
 }
 
 export interface RefreshSessionResponse {
@@ -46,6 +47,8 @@ export interface ValidateTokenResponse {
   groups: string[];
   permissions: Permissions[];
   isValid: boolean;
+  shopId: string;
+  merchantId: string;
 }
 
 export interface Permissions {

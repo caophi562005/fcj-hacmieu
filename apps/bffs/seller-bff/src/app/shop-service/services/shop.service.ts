@@ -1,10 +1,12 @@
 import {
-  GetManyShopsRequest,
-  GetManyShopsResponse,
+  CreateShopRequest,
+  DeleteShopRequest,
   GetShopRequest,
   SHOP_MODULE_SERVICE_NAME,
   SHOP_SERVICE_PACKAGE_NAME,
   ShopModuleClient,
+  ShopResponse,
+  UpdateShopRequest,
 } from '@common/interfaces/proto-types/shop';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
@@ -25,22 +27,19 @@ export class ShopService implements OnModuleInit {
     );
   }
 
-  async getManyShops(data: GetManyShopsRequest): Promise<GetManyShopsResponse> {
-    return firstValueFrom(this.shopModule.getManyShops(data));
+  async getShop(data: GetShopRequest): Promise<ShopResponse> {
+    return firstValueFrom(this.shopModule.getShop(data));
   }
 
-  async getShop(data: GetShopRequest) {
-    const response = await firstValueFrom(this.shopModule.getShop(data));
-    return {
-      id: response.id,
-      name: response.name,
-      description: response.description,
-      logo: response.logo,
-      banner: response.banner,
-      phone: response.phone,
-      pickupAddress: response.pickupAddress,
-      returnAddress: response.returnAddress,
-      createdAt: response.createdAt,
-    };
+  async createShop(data: CreateShopRequest): Promise<ShopResponse> {
+    return firstValueFrom(this.shopModule.createShop(data));
+  }
+
+  async updateShop(data: UpdateShopRequest): Promise<ShopResponse> {
+    return firstValueFrom(this.shopModule.updateShop(data));
+  }
+
+  async deleteShop(data: DeleteShopRequest): Promise<ShopResponse> {
+    return firstValueFrom(this.shopModule.deleteShop(data));
   }
 }

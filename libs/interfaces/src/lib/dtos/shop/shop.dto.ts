@@ -23,7 +23,10 @@ export class GetShopRequestDto extends createZodDto(
 ) {}
 
 export class CreateShopRequestDto extends createZodDto(
-  CreateShopRequestSchema.omit({ processId: true, createdById: true }),
+  CreateShopRequestSchema.omit({
+    processId: true,
+    createdById: true,
+  }),
 ) {}
 
 export class UpdateShopRequestDto extends createZodDto(
@@ -42,4 +45,14 @@ export class GetManyShopsResponseDto extends createZodDto(
 
 export class GetShopResponseDto extends createZodDto(
   ResponseSchema(ShopResponseSchema),
+) {}
+
+export class GetShopResponseByUserDto extends createZodDto(
+  ResponseSchema(
+    ShopResponseSchema.omit({
+      merchantId: true,
+      credit: true,
+      status: true,
+    }),
+  ),
 ) {}

@@ -7,7 +7,7 @@ import {
   ValidateTokenResponse,
 } from '@common/interfaces/proto-types/iam';
 import { generateTokenCacheKey } from '@common/utils/cache-key.util';
-import { getAccessToken } from '@common/utils/get-access.util';
+import { getAccessToken, getIdToken } from '@common/utils/get-access.util';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import {
   CanActivate,
@@ -47,6 +47,10 @@ export class AccessTokenGuard implements CanActivate, OnModuleInit {
     if (!accessToken) {
       throw new UnauthorizedException('Error.AccessTokenNotFound');
     }
+    const idToken = getIdToken(request);
+    if (!idToken) {
+      throw new UnauthorizedException('Error.IdTokenNotFound');
+    }
 
     const cacheKey = generateTokenCacheKey(accessToken);
 
@@ -63,6 +67,7 @@ export class AccessTokenGuard implements CanActivate, OnModuleInit {
       const decodedAccessToken = await firstValueFrom(
         this.authModule.validateToken({
           accessToken,
+          idToken,
           processId,
         }),
       );

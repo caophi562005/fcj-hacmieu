@@ -1,11 +1,9 @@
 import { ProcessId } from '@common/decorators/process-id.decorator';
-import { UserData } from '@common/decorators/user-data.decorator';
 import {
-  CreateMerchantRequestDto,
   GetMerchantRequestDto,
   GetMerchantResponseDto,
 } from '@common/interfaces/dtos/shop';
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Controller, Get, Param } from '@nestjs/common';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { MerchantService } from '../services/merchant.service';
 
@@ -25,23 +23,6 @@ export class MerchantController {
     return this.merchantService.getMerchant({
       ...params,
       processId,
-    });
-  }
-
-  @Post()
-  @ApiOkResponse({
-    type: GetMerchantResponseDto,
-  })
-  async createMerchant(
-    @Body() body: CreateMerchantRequestDto,
-    @ProcessId() processId: string,
-    @UserData('userId') userId: string,
-  ) {
-    return this.merchantService.createMerchant({
-      ...body,
-      processId,
-      createdById: userId,
-      userId,
     });
   }
 }

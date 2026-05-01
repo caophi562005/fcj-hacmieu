@@ -8,12 +8,20 @@ import {
   ShopResponse,
   UpdateShopRequest,
 } from '@common/interfaces/models/shop';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { MerchantRepository } from '../../merchant/repositories/merchant.repository';
 import { ShopRepository } from '../repositories/shop.repository';
 
 @Injectable()
 export class ShopService {
-  constructor(private readonly shopRepository: ShopRepository) {}
+  constructor(
+    private readonly shopRepository: ShopRepository,
+    private readonly merchantRepository: MerchantRepository,
+  ) {}
 
   async list(data: GetManyShopsRequest): Promise<GetManyShopsResponse> {
     const shops = await this.shopRepository.list(data);
@@ -36,6 +44,16 @@ export class ShopService {
     ...data
   }: CreateShopRequest): Promise<ShopResponse> {
     try {
+      const merchant = await this.merchantRepository.findById({
+        id: data.merchantId,
+      });
+      if (!merchant) {
+        throw new NotFoundException('Error.MerchantNotFound');
+      }
+      if (merchant.approvalStatus !== 'APPROVED') {
+        throw new BadRequestException('Error.MerchantNotApproved');
+      }
+
       const createdShop = await this.shopRepository.create(data);
       return createdShop;
     } catch (error: any) {

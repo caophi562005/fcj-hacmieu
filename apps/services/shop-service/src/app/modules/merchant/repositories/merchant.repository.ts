@@ -54,7 +54,7 @@ export class MerchantRepository {
   }
 
   findById(data: GetMerchantRequest) {
-    return this.prismaService.merchant.findFirst({
+    return this.prismaService.merchant.findUnique({
       where: {
         id: data.id,
         deletedAt: null,

@@ -4,9 +4,11 @@ import { cookies } from 'next/headers';
 
 const BFF_BASE_URL = AppConfiguration.CUSTOMER_BFF_URL;
 const ACCESS_TOKEN_COOKIE = 'access_token';
+const ID_TOKEN_COOKIE = 'id_token';
 
 export type CreateApiOptions = {
   accessToken?: string | null;
+  idToken?: string | null;
   cookie?: string | null;
 };
 
@@ -16,11 +18,12 @@ export type CreateApiOptions = {
 export async function createServerApi(): Promise<AxiosInstance> {
   const c = await cookies();
   const accessToken = c.get(ACCESS_TOKEN_COOKIE)?.value ?? null;
-  return createApi({ accessToken });
+  const idToken = c.get(ID_TOKEN_COOKIE)?.value ?? null;
+  return createApi({ accessToken, idToken });
 }
 
 export function createApi(options: CreateApiOptions = {}): AxiosInstance {
-  const { accessToken, cookie } = options;
+  const { accessToken, idToken, cookie } = options;
 
   const config: AxiosRequestConfig = {
     baseURL: BFF_BASE_URL,
@@ -35,6 +38,9 @@ export function createApi(options: CreateApiOptions = {}): AxiosInstance {
   // Cho phép forward cookie (option) khi BFF check session bằng cookie
   if (accessToken) {
     config.headers!.Authorization = `Bearer ${accessToken}`;
+  }
+  if (idToken) {
+    config.headers!['x-id-token'] = idToken;
   }
   if (cookie) {
     config.headers!.Cookie = cookie;

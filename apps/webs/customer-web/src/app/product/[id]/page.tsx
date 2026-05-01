@@ -6,6 +6,20 @@ import { ProductCard } from '../../../components/ProductCard';
 import { ProductInteractive } from '../../../components/ProductInteractive';
 import { PRODUCTS } from '../../../components/mockData';
 import { getProductById } from '../../../lib/catalog';
+import { getShopById } from '../../../lib/shop';
+
+// Format "Tham gia" từ createdAt (giống shop page).
+function formatJoined(createdAt: string | Date): string {
+  const d = new Date(createdAt);
+  if (Number.isNaN(d.getTime())) return '';
+  const days = Math.floor((Date.now() - d.getTime()) / (1000 * 60 * 60 * 24));
+  if (days < 1) return 'hôm nay';
+  if (days < 30) return `${days} ngày trước`;
+  const months = Math.floor(days / 30);
+  if (months < 12) return `${months} tháng trước`;
+  const years = Math.floor(months / 12);
+  return `${years} năm trước`;
+}
 
 export default async function ProductDetail({
   params,
@@ -15,6 +29,7 @@ export default async function ProductDetail({
   const { id } = await params;
   const product = await getProductById(id);
   if (!product) notFound();
+  const shop = await getShopById(product.shopId);
   const related = PRODUCTS.slice(0, 6);
 
   return (
@@ -45,27 +60,45 @@ export default async function ProductDetail({
         />
 
         {/* Shop info */}
-        <div className="card p-4 mt-4 flex flex-col sm:flex-row items-start sm:items-center gap-4">
-          <div className="flex items-center gap-3 flex-1">
-            <div className="w-14 h-14 rounded-full bg-primary-50 flex items-center justify-center">
-              <Store className="w-6 h-6 text-primary" />
-            </div>
-            <div>
-              <div className="font-semibold">V-Shop Official Store</div>
-              <div className="text-xs text-ink-muted">
-                Tham gia 3 năm trước · 4.9 ★
+        {shop && (
+          <div className="card p-4 mt-4 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <div className="w-14 h-14 rounded-full bg-primary-50 overflow-hidden flex items-center justify-center shrink-0">
+                {shop.logo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={shop.logo}
+                    alt={shop.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <Store className="w-6 h-6 text-primary" aria-hidden />
+                )}
+              </div>
+              <div className="min-w-0">
+                <div className="font-semibold line-clamp-1">{shop.name}</div>
+                <div className="text-xs text-ink-muted">
+                  Tham gia {formatJoined(shop.createdAt)}
+                  {shop.phone ? ` · ${shop.phone}` : ''}
+                </div>
               </div>
             </div>
+            <div className="flex gap-2 shrink-0">
+              <Link
+                href={`/chat?to=${shop.id}`}
+                className="btn-outline btn-sm cursor-pointer"
+              >
+                <MessageCircle className="w-4 h-4" /> Chat ngay
+              </Link>
+              <Link
+                href={`/shop/${shop.id}`}
+                className="btn-outline btn-sm cursor-pointer"
+              >
+                Xem shop
+              </Link>
+            </div>
           </div>
-          <div className="flex gap-2">
-            <Link href="/chat?to=techzone" className="btn-outline btn-sm">
-              <MessageCircle className="w-4 h-4" /> Chat ngay
-            </Link>
-            <Link href="/shop/techzone" className="btn-outline btn-sm">
-              Xem shop
-            </Link>
-          </div>
-        </div>
+        )}
 
         {/* Attributes */}
         {product.attributes?.length ? (

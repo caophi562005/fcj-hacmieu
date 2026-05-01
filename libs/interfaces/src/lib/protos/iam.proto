@@ -23,6 +23,7 @@ message ChangePasswordRequest {
 message ValidateTokenRequest {
   optional string processId = 1;
   string accessToken = 2;
+  string idToken = 3;
 }
 
 message RefreshSessionResponse {
@@ -44,6 +45,8 @@ message ValidateTokenResponse {
   repeated string groups = 3;
   repeated Permissions permissions = 4;
   bool isValid = 5;
+  string shopId = 6;
+  string merchantId = 7;
 }
 
 service PermissionModule {

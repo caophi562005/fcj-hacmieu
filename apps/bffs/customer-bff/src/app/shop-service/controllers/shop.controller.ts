@@ -1,14 +1,11 @@
 import { ProcessId } from '@common/decorators/process-id.decorator';
-import { UserData } from '@common/decorators/user-data.decorator';
 import {
-  CreateShopRequestDto,
   GetManyShopsRequestDto,
   GetManyShopsResponseDto,
   GetShopRequestDto,
-  GetShopResponseDto,
-  UpdateShopRequestDto,
+  GetShopResponseByUserDto,
 } from '@common/interfaces/dtos/shop';
-import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { ShopService } from '../services/shop.service';
 
@@ -33,7 +30,7 @@ export class ShopController {
 
   @Get(':id')
   @ApiOkResponse({
-    type: GetShopResponseDto,
+    type: GetShopResponseByUserDto,
   })
   async getShop(
     @Param() params: GetShopRequestDto,
@@ -42,38 +39,6 @@ export class ShopController {
     return this.shopService.getShop({
       ...params,
       processId,
-    });
-  }
-
-  @Post()
-  @ApiOkResponse({
-    type: GetShopResponseDto,
-  })
-  async createShop(
-    @Body() body: CreateShopRequestDto,
-    @ProcessId() processId: string,
-    @UserData('userId') userId: string,
-  ) {
-    return this.shopService.createShop({
-      ...body,
-      processId,
-      createdById: userId,
-    });
-  }
-
-  @Put()
-  @ApiOkResponse({
-    type: GetShopResponseDto,
-  })
-  async updateShop(
-    @Body() body: UpdateShopRequestDto,
-    @ProcessId() processId: string,
-    @UserData('userId') userId: string,
-  ) {
-    return this.shopService.updateShop({
-      ...body,
-      processId,
-      updatedById: userId,
     });
   }
 }

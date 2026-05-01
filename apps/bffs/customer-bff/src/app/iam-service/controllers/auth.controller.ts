@@ -38,9 +38,14 @@ export class AuthController {
   @Post('validate')
   validateToken(
     @Headers('authorization') authorization: string,
+    @Headers('x-id-token') idToken: string,
     @ProcessId() processId: string,
   ) {
     const accessToken = authorization.split(' ')[1];
-    return this.authService.validateToken({ accessToken, processId });
+    return this.authService.validateToken({
+      accessToken,
+      idToken,
+      processId,
+    });
   }
 }

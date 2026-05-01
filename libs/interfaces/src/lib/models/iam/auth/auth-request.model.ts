@@ -19,6 +19,7 @@ export const ValidateTokenRequestSchema = z
   .object({
     processId: z.uuid().optional(),
     accessToken: z.string(),
+    idToken: z.string(),
   })
   .strict();
 

@@ -15,6 +15,7 @@ import { NextResponse, type NextRequest } from 'next/server';
  */
 
 const ACCESS_TOKEN_COOKIE = 'access_token';
+const ID_TOKEN_COOKIE = 'id_token';
 const REFRESH_TOKEN_COOKIE = 'refresh_token';
 const REFRESH_THRESHOLD_SECONDS = 5 * 60; // Refresh khi còn <5 phút
 
@@ -23,6 +24,7 @@ const BFF_BASE_URL = AppConfiguration.CUSTOMER_BFF_URL;
 type RefreshResponse = {
   data?: {
     accessToken?: string;
+    idToken?: string;
     refreshToken?: string;
     expiresIn?: number;
   };
@@ -42,6 +44,7 @@ function decodeJwtExp(token: string): number | null {
 
 async function refreshTokens(refreshToken: string): Promise<{
   accessToken: string;
+  idToken?: string;
   refreshToken?: string;
   expiresIn: number;
 } | null> {
@@ -64,6 +67,7 @@ async function refreshTokens(refreshToken: string): Promise<{
 
     return {
       accessToken: data.accessToken,
+      idToken: data.idToken,
       refreshToken: data.refreshToken,
       expiresIn: data.expiresIn ?? 3600,
     };
@@ -96,9 +100,10 @@ export async function proxy(req: NextRequest) {
   const tokens = await refreshTokens(refreshToken);
   if (!tokens) {
     // Refresh fail (refresh_token cũng hết hạn / bị revoke).
-    // Xoá cả 2 cookie để page redirect login lần sau.
+    // Xoá cookies để page redirect login lần sau.
     const res = NextResponse.next();
     res.cookies.delete(ACCESS_TOKEN_COOKIE);
+    res.cookies.delete(ID_TOKEN_COOKIE);
     res.cookies.delete(REFRESH_TOKEN_COOKIE);
     return res;
   }
@@ -108,11 +113,18 @@ export async function proxy(req: NextRequest) {
   // trong CHÍNH request này đọc được token mới.
   const requestHeaders = new Headers(req.headers);
   const cookieHeader = requestHeaders.get('cookie') ?? '';
-  const updatedCookie = upsertCookieHeader(
+  let updatedCookie = upsertCookieHeader(
     cookieHeader,
     ACCESS_TOKEN_COOKIE,
     tokens.accessToken,
   );
+  if (tokens.idToken) {
+    updatedCookie = upsertCookieHeader(
+      updatedCookie,
+      ID_TOKEN_COOKIE,
+      tokens.idToken,
+    );
+  }
   requestHeaders.set('cookie', updatedCookie);
 
   const res = NextResponse.next({
@@ -128,6 +140,16 @@ export async function proxy(req: NextRequest) {
     maxAge: tokens.expiresIn,
     secure: isProd,
   });
+
+  if (tokens.idToken) {
+    res.cookies.set(ID_TOKEN_COOKIE, tokens.idToken, {
+      httpOnly: true,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: tokens.expiresIn,
+      secure: isProd,
+    });
+  }
 
   if (tokens.refreshToken) {
     res.cookies.set(REFRESH_TOKEN_COOKIE, tokens.refreshToken, {

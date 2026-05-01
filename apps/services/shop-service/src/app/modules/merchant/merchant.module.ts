@@ -7,6 +7,6 @@ import { MerchantService } from './services/merchant.service';
 @Module({
   controllers: [MerchantGrpcController],
   providers: [MerchantRepository, MerchantService],
-  exports: [MerchantService],
+  exports: [MerchantRepository],
 })
 export class MerchantModule {}

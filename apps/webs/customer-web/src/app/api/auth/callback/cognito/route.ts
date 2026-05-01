@@ -72,6 +72,16 @@ export async function GET(request: NextRequest) {
       secure: process.env.NODE_ENV === 'production',
     });
 
+    if (tokenSet.id_token) {
+      res.cookies.set('id_token', tokenSet.id_token, {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        maxAge: expiresIn,
+        secure: process.env.NODE_ENV === 'production',
+      });
+    }
+
     if (tokenSet.refresh_token) {
       res.cookies.set('refresh_token', tokenSet.refresh_token, {
         httpOnly: true,
