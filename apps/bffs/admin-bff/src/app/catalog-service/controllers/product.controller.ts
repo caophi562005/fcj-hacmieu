@@ -6,6 +6,7 @@ import {
   GetManyProductsRequestDto,
   GetManyProductsResponseDto,
   GetProductRequestDto,
+  GetProductResponseDto,
   UpdateProductRequestDto,
 } from '@common/interfaces/dtos/catalog';
 import {
@@ -42,7 +43,7 @@ export class ProductController {
 
   @Get(':id')
   @ApiOkResponse({
-    type: GetManyProductsResponseDto,
+    type: GetProductResponseDto,
   })
   async getProductById(
     @Param() params: GetProductRequestDto,

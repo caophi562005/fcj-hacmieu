@@ -2,6 +2,7 @@ import type { OrderBy, SortBy } from '@common/constants/product.constant';
 import type {
   GetManyCategoriesResponse,
   GetManyProductsResponse,
+  GetProductResponse,
 } from '@common/interfaces/models/catalog';
 import type { Response as ApiResponse } from '@common/interfaces/models/common/response.model';
 import { cache } from 'react';
@@ -56,6 +57,19 @@ export async function getManyProducts(
   if (res.status === 404) return EMPTY_PRODUCTS;
   return res.data?.data ?? EMPTY_PRODUCTS;
 }
+
+// Lấy chi tiết 1 product. Trả về null nếu BFF trả 404.
+export const getProductById = cache(
+  async (id: string): Promise<GetProductResponse | null> => {
+    const api = await createServerApi();
+    const res = await api.get<ApiResponse<GetProductResponse>>(
+      `/catalog/product/${id}`,
+      { validateStatus: (s) => (s >= 200 && s < 300) || s === 404 },
+    );
+    if (res.status === 404) return null;
+    return res.data?.data ?? null;
+  },
+);
 
 // Lấy danh mục cha (parentCategoryId IS NULL) — backend mặc định trả root khi
 // không truyền parentCategoryId. Endpoint này không phân trang, trả tất cả.
