@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { BottomNav } from '../components/BottomNav';
 import { Header } from '../components/Header';
+import { ToastProvider } from '../components/ToastProvider';
 import './global.css';
 
 export const metadata: Metadata = {
@@ -28,6 +29,7 @@ export default function RootLayout({
           <main className="flex-1 pb-16 md:pb-0">{children}</main>
           <BottomNav />
         </div>
+        <ToastProvider />
       </body>
     </html>
   );

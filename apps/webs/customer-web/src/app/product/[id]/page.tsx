@@ -48,6 +48,8 @@ export default async function ProductDetail({
         </nav>
 
         <ProductInteractive
+          productId={product.id}
+          shopId={product.shopId}
           name={product.name}
           basePrice={product.basePrice}
           virtualPrice={product.virtualPrice}

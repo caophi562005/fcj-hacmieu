@@ -1,22 +1,31 @@
 import { MessageCircle, ShoppingCart } from 'lucide-react';
 import Link from 'next/link';
 import { getAuth } from '../lib/auth';
+import { getMyCart } from '../lib/cart';
 import { getManyNotifications } from '../lib/notifications';
 import { NotificationBell } from './NotificationBell';
 import { SearchBar } from './SearchBar';
 
-export async function Header({ cartCount = 3 }: { cartCount?: number }) {
+export async function Header() {
   const user = await getAuth();
 
   // BFF trả `unreadCount` chính xác (count từ DB)
   let initialUnreadCount = 0;
+  let cartCount = 0;
   if (user) {
     // Dùng cùng query với NotificationsPage (page=1, limit=10) để
     // `React.cache` dedupe → khi user vào /profile/notifications tab "Tất cả"
     // chỉ cần 1 BFF call cho cả Header và Page.
-    const { unreadCount } = await getManyNotifications({ page: 1, limit: 10 });
-    initialUnreadCount = unreadCount;
+    const [notif, cart] = await Promise.all([
+      getManyNotifications({ page: 1, limit: 10 }),
+      // limit=1 là đủ vì ta chỉ cần `totalItems` để hiển thị badge.
+      getMyCart({ page: 1, limit: 1 }),
+    ]);
+    initialUnreadCount = notif.unreadCount;
+    cartCount = cart.totalItems;
   }
+
+  const cartBadge = cartCount > 99 ? '99+' : String(cartCount);
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur shadow-card">
@@ -45,7 +54,7 @@ export async function Header({ cartCount = 3 }: { cartCount?: number }) {
             <ShoppingCart className="w-5 h-5" />
             {cartCount > 0 && (
               <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-white text-[10px] font-bold flex items-center justify-center">
-                {cartCount}
+                {cartBadge}
               </span>
             )}
           </Link>
@@ -101,7 +110,7 @@ export async function Header({ cartCount = 3 }: { cartCount?: number }) {
           <ShoppingCart className="w-6 h-6" />
           {cartCount > 0 && (
             <span className="absolute top-0 right-0 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-white text-[10px] font-bold flex items-center justify-center">
-              {cartCount}
+              {cartBadge}
             </span>
           )}
         </Link>

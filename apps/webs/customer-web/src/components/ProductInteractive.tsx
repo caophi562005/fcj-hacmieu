@@ -4,8 +4,11 @@ import 'react-medium-image-zoom/dist/styles.css';
 
 import { Heart, ShieldCheck, ShoppingCart, Truck } from 'lucide-react';
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useMemo, useState, useTransition } from 'react';
 import Zoom from 'react-medium-image-zoom';
+import { toast } from 'react-toastify';
+import { addCartItemAction } from '../lib/cart.actions';
 import { formatVnd } from './ProductCard';
 
 type Variant = { value: string; options: string[] };
@@ -18,6 +21,8 @@ type Sku = {
 };
 
 export type ProductInteractiveProps = {
+  productId: string;
+  shopId: string;
   name: string;
   basePrice: number;
   virtualPrice: number;
@@ -31,6 +36,8 @@ export type ProductInteractiveProps = {
 
 export function ProductInteractive(props: ProductInteractiveProps) {
   const {
+    productId,
+    shopId,
     name,
     basePrice,
     virtualPrice,
@@ -41,6 +48,8 @@ export function ProductInteractive(props: ProductInteractiveProps) {
     averageRate,
     soldCount,
   } = props;
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
 
   // Gộp toàn bộ ảnh: ảnh sản phẩm + ảnh từng SKU (dedupe, giữ thứ tự).
   const allImages = useMemo(() => {
@@ -244,19 +253,54 @@ export function ProductInteractive(props: ProductInteractiveProps) {
         <div className="flex flex-wrap gap-2 mt-5">
           <button
             type="button"
-            className="btn-secondary btn-md flex-1 min-w-[160px]"
+            disabled={isPending}
+            onClick={() => {
+              if (variants.length > 0 && !matchedSku) {
+                toast.warn('Vui lòng chọn đầy đủ phân loại sản phẩm');
+                return;
+              }
+              if (!matchedSku) {
+                toast.error('Sản phẩm này chưa có phân loại khả dụng');
+                return;
+              }
+              if (stock != null && qty > stock) {
+                toast.warn(`Chỉ còn ${stock} sản phẩm trong kho`);
+                return;
+              }
+              const productImage =
+                matchedSku.image || allImages[0] || '/placeholder.png';
+              startTransition(async () => {
+                const result = await addCartItemAction({
+                  productId,
+                  productName: name,
+                  productImage,
+                  skuId: matchedSku.id,
+                  skuValue: matchedSku.value,
+                  shopId,
+                  quantity: qty,
+                });
+                if (result.ok) {
+                  toast.success('Đã thêm vào giỏ hàng');
+                  router.refresh();
+                } else {
+                  toast.error(result.message);
+                }
+              });
+            }}
+            className="btn-secondary btn-md flex-1 min-w-[160px] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            <ShoppingCart className="w-4 h-4" /> Thêm vào giỏ
+            <ShoppingCart className="w-4 h-4" />
+            {isPending ? 'Đang thêm...' : 'Thêm vào giỏ'}
           </button>
           <Link
             href="/payment"
-            className="btn-primary btn-md flex-1 min-w-[160px]"
+            className="btn-primary btn-md flex-1 min-w-[160px] cursor-pointer"
           >
             Mua ngay
           </Link>
           <button
             type="button"
-            className="btn-outline btn-md w-11 px-0"
+            className="btn-outline btn-md w-11 px-0 cursor-pointer"
             aria-label="Yêu thích"
           >
             <Heart className="w-4 h-4" />
