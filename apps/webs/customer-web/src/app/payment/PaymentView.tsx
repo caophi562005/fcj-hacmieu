@@ -142,7 +142,7 @@ export function PaymentView({ groups, voucher }: Props) {
             Trang chủ
           </Link>
           <Link
-            href="/profile/order"
+            href="/profile/orders"
             className="btn-primary btn-lg w-full cursor-pointer"
           >
             Đơn mua

@@ -65,9 +65,9 @@ export interface OrderSummary {
   id: string;
   code: string;
   shopId: string;
-  shopName: string;
   status: string;
   itemTotal: number;
+  discount: number;
   grandTotal: number;
   firstProductImage: string;
   firstProductName: string;
@@ -124,7 +124,6 @@ export interface GetOrderResponse {
   code: string;
   userId: string;
   shopId: string;
-  shopName: string;
   status: string;
   paymentMethod: string;
   paymentStatus: string;

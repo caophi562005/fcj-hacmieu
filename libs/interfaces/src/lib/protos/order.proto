@@ -76,10 +76,11 @@ message OrderSummary {
   string shopId = 3;
   string status = 4;
   double itemTotal = 5;
-  double grandTotal = 6;
-  string firstProductImage = 7;
-  string firstProductName = 8;
-  string createdAt = 9;
+  double discount = 6;
+  double grandTotal = 7;
+  string firstProductImage = 8;
+  string firstProductName = 9;
+  string createdAt = 10;
 }
 
 message OrderItem {

@@ -4,6 +4,7 @@ import {
   DeleteReviewRequest,
   GetManyReviewsRequest,
   GetManyReviewsResponse,
+  GetReviewByOrderItemIdRequest,
   GetReviewRequest,
   ReviewResponse,
   UpdateReviewRequest,
@@ -27,6 +28,19 @@ export class ReviewService {
     ...data
   }: GetReviewRequest): Promise<ReviewResponse> {
     const review = await this.reviewRepository.findById(data);
+
+    if (!review) {
+      throw new NotFoundException('Error.ReviewNotFound');
+    }
+
+    return review;
+  }
+
+  async findByOrderItemId({
+    processId,
+    ...data
+  }: GetReviewByOrderItemIdRequest): Promise<ReviewResponse> {
+    const review = await this.reviewRepository.findByOrderItemId(data);
 
     if (!review) {
       throw new NotFoundException('Error.ReviewNotFound');

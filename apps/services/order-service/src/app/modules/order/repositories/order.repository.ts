@@ -60,6 +60,7 @@ export class OrderRepository {
         shopId: order.shopId,
         status: order.status,
         itemTotal: order.itemTotal,
+        discount: order.discount,
         grandTotal: order.grandTotal,
         firstProductImage: order.items[0]?.productImage || '',
         firstProductName: order.items[0]?.productName || '',

@@ -1,3 +1,4 @@
+import { GetReviewByOrderItemIdRequest } from '@common/interfaces/models/utility';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma-client/utility-service';
 import { PrismaService } from '../../../prisma/prisma.service';
@@ -49,9 +50,21 @@ export class ReviewRepository {
   }
 
   findById(data: { id: string }) {
-    return this.prismaService.review.findFirst({
+    return this.prismaService.review.findUnique({
       where: {
         id: data.id,
+        deletedAt: null,
+      },
+    });
+  }
+
+  findByOrderItemId(data: GetReviewByOrderItemIdRequest) {
+    return this.prismaService.review.findUnique({
+      where: {
+        userId_orderItemId: {
+          userId: data.userId,
+          orderItemId: data.orderItemId,
+        },
         deletedAt: null,
       },
     });

@@ -4,6 +4,7 @@ import {
   CreateReviewRequest,
   DeleteReviewRequest,
   GetManyReviewsRequest,
+  GetReviewByOrderItemIdRequest,
   GetReviewRequest,
   UpdateReviewRequest,
 } from '@common/interfaces/models/utility';
@@ -24,6 +25,11 @@ export class ReviewGrpcController {
   @GrpcMethod(GrpcModuleName.UTILITY.REVIEW, 'GetReview')
   getReview(data: GetReviewRequest) {
     return this.reviewService.findById(data);
+  }
+
+  @GrpcMethod(GrpcModuleName.UTILITY.REVIEW, 'GetReviewByOrderItemId')
+  getReviewByOrderItemId(data: GetReviewByOrderItemIdRequest) {
+    return this.reviewService.findByOrderItemId(data);
   }
 
   @GrpcMethod(GrpcModuleName.UTILITY.REVIEW, 'CreateReview')

@@ -182,6 +182,12 @@ export interface GetReviewRequest {
   id: string;
 }
 
+export interface GetReviewByOrderItemIdRequest {
+  processId?: string | undefined;
+  orderItemId: string;
+  userId: string;
+}
+
 export interface CreateReviewRequest {
   processId?: string | undefined;
   userId: string;
@@ -427,6 +433,8 @@ export interface ReviewServiceClient {
 
   getReview(request: GetReviewRequest): Observable<ReviewResponse>;
 
+  getReviewByOrderItemId(request: GetReviewByOrderItemIdRequest): Observable<ReviewResponse>;
+
   createReview(request: CreateReviewRequest): Observable<ReviewResponse>;
 
   updateReview(request: UpdateReviewRequest): Observable<ReviewResponse>;
@@ -443,6 +451,10 @@ export interface ReviewServiceController {
 
   getReview(request: GetReviewRequest): Promise<ReviewResponse> | Observable<ReviewResponse> | ReviewResponse;
 
+  getReviewByOrderItemId(
+    request: GetReviewByOrderItemIdRequest,
+  ): Promise<ReviewResponse> | Observable<ReviewResponse> | ReviewResponse;
+
   createReview(request: CreateReviewRequest): Promise<ReviewResponse> | Observable<ReviewResponse> | ReviewResponse;
 
   updateReview(request: UpdateReviewRequest): Promise<ReviewResponse> | Observable<ReviewResponse> | ReviewResponse;
@@ -452,7 +464,14 @@ export interface ReviewServiceController {
 
 export function ReviewServiceControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = ["getManyReviews", "getReview", "createReview", "updateReview", "deleteReview"];
+    const grpcMethods: string[] = [
+      "getManyReviews",
+      "getReview",
+      "getReviewByOrderItemId",
+      "createReview",
+      "updateReview",
+      "deleteReview",
+    ];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
       GrpcMethod("ReviewService", method)(constructor.prototype[method], method, descriptor);

@@ -2,10 +2,12 @@ import { MessageCircle, Star, Store } from 'lucide-react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { MainShell } from '../../../components/MainShell';
+import { Pagination } from '../../../components/Pagination';
 import { ProductCard } from '../../../components/ProductCard';
 import { ProductInteractive } from '../../../components/ProductInteractive';
 import { PRODUCTS } from '../../../components/mockData';
 import { getProductById } from '../../../lib/catalog';
+import { getManyReviews } from '../../../lib/review';
 import { getShopById } from '../../../lib/shop';
 
 // Format "Tham gia" từ createdAt (giống shop page).
@@ -21,16 +23,43 @@ function formatJoined(createdAt: string | Date): string {
   return `${years} năm trước`;
 }
 
+function parsePage(raw?: string): number {
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n < 1) return 1;
+  return Math.floor(n);
+}
+
+function buildReviewHref(page: number): string {
+  const params = new URLSearchParams();
+  if (page > 1) params.set('page', String(page));
+  const qs = params.toString();
+  return qs ? `?${qs}` : '?';
+}
+
 export default async function ProductDetail({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ page?: string }>;
 }) {
   const { id } = await params;
+  const sp = (await searchParams) ?? {};
+  const reviewPage = parsePage(sp.page);
+  const reviewLimit = 5;
+
   const product = await getProductById(id);
   if (!product) notFound();
+
+  const reviewsData = await getManyReviews({
+    productId: product.id,
+    page: reviewPage,
+    limit: reviewLimit,
+  });
+
   const shop = await getShopById(product.shopId);
   const related = PRODUCTS.slice(0, 6);
+  const reviewTotalPages = Math.max(reviewsData.totalPages || 1, 1);
 
   return (
     <MainShell>
@@ -140,36 +169,66 @@ export default async function ProductDetail({
         <div className="card p-5 mt-4">
           <h2 className="text-base font-semibold mb-3">Đánh giá sản phẩm</h2>
           <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="flex gap-3 pb-4 border-b border-border-subtle last:border-0"
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={`https://i.pravatar.cc/40?img=${10 + i}`}
-                  alt=""
-                  className="w-10 h-10 rounded-full"
-                />
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-sm">Người dùng {i}</span>
-                    <span className="flex items-center text-xs text-yellow-500">
-                      {Array.from({ length: 5 }).map((_, k) => (
-                        <Star
-                          key={k}
-                          className="w-3 h-3 fill-yellow-400 text-yellow-400"
-                        />
-                      ))}
-                    </span>
+            {reviewsData.reviews.length > 0 ? (
+              reviewsData.reviews.map((review, idx) => {
+                const rowIndex = (reviewPage - 1) * reviewLimit + idx + 1;
+                const createdAtText = new Date(
+                  review.createdAt,
+                ).toLocaleDateString('vi-VN');
+
+                return (
+                  <div
+                    key={review.id}
+                    className="flex gap-3 pb-4 border-b border-border-subtle last:border-0"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={`https://i.pravatar.cc/40?img=${((rowIndex - 1) % 70) + 1}`}
+                      alt={`Avatar người dùng ${rowIndex}`}
+                      className="w-10 h-10 rounded-full"
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-medium text-sm">
+                          Người dùng {rowIndex}
+                        </span>
+                        <span className="flex items-center text-xs text-yellow-500">
+                          {Array.from({ length: 5 }).map((_, k) => (
+                            <Star
+                              key={k}
+                              className={`w-3 h-3 ${
+                                k < review.rating
+                                  ? 'fill-yellow-400 text-yellow-400'
+                                  : 'text-border'
+                              }`}
+                            />
+                          ))}
+                        </span>
+                        <span className="text-xs text-ink-subtle">
+                          {createdAtText}
+                        </span>
+                      </div>
+                      <p className="text-sm text-ink-muted mt-1 whitespace-pre-line">
+                        {review.content || 'Không có nội dung đánh giá.'}
+                      </p>
+                    </div>
                   </div>
-                  <p className="text-sm text-ink-muted mt-1">
-                    Sản phẩm đẹp đúng mô tả, giao hàng nhanh, đóng gói cẩn thận.
-                    Sẽ ủng hộ shop lần sau.
-                  </p>
-                </div>
-              </div>
-            ))}
+                );
+              })
+            ) : (
+              <p className="text-sm text-ink-muted">
+                Sản phẩm chưa có đánh giá nào.
+              </p>
+            )}
+          </div>
+
+          <div className="mt-4">
+            <Pagination
+              page={reviewPage}
+              totalPages={reviewTotalPages}
+              buildHref={(n) => buildReviewHref(n)}
+              ariaLabel="Phân trang đánh giá sản phẩm"
+            />
           </div>
         </div>
 

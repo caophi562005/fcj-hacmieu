@@ -2,7 +2,7 @@ import {
   CreateReviewRequest,
   DeleteReviewRequest,
   GetManyReviewsRequest,
-  GetManyReviewsResponse,
+  GetReviewByOrderItemIdRequest,
   GetReviewRequest,
   REVIEW_SERVICE_NAME,
   ReviewResponse,
@@ -28,14 +28,32 @@ export class ReviewService implements OnModuleInit {
       this.utilityClient.getService<ReviewServiceClient>(REVIEW_SERVICE_NAME);
   }
 
-  async getManyReviews(
-    data: GetManyReviewsRequest,
-  ): Promise<GetManyReviewsResponse> {
-    return firstValueFrom(this.reviewModule.getManyReviews(data));
+  async getManyReviews(data: GetManyReviewsRequest) {
+    const response = await firstValueFrom(
+      this.reviewModule.getManyReviews(data),
+    );
+    return {
+      ...response,
+      reviews: response.reviews.map((review) => ({
+        id: review.id,
+        userId: review.userId,
+        productId: review.productId,
+        rating: review.rating,
+        content: review.content,
+        createdAt: review.createdAt,
+        updatedAt: review.updatedAt,
+      })),
+    };
   }
 
   async getReview(data: GetReviewRequest): Promise<ReviewResponse> {
     return firstValueFrom(this.reviewModule.getReview(data));
+  }
+
+  async getReviewByOrderItemId(
+    data: GetReviewByOrderItemIdRequest,
+  ): Promise<ReviewResponse> {
+    return firstValueFrom(this.reviewModule.getReviewByOrderItemId(data));
   }
 
   async createReview(data: CreateReviewRequest): Promise<ReviewResponse> {

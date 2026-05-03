@@ -57,6 +57,7 @@ export const GetManyOrdersResponseSchema = PaginationQueryResponseSchema.extend(
         shopId: z.uuid(),
         status: z.string(),
         itemTotal: z.number(),
+        discount: z.number(),
         grandTotal: z.number(),
         firstProductImage: z.string(),
         firstProductName: z.string(),

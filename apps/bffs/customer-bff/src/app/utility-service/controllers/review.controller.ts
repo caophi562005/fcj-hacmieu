@@ -1,3 +1,4 @@
+import { IsPublic } from '@common/decorators/auth.decorator';
 import { ProcessId } from '@common/decorators/process-id.decorator';
 import { UserData } from '@common/decorators/user-data.decorator';
 import {
@@ -5,6 +6,7 @@ import {
   DeleteReviewRequestDto,
   GetManyReviewsRequestDto,
   GetManyReviewsResponseDto,
+  GetReviewByOrderItemIdRequestDto,
   ReviewResponseDto,
   UpdateReviewRequestDto,
 } from '@common/interfaces/dtos/utility';
@@ -27,6 +29,7 @@ export class ReviewController {
   constructor(private readonly reviewService: ReviewService) {}
 
   @Get()
+  @IsPublic()
   @ApiOkResponse({
     type: GetManyReviewsResponseDto,
   })
@@ -37,6 +40,22 @@ export class ReviewController {
     return this.reviewService.getManyReviews({
       ...queries,
       processId,
+    });
+  }
+
+  @Get(':orderItemId')
+  @ApiOkResponse({
+    type: ReviewResponseDto,
+  })
+  async getReviewByOrderItemId(
+    @Param() params: GetReviewByOrderItemIdRequestDto,
+    @ProcessId() processId: string,
+    @UserData('userId') userId: string,
+  ) {
+    return this.reviewService.getReviewByOrderItemId({
+      ...params,
+      processId,
+      userId,
     });
   }
 

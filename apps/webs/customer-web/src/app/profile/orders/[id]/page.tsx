@@ -1,21 +1,98 @@
-import Link from 'next/link';
-import {
-  Package,
-  Truck,
-  CircleCheck,
-  MapPin,
-  Receipt,
-} from 'lucide-react';
+import { OrderStatusValues } from '@common/constants/order.constant';
+import { PaymentMethodValues } from '@common/constants/payment.constant';
+import type { ReviewResponse } from '@common/interfaces/models/utility';
 import type { LucideIcon } from 'lucide-react';
+import {
+  CircleCheck,
+  Clock3,
+  MapPin,
+  Package,
+  Receipt,
+  Wallet,
+} from 'lucide-react';
+import Link from 'next/link';
+import type { ReactNode } from 'react';
 import { formatVnd } from '../../../../components/ProductCard';
-import { PRODUCTS } from '../../../../components/mockData';
+import { getMyOrderById } from '../../../../lib/order';
+import { getMyReviewByOrderItemId } from '../../../../lib/review';
+import { OrderReviews } from './OrderReviews';
 
-const STEPS: { icon: LucideIcon; label: string; time: string }[] = [
-  { icon: Receipt, label: 'Đơn hàng đã đặt', time: '20/04 — 09:15' },
-  { icon: Package, label: 'Đã chuẩn bị xong', time: '20/04 — 14:30' },
-  { icon: Truck, label: 'Đang giao hàng', time: '21/04 — 08:00' },
-  { icon: CircleCheck, label: 'Giao hàng thành công', time: '21/04 — 16:42' },
-];
+function statusLabel(status: string): string {
+  switch (status) {
+    case OrderStatusValues.CREATING:
+      return 'Đang tạo';
+    case OrderStatusValues.PENDING:
+      return 'Chờ thanh toán';
+    case OrderStatusValues.CONFIRMED:
+      return 'Chờ giao hàng';
+    case OrderStatusValues.SHIPPING:
+      return 'Đang giao';
+    case OrderStatusValues.COMPLETED:
+      return 'Hoàn thành';
+    case OrderStatusValues.CANCELLED:
+      return 'Đã hủy';
+    case OrderStatusValues.REFUNDED:
+      return 'Đã hoàn tiền';
+    default:
+      return status;
+  }
+}
+
+function statusBadgeClass(status: string): string {
+  switch (status) {
+    case OrderStatusValues.PENDING:
+      return 'bg-warning/10 text-warning';
+    case OrderStatusValues.CONFIRMED:
+      return 'bg-secondary/15 text-primary';
+    case OrderStatusValues.SHIPPING:
+      return 'bg-accent text-accent-foreground';
+    case OrderStatusValues.COMPLETED:
+      return 'bg-success/10 text-success';
+    case OrderStatusValues.CANCELLED:
+    case OrderStatusValues.REFUNDED:
+      return 'bg-danger/10 text-danger';
+    default:
+      return 'bg-surface-muted text-ink-muted';
+  }
+}
+
+function formatDateTime(raw: unknown): string {
+  const d = new Date(String(raw));
+  if (Number.isNaN(d.getTime())) return '--';
+  return d.toLocaleString('vi-VN', {
+    hour12: false,
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+function paymentMethodLabel(method: string): string {
+  switch (method) {
+    case PaymentMethodValues.COD:
+      return 'Thanh toán khi nhận hàng (COD)';
+    case PaymentMethodValues.ONLINE:
+      return 'Thanh toán online';
+    case PaymentMethodValues.WALLET:
+      return 'Ví điện tử';
+    default:
+      return method;
+  }
+}
+
+function timelineIcon(status: string): LucideIcon {
+  switch (status) {
+    case OrderStatusValues.PENDING:
+      return Receipt;
+    case OrderStatusValues.SHIPPING:
+      return Package;
+    case OrderStatusValues.COMPLETED:
+      return CircleCheck;
+    default:
+      return Clock3;
+  }
+}
 
 export default async function OrderDetailPage({
   params,
@@ -23,53 +100,107 @@ export default async function OrderDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const items = PRODUCTS.slice(0, 3).map((p, i) => ({ ...p, qty: i + 1 }));
-  const subtotal = items.reduce((s, it) => s + it.price * it.qty, 0);
-  const shipping = 0;
-  const discount = 30000;
-  const total = subtotal + shipping - discount;
-  const currentStep = 3;
+  const order = await getMyOrderById(id);
+
+  if (!order) {
+    return (
+      <div className="card p-8 text-center">
+        <p className="text-sm text-ink-muted mb-4">
+          Không tìm thấy đơn hàng này.
+        </p>
+        <Link
+          href="/profile/orders"
+          className="btn-primary btn-md cursor-pointer"
+        >
+          Quay lại đơn mua
+        </Link>
+      </div>
+    );
+  }
+
+  const timeline =
+    Array.isArray(order.timeline) && order.timeline.length > 0
+      ? [...order.timeline].sort(
+          (a, b) =>
+            new Date(String(a.at)).getTime() - new Date(String(b.at)).getTime(),
+        )
+      : [{ status: order.status, at: order.createdAt }];
+
+  const discountValue = Math.abs(order.discount || 0);
+  const hasDiscount = discountValue > 0;
+  const canReview = order.status === OrderStatusValues.COMPLETED;
+
+  const reviewItems = canReview
+    ? order.itemsSnapshot.map((it) => ({
+        orderId: order.id,
+        orderItemId: it.id,
+        sellerId: order.shopId,
+        productId: it.productId,
+        productName: it.productName,
+        skuValue: it.skuValue,
+        productImage: it.productImage,
+        quantity: it.quantity,
+      }))
+    : [];
+
+  const reviewEntries = canReview
+    ? await Promise.all(
+        reviewItems.map(async (it) => {
+          const review = await getMyReviewByOrderItemId(it.orderItemId);
+          return [it.orderItemId, review] as const;
+        }),
+      )
+    : [];
+
+  const initialReviews = Object.fromEntries(reviewEntries) as Record<
+    string,
+    ReviewResponse | null
+  >;
 
   return (
     <>
       <div className="card p-5 mb-4 flex flex-wrap items-center gap-3">
-        <Link href="/profile/orders" className="text-sm text-primary hover:underline">
+        <Link
+          href="/profile/orders"
+          className="text-sm text-primary hover:underline cursor-pointer"
+        >
           ← Đơn mua
         </Link>
         <div className="text-sm">
-          Mã đơn:{' '}
-          <span className="font-semibold">{id}</span>
+          Mã đơn: <span className="font-semibold">{order.code}</span>
         </div>
-        <span className="ml-auto chip-primary">Hoàn thành</span>
+        <span
+          className={`ml-auto text-xs font-semibold px-2 py-0.5 rounded ${statusBadgeClass(
+            order.status,
+          )}`}
+        >
+          {statusLabel(order.status)}
+        </span>
       </div>
 
       {/* Tracking */}
       <div className="card p-5 mb-4 overflow-x-auto">
         <h2 className="font-semibold mb-4">Trạng thái đơn hàng</h2>
-        <ol className="flex items-start min-w-[600px]">
-          {STEPS.map((s, i) => {
-            const done = i <= currentStep;
-            const Icon = s.icon;
+        <ol className="flex items-start min-w-[420px]">
+          {timeline.map((step, i) => {
+            const Icon = timelineIcon(step.status);
             return (
-              <li key={i} className="flex-1 flex flex-col items-center relative">
-                <div
-                  className={`relative z-10 w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
-                    done
-                      ? 'bg-primary text-white'
-                      : 'bg-surface-muted text-ink-subtle'
-                  }`}
-                >
+              <li
+                key={i}
+                className="flex-1 flex flex-col items-center relative"
+              >
+                <div className="relative z-10 w-10 h-10 rounded-full flex items-center justify-center bg-primary text-white">
                   <Icon className="w-5 h-5" />
                 </div>
-                {i < STEPS.length - 1 && (
-                  <div
-                    className={`absolute top-5 left-1/2 w-full h-0.5 ${
-                      i < currentStep ? 'bg-primary' : 'bg-border'
-                    }`}
-                  />
+                {i < timeline.length - 1 && (
+                  <div className="absolute top-5 left-1/2 w-full h-0.5 bg-primary" />
                 )}
-                <div className="text-xs mt-2 font-medium text-center">{s.label}</div>
-                <div className="text-[10px] text-ink-subtle">{s.time}</div>
+                <div className="text-xs mt-2 font-medium text-center">
+                  {statusLabel(step.status)}
+                </div>
+                <div className="text-[10px] text-ink-subtle">
+                  {formatDateTime(step.at)}
+                </div>
               </li>
             );
           })}
@@ -82,20 +213,34 @@ export default async function OrderDetailPage({
             <MapPin className="w-5 h-5 text-primary shrink-0 mt-0.5" />
             <div>
               <h3 className="font-semibold text-sm">Địa chỉ nhận hàng</h3>
-              <p className="text-sm mt-1">Nguyễn Văn A · +84 901 234 567</p>
-              <p className="text-sm text-ink-muted">
-                123 Lê Lợi, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh
+              <p className="text-sm mt-1">
+                {order.receiver.name} · {order.receiver.phone}
               </p>
+              <p className="text-sm text-ink-muted">{order.receiver.address}</p>
+              {order.receiver.note && (
+                <p className="text-xs text-ink-subtle mt-1">
+                  Ghi chú: {order.receiver.note}
+                </p>
+              )}
             </div>
           </div>
         </div>
         <div className="card p-4">
           <div className="flex items-start gap-3">
-            <Truck className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+            <Wallet className="w-5 h-5 text-primary shrink-0 mt-0.5" />
             <div>
-              <h3 className="font-semibold text-sm">Đơn vị vận chuyển</h3>
-              <p className="text-sm mt-1">V-Express · Giao nhanh 2h</p>
-              <p className="text-sm text-ink-muted">Mã vận đơn: VSX1234567890</p>
+              <h3 className="font-semibold text-sm">Thanh toán</h3>
+              <p className="text-sm mt-1">
+                {paymentMethodLabel(order.paymentMethod)}
+              </p>
+              <p className="text-sm text-ink-muted">
+                Trạng thái: {order.paymentStatus}
+              </p>
+              {order.paymentId && (
+                <p className="text-xs text-ink-subtle mt-1">
+                  Mã thanh toán: {order.paymentId}
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -103,46 +248,94 @@ export default async function OrderDetailPage({
 
       <div className="card mb-4">
         <div className="px-4 py-3 border-b border-border-subtle font-semibold">
-          Sản phẩm ({items.length})
+          Sản phẩm ({order.itemsSnapshot.length})
         </div>
-        {items.map((it) => (
+        {order.itemsSnapshot.map((it) => (
           <div
             key={it.id}
             className="flex items-center gap-3 p-4 border-b border-border-subtle last:border-0"
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={it.image} alt={it.name} className="w-16 h-16 rounded object-cover" />
+            <Link
+              href={`/product/${it.productId}`}
+              className="block cursor-pointer"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={it.productImage || '/placeholder.png'}
+                alt={it.productName}
+                className="w-16 h-16 rounded object-cover bg-surface-muted"
+              />
+            </Link>
             <div className="flex-1 min-w-0">
-              <div className="text-sm line-clamp-2">{it.name}</div>
-              <div className="text-xs text-ink-subtle">x{it.qty}</div>
+              <Link
+                href={`/product/${it.productId}`}
+                className="text-sm line-clamp-2 hover:text-primary transition-colors cursor-pointer"
+              >
+                {it.productName}
+              </Link>
+              <div className="text-xs text-ink-subtle mt-1">
+                Phân loại: {it.skuValue || 'Mặc định'}
+              </div>
+              <div className="text-xs text-ink-subtle">x{it.quantity}</div>
             </div>
             <div className="text-sm font-semibold text-primary">
-              {formatVnd(it.price * it.qty)}
+              {formatVnd(it.price * it.quantity)}
             </div>
           </div>
         ))}
       </div>
 
+      {canReview ? (
+        <OrderReviews items={reviewItems} initialReviews={initialReviews} />
+      ) : null}
+
       <div className="card p-5">
         <h3 className="font-semibold mb-3">Tổng kết</h3>
         <dl className="text-sm space-y-2">
-          <Row label="Tạm tính" value={formatVnd(subtotal)} />
-          <Row label="Phí vận chuyển" value={<span className="text-success">Miễn phí</span>} />
-          <Row label="Voucher giảm giá" value={<span className="text-success">-{formatVnd(discount)}</span>} />
+          <Row label="Tạm tính" value={formatVnd(order.itemTotal)} />
           <Row
-            label={<span className="font-semibold text-base">Tổng thanh toán</span>}
+            label="Phí vận chuyển"
+            value={
+              order.shippingFee === 0 ? (
+                <span className="text-success">Miễn phí</span>
+              ) : (
+                formatVnd(order.shippingFee)
+              )
+            }
+          />
+          <Row
+            label="Voucher giảm giá"
+            value={
+              hasDiscount ? (
+                <span className="text-success">
+                  -{formatVnd(discountValue)}
+                </span>
+              ) : (
+                <span className="text-ink-muted">Không áp dụng</span>
+              )
+            }
+          />
+          <Row
+            label={
+              <span className="font-semibold text-base">Tổng thanh toán</span>
+            }
             value={
               <span className="font-bold text-primary text-lg">
-                {formatVnd(total)}
+                {formatVnd(order.grandTotal)}
               </span>
             }
             border
           />
-          <Row label="Phương thức" value="Thanh toán khi nhận hàng (COD)" />
+          <Row
+            label="Phương thức"
+            value={paymentMethodLabel(order.paymentMethod)}
+          />
         </dl>
         <div className="flex flex-wrap gap-2 mt-5">
-          <button className="btn-outline btn-md">Liên hệ shop</button>
-          <button className="btn-primary btn-md">Mua lại</button>
+          <button className="btn-outline btn-md cursor-pointer">
+            Liên hệ shop
+          </button>
+          <button className="btn-primary btn-md cursor-pointer">Mua lại</button>
         </div>
       </div>
     </>
@@ -154,8 +347,8 @@ function Row({
   value,
   border,
 }: {
-  label: React.ReactNode;
-  value: React.ReactNode;
+  label: ReactNode;
+  value: ReactNode;
   border?: boolean;
 }) {
   return (

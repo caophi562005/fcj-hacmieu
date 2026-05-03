@@ -180,6 +180,7 @@ message ReportResponse {
 service ReviewService {
   rpc GetManyReviews(GetManyReviewsRequest) returns (GetManyReviewsResponse);
   rpc GetReview(GetReviewRequest) returns (ReviewResponse);
+  rpc GetReviewByOrderItemId(GetReviewByOrderItemIdRequest) returns (ReviewResponse);
   rpc CreateReview(CreateReviewRequest) returns (ReviewResponse);
   rpc UpdateReview(UpdateReviewRequest) returns (ReviewResponse);
   rpc DeleteReview(DeleteReviewRequest) returns (ReviewResponse);
@@ -205,6 +206,12 @@ message GetManyReviewsResponse {
 message GetReviewRequest {
   optional string processId = 1;
   string id = 2;
+}
+
+message GetReviewByOrderItemIdRequest {
+  optional string processId = 1;
+  string orderItemId = 2;
+  string userId = 3;
 }
 
 message CreateReviewRequest {

@@ -20,6 +20,16 @@ export const GetReviewRequestSchema = z
   })
   .strict();
 
+export const GetReviewByOrderItemIdRequestSchema = z
+  .object({
+    orderItemId: z.uuid(),
+    userId: z.uuid(),
+  })
+  .extend({
+    processId: z.uuid().optional(),
+  })
+  .strict();
+
 export const CreateReviewRequestSchema = z
   .object({
     userId: z.uuid(),
@@ -60,6 +70,9 @@ export const DeleteReviewRequestSchema = z
   .strict();
 
 export type GetManyReviewsRequest = z.infer<typeof GetManyReviewsRequestSchema>;
+export type GetReviewByOrderItemIdRequest = z.infer<
+  typeof GetReviewByOrderItemIdRequestSchema
+>;
 export type GetReviewRequest = z.infer<typeof GetReviewRequestSchema>;
 export type CreateReviewRequest = z.infer<typeof CreateReviewRequestSchema>;
 export type UpdateReviewRequest = z.infer<typeof UpdateReviewRequestSchema>;

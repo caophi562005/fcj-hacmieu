@@ -4,6 +4,7 @@ import {
   DeleteReviewRequestSchema,
   GetManyReviewsRequestSchema,
   GetManyReviewsResponseSchema,
+  GetReviewByOrderItemIdRequestSchema,
   GetReviewRequestSchema,
   ReviewResponseSchema,
   UpdateReviewRequestSchema,
@@ -14,7 +15,13 @@ export class GetManyReviewsRequestDto extends createZodDto(
   GetManyReviewsRequestSchema.omit({ processId: true }),
 ) {}
 
-export class GetReviewRequestDto extends createZodDto(GetReviewRequestSchema) {}
+export class GetReviewRequestDto extends createZodDto(
+  GetReviewRequestSchema.omit({ processId: true }),
+) {}
+
+export class GetReviewByOrderItemIdRequestDto extends createZodDto(
+  GetReviewByOrderItemIdRequestSchema.omit({ processId: true, userId: true }),
+) {}
 
 export class CreateReviewRequestDto extends createZodDto(
   CreateReviewRequestSchema.omit({ processId: true }),
@@ -27,6 +34,8 @@ export class UpdateReviewRequestDto extends createZodDto(
 export class DeleteReviewRequestDto extends createZodDto(
   DeleteReviewRequestSchema.omit({ processId: true }),
 ) {}
+
+// ====================================================================================================
 
 export class GetManyReviewsResponseDto extends createZodDto(
   ResponseSchema(GetManyReviewsResponseSchema),
