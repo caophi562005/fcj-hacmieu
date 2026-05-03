@@ -41,6 +41,7 @@ export interface Receiver {
   name: string;
   phone: string;
   address: string;
+  note?: string | undefined;
 }
 
 export interface OrderGroup {
@@ -133,9 +134,6 @@ export interface GetOrderResponse {
   discount: number;
   grandTotal: number;
   receiver: Receiver | undefined;
-  receiverName: string;
-  receiverPhone: string;
-  receiverAddress: string;
   timeline: Timeline[];
   itemsSnapshot: OrderItemSnapshot[];
   firstProductName: string;

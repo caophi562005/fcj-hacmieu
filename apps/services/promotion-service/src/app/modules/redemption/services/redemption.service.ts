@@ -1,6 +1,7 @@
 import { PrismaErrorValues } from '@common/constants/prisma.constant';
 import {
   ClaimPromotionRequest,
+  CreatePromotionRedemptionRequest,
   GetMyVouchersRequest,
   GetMyVouchersResponse,
   PromotionRedemptionResponse,
@@ -15,6 +16,12 @@ import { RedemptionRepository } from '../repositories/redemption.repository';
 @Injectable()
 export class RedemptionService {
   constructor(private readonly redemptionRepository: RedemptionRepository) {}
+
+  async createFromOrder(
+    data: CreatePromotionRedemptionRequest,
+  ): Promise<PromotionRedemptionResponse> {
+    return this.redemptionRepository.createFromOrder(data);
+  }
 
   async claim({
     processId: _,

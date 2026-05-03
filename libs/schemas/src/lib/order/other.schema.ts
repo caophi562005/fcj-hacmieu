@@ -11,13 +11,14 @@ export const ReceiverSchema = z.object({
   name: z.string(),
   phone: z.string(),
   address: z.string(),
+  note: z.string().optional(),
 });
 
 export const TimelineSchema = z.array(
   z.object({
     status: z.string(),
     at: z.any(),
-  })
+  }),
 );
 
 export const OrderSchema = BaseSchema.extend({

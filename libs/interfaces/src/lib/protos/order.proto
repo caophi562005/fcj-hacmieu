@@ -50,6 +50,7 @@ message Receiver {
   string name = 1;
   string phone = 2;
   string address = 3;
+  optional string note = 4;
 }
 
 message OrderGroup {
@@ -73,13 +74,12 @@ message OrderSummary {
   string id = 1;
   string code = 2;
   string shopId = 3;
-  string shopName = 4;
-  string status = 5;
-  double itemTotal = 6;
-  double grandTotal = 7;
-  string firstProductImage = 8;
-  string firstProductName = 9;
-  string createdAt = 10;
+  string status = 4;
+  double itemTotal = 5;
+  double grandTotal = 6;
+  string firstProductImage = 7;
+  string firstProductName = 8;
+  string createdAt = 9;
 }
 
 message OrderItem {
@@ -132,28 +132,24 @@ message GetOrderResponse {
   string code = 2;
   string userId = 3;
   string shopId = 4;
-  string shopName = 5;
 
-  string status = 6;
-  string paymentMethod = 7;
-  string paymentStatus = 8;
-  string paymentId = 9;
+  string status = 5;
+  string paymentMethod = 6;
+  string paymentStatus = 7;
+  string paymentId = 8;
 
-  double itemTotal = 10;
-  double shippingFee = 11;
-  double discount = 12;
-  double grandTotal = 13;
+  double itemTotal = 9;
+  double shippingFee = 10;
+  double discount = 11;
+  double grandTotal = 12;
 
-  Receiver receiver = 14;
-  string receiverName = 15;
-  string receiverPhone = 16;
-  string receiverAddress = 17;
-  repeated Timeline timeline = 18;
-  repeated OrderItemSnapshot itemsSnapshot = 19;
-  string firstProductName = 20;
-  string firstProductImage = 21;
-  string createdAt = 22;
-  string updatedAt = 23;
+  Receiver receiver = 13;
+  repeated Timeline timeline = 14;
+  repeated OrderItemSnapshot itemsSnapshot = 15;
+  string firstProductName = 16;
+  string firstProductImage = 17;
+  string createdAt = 18;
+  string updatedAt = 19;
 }
 
 message OrderItemSnapshot {

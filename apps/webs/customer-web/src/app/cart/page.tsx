@@ -1,6 +1,7 @@
 import { MainShell } from '../../components/MainShell';
 import { getMyCart } from '../../lib/cart';
 import { getProductById } from '../../lib/catalog';
+import { getMyVouchers } from '../../lib/promotions';
 import { getShopById } from '../../lib/shop';
 import { CartView, type CartShopView } from './CartView';
 
@@ -24,9 +25,11 @@ export default async function CartPage({
     new Set(cart.cartItems.flatMap((g) => g.cartItems.map((i) => i.productId))),
   );
 
-  const [shops, products] = await Promise.all([
+  const [shops, products, myVouchers] = await Promise.all([
     Promise.all(cart.cartItems.map((g) => getShopById(g.shopId))),
     Promise.all(productIds.map((id) => getProductById(id))),
+    // Voucher đã claim & còn dùng được. limit=50 vì 1 trang cart hiếm khi cần nhiều hơn.
+    getMyVouchers({ status: 'AVAILABLE', limit: 50 }),
   ]);
 
   // Lookup price theo skuId; fallback basePrice nếu không tìm thấy SKU.
@@ -65,7 +68,7 @@ export default async function CartPage({
         <h1 className="text-xl md:text-2xl font-semibold mb-4">
           Giỏ hàng của bạn
         </h1>
-        <CartView groups={groups} />
+        <CartView groups={groups} vouchers={myVouchers.redemptions} />
       </div>
     </MainShell>
   );

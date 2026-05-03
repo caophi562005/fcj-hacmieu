@@ -1,6 +1,17 @@
 'use client';
 
-import { Loader2, Store, TicketPercent, Trash2 } from 'lucide-react';
+import { DiscountTypeValues } from '@common/constants/promotion.constant';
+import type { PromotionRedemptionResponse } from '@common/interfaces/models/promotion';
+import {
+  Check,
+  ChevronDown,
+  Loader2,
+  Store,
+  Tag,
+  TicketPercent,
+  Trash2,
+  X,
+} from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
@@ -32,7 +43,43 @@ export type CartShopView = {
 
 const DEBOUNCE_MS = 1000;
 
-export function CartView({ groups }: { groups: CartShopView[] }) {
+// Tính discount cho 1 voucher dựa trên subtotal hiện tại.
+// Trả về null nếu voucher không áp dụng được (vd: chưa đủ minOrderSubtotal).
+function calcDiscount(
+  voucher: PromotionRedemptionResponse,
+  subtotal: number,
+): number | null {
+  if (subtotal < (voucher.minOrderSubtotal ?? 0)) return null;
+  if (voucher.discountType === DiscountTypeValues.PERCENT) {
+    // PERCENT lưu ×100 (100 = 1%, 10000 = 100%) — xem schema PromotionSchema.
+    const raw = Math.floor((subtotal * voucher.discountValue) / 10000);
+    return voucher.maxDiscount ? Math.min(raw, voucher.maxDiscount) : raw;
+  }
+  return Math.min(voucher.discountValue, subtotal);
+}
+
+function voucherTitle(v: PromotionRedemptionResponse): string {
+  return v.discountType === DiscountTypeValues.PERCENT
+    ? `Giảm ${(v.discountValue / 100).toFixed(0)}%`
+    : `Giảm ${formatVnd(v.discountValue)}`;
+}
+
+function voucherDesc(v: PromotionRedemptionResponse): string {
+  const parts: string[] = [];
+  if (v.minOrderSubtotal > 0)
+    parts.push(`Đơn từ ${formatVnd(v.minOrderSubtotal)}`);
+  if (v.maxDiscount && v.discountType === DiscountTypeValues.PERCENT)
+    parts.push(`Tối đa ${formatVnd(v.maxDiscount)}`);
+  return parts.length ? parts.join(' • ') : 'Áp dụng cho đơn hợp lệ';
+}
+
+export function CartView({
+  groups,
+  vouchers,
+}: {
+  groups: CartShopView[];
+  vouchers: PromotionRedemptionResponse[];
+}) {
   const router = useRouter();
   const [, startTransition] = useTransition();
 
@@ -180,8 +227,80 @@ export function CartView({ groups }: { groups: CartShopView[] }) {
 
   const selectedCount = allItemIds.filter((id) => selected[id]).length;
   const shipping = 0;
-  const discount = 0;
+
+  // ---- Voucher selector ----
+  const [voucherOpen, setVoucherOpen] = useState(false);
+  const [selectedVoucherId, setSelectedVoucherId] = useState<string | null>(
+    null,
+  );
+  const voucherPanelRef = useRef<HTMLDivElement | null>(null);
+
+  // Click outside để đóng panel.
+  useEffect(() => {
+    if (!voucherOpen) return;
+    const onClick = (e: MouseEvent) => {
+      if (
+        voucherPanelRef.current &&
+        !voucherPanelRef.current.contains(e.target as Node)
+      ) {
+        setVoucherOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', onClick);
+    return () => document.removeEventListener('mousedown', onClick);
+  }, [voucherOpen]);
+
+  const selectedVoucher = useMemo(
+    () => vouchers.find((v) => v.id === selectedVoucherId) ?? null,
+    [vouchers, selectedVoucherId],
+  );
+
+  // Tự bỏ chọn voucher nếu subtotal tụt xuống dưới ngưỡng.
+  useEffect(() => {
+    if (!selectedVoucher) return;
+    if (subtotal < (selectedVoucher.minOrderSubtotal ?? 0)) {
+      setSelectedVoucherId(null);
+      toast.info('Voucher đã bị bỏ vì đơn hàng không còn đủ điều kiện');
+    }
+  }, [subtotal, selectedVoucher]);
+
+  const discount = selectedVoucher
+    ? (calcDiscount(selectedVoucher, subtotal) ?? 0)
+    : 0;
   const total = subtotal + shipping - discount;
+
+  const handleProceedToPayment = () => {
+    if (selectedCount === 0) return;
+
+    const hasSyncInFlight = Object.values(busyIds).some(Boolean);
+    const hasPendingDelta = Object.values(pendingDeltaRef.current).some(
+      (delta) => delta !== 0,
+    );
+    if (hasSyncInFlight || hasPendingDelta) {
+      toast.info(
+        'Vui lòng đợi cập nhật giỏ hàng hoàn tất trước khi thanh toán',
+      );
+      return;
+    }
+
+    const selectedItemIds = groups
+      .flatMap((g) => g.items)
+      .filter((it) => selected[it.id])
+      .map((it) => it.id);
+
+    if (selectedItemIds.length === 0) {
+      toast.info('Vui lòng chọn ít nhất 1 sản phẩm để thanh toán');
+      return;
+    }
+
+    const params = new URLSearchParams();
+    params.set('items', selectedItemIds.join(','));
+    if (selectedVoucher?.code) {
+      params.set('voucher', selectedVoucher.code);
+    }
+
+    router.push(`/payment?${params.toString()}`);
+  };
 
   if (groups.length === 0) {
     return (
@@ -364,21 +483,154 @@ export function CartView({ groups }: { groups: CartShopView[] }) {
           );
         })}
 
-        <div className="card p-4 flex items-center gap-3">
-          <TicketPercent className="w-5 h-5 text-primary shrink-0" />
-          <input
-            className="input"
-            placeholder="Nhập mã giảm giá"
-            disabled
-            title="Tính năng đang phát triển"
-          />
-          <button
-            type="button"
-            className="btn-primary btn-md cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
-            disabled
+        <div ref={voucherPanelRef} className="card p-4 relative">
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={() => setVoucherOpen((v) => !v)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                setVoucherOpen((v) => !v);
+              }
+            }}
+            className="w-full flex items-center gap-3 text-left cursor-pointer group focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 rounded"
+            aria-expanded={voucherOpen}
+            aria-haspopup="listbox"
           >
-            Áp dụng
-          </button>
+            <TicketPercent className="w-5 h-5 text-primary shrink-0" />
+            <div className="flex-1 min-w-0">
+              {selectedVoucher ? (
+                <>
+                  <div className="font-medium text-sm line-clamp-1">
+                    {voucherTitle(selectedVoucher)}{' '}
+                    <span className="text-ink-subtle font-normal">
+                      ({selectedVoucher.code})
+                    </span>
+                  </div>
+                  <div className="text-xs text-success mt-0.5">
+                    Đã áp dụng • Giảm {formatVnd(discount)}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="font-medium text-sm">Chọn mã giảm giá</div>
+                  <div className="text-xs text-ink-subtle mt-0.5">
+                    {vouchers.length > 0
+                      ? `${vouchers.length} mã khả dụng`
+                      : 'Bạn chưa có mã nào — vào "Kho voucher" để thu thập'}
+                  </div>
+                </>
+              )}
+            </div>
+            {selectedVoucher ? (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedVoucherId(null);
+                }}
+                className="w-7 h-7 inline-flex items-center justify-center rounded-full text-ink-muted hover:text-danger hover:bg-danger/5 transition-colors cursor-pointer"
+                aria-label="Bỏ chọn voucher"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            ) : (
+              <ChevronDown
+                className={`w-4 h-4 text-ink-muted transition-transform ${
+                  voucherOpen ? 'rotate-180' : ''
+                }`}
+                aria-hidden
+              />
+            )}
+          </div>
+
+          {voucherOpen && (
+            <div
+              role="listbox"
+              className="absolute z-20 left-0 right-0 top-full mt-2 max-h-[360px] overflow-y-auto rounded-lg border border-border-subtle bg-white shadow-lg"
+            >
+              {vouchers.length === 0 ? (
+                <div className="p-6 text-center">
+                  <Tag className="w-6 h-6 mx-auto text-ink-subtle mb-2" />
+                  <div className="text-sm font-medium mb-1">
+                    Chưa có voucher nào
+                  </div>
+                  <Link
+                    href="/profile/voucher"
+                    className="text-xs text-primary hover:underline cursor-pointer"
+                  >
+                    Đi tới kho voucher
+                  </Link>
+                </div>
+              ) : (
+                <ul className="divide-y divide-border-subtle">
+                  {vouchers.map((v) => {
+                    const eligible = subtotal >= (v.minOrderSubtotal ?? 0);
+                    const isSelected = v.id === selectedVoucherId;
+                    const Icon =
+                      v.discountType === DiscountTypeValues.PERCENT
+                        ? TicketPercent
+                        : Tag;
+                    return (
+                      <li key={v.id}>
+                        <button
+                          type="button"
+                          disabled={!eligible}
+                          onClick={() => {
+                            setSelectedVoucherId(isSelected ? null : v.id);
+                            setVoucherOpen(false);
+                          }}
+                          className={`w-full flex items-start gap-3 p-3 text-left transition-colors ${
+                            eligible
+                              ? 'hover:bg-surface-muted cursor-pointer'
+                              : 'opacity-60 cursor-not-allowed'
+                          } ${isSelected ? 'bg-primary/5' : ''}`}
+                          aria-selected={isSelected}
+                          role="option"
+                        >
+                          <div
+                            className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
+                              eligible
+                                ? 'bg-primary/10 text-primary'
+                                : 'bg-surface-muted text-ink-subtle'
+                            }`}
+                          >
+                            <Icon className="w-4 h-4" aria-hidden />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-medium line-clamp-1">
+                              {voucherTitle(v)}
+                              <span className="ml-2 text-xs text-ink-subtle font-normal">
+                                {v.code}
+                              </span>
+                            </div>
+                            <div className="text-xs text-ink-subtle mt-0.5 line-clamp-1">
+                              {voucherDesc(v)}
+                            </div>
+                            {!eligible && (
+                              <div className="text-xs text-danger mt-1">
+                                Cần mua thêm{' '}
+                                {formatVnd(
+                                  (v.minOrderSubtotal ?? 0) - subtotal,
+                                )}
+                              </div>
+                            )}
+                          </div>
+                          {isSelected && (
+                            <Check
+                              className="w-4 h-4 text-primary shrink-0 mt-1"
+                              aria-hidden
+                            />
+                          )}
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -411,6 +663,7 @@ export function CartView({ groups }: { groups: CartShopView[] }) {
           <button
             type="button"
             disabled={selectedCount === 0}
+            onClick={handleProceedToPayment}
             className="btn-primary btn-lg w-full mt-4 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
           >
             Tiến hành thanh toán

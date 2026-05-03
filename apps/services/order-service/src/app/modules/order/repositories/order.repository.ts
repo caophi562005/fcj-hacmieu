@@ -58,7 +58,6 @@ export class OrderRepository {
         id: order.id,
         code: order.code,
         shopId: order.shopId,
-        shopName: '',
         status: order.status,
         itemTotal: order.itemTotal,
         grandTotal: order.grandTotal,
@@ -100,12 +99,14 @@ export class OrderRepository {
       name?: string;
       phone?: string;
       address?: string;
+      note?: string;
     };
 
     const receiver = {
       name: receiverRaw.name || '',
       phone: receiverRaw.phone || '',
       address: receiverRaw.address || '',
+      note: receiverRaw.note || undefined,
     };
 
     return {
@@ -113,7 +114,6 @@ export class OrderRepository {
       code: order.code,
       userId: order.userId,
       shopId: order.shopId,
-      shopName: '',
       status: order.status,
       paymentMethod: order.paymentMethod,
       paymentStatus: order.paymentStatus,
@@ -123,9 +123,6 @@ export class OrderRepository {
       discount: order.discount,
       grandTotal: order.grandTotal,
       receiver,
-      receiverName: receiver.name,
-      receiverPhone: receiver.phone,
-      receiverAddress: receiver.address,
       timeline: Array.isArray(order.timeline) ? order.timeline : [],
       itemsSnapshot: order.items,
       firstProductName: order.items[0]?.productName || '',

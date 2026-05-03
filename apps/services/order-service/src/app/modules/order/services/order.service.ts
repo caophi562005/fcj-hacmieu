@@ -36,10 +36,16 @@ import {
 } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
 import { SqsService } from '@ssut/nestjs-sqs';
+import { customAlphabet } from 'nanoid';
 import { firstValueFrom } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 import { CartItemService } from '../../cart/services/cart-item.service';
 import { OrderRepository } from '../repositories/order.repository';
+
+const generatePaymentCode = customAlphabet(
+  '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz',
+  14,
+);
 
 @Injectable()
 export class OrderService implements OnModuleInit {
@@ -245,14 +251,16 @@ export class OrderService implements OnModuleInit {
       };
     }
 
-    const paymentId = uuidv4();
+    const isOnlinePayment = data.paymentMethod === PaymentMethodValues.ONLINE;
+    const paymentId = isOnlinePayment ? uuidv4() : null;
+    const paymentCode = isOnlinePayment ? `PAY${generatePaymentCode()}` : null;
 
     const mergedData = {
       userId,
       receiver: data.receiver,
       shippingFee: data.shippingFee,
       paymentMethod: data.paymentMethod,
-      paymentId: paymentId,
+      paymentId,
       orders: ordersWithTotal,
     };
 
@@ -282,11 +290,9 @@ export class OrderService implements OnModuleInit {
       id: paymentId,
       processId,
       userId,
-      code: `PAY-${Date.now()}`,
+      code: isOnlinePayment ? paymentCode : null,
       orderId: createdOrders.map((order) => order.id),
-      method:
-        data.paymentMethod ||
-        (PaymentMethodValues.ONLINE as typeof PaymentMethodValues.ONLINE),
+      method: data.paymentMethod,
       status: PaymentStatusValues.PENDING,
       amount: createdOrders.reduce((sum, order) => sum + order.grandTotal, 0),
     });

@@ -33,10 +33,6 @@ export const GetOrderResponseSchema = OrderSchema.pick({
   createdAt: true,
   updatedAt: true,
 }).safeExtend({
-  shopName: z.string(),
-  receiverName: z.string(),
-  receiverPhone: z.string(),
-  receiverAddress: z.string(),
   itemsSnapshot: z.array(
     OrderItemResponseSchema.pick({
       id: true,
@@ -46,7 +42,7 @@ export const GetOrderResponseSchema = OrderSchema.pick({
       skuValue: true,
       quantity: true,
       price: true,
-    })
+    }),
   ),
   firstProductName: z.string(),
   firstProductImage: z.string(),
@@ -59,16 +55,15 @@ export const GetManyOrdersResponseSchema = PaginationQueryResponseSchema.extend(
         id: z.uuid(),
         code: z.string(),
         shopId: z.uuid(),
-        shopName: z.string(),
         status: z.string(),
         itemTotal: z.number(),
         grandTotal: z.number(),
         firstProductImage: z.string(),
         firstProductName: z.string(),
         createdAt: z.any(),
-      })
+      }),
     ),
-  }
+  },
 );
 
 export const DashboardSellerResponseSchema = z.object({
