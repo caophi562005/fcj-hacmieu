@@ -1,0 +1,16 @@
+{
+  "name": "seller-web",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/webs/seller-web",
+  "projectType": "application",
+  "tags": [],
+  "// targets": "to see all targets run: nx show project seller-web --web",
+  "targets": {
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm nx dev seller-web"
+      }
+    }
+  }
+}

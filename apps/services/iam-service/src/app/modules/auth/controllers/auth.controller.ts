@@ -2,6 +2,7 @@ import { GrpcModuleName } from '@common/constants/grpc.constant';
 import { GrpcLoggingInterceptor } from '@common/interceptors/grpcLogging.interceptor';
 import {
   ChangePasswordRequest,
+  LogoutRequest,
   RefreshSessionRequest,
   ValidateTokenRequest,
 } from '@common/interfaces/models/iam';
@@ -22,6 +23,11 @@ export class AuthGrpcController {
   @GrpcMethod(GrpcModuleName.IAM.AUTH, 'ChangePassword')
   changePassword(data: ChangePasswordRequest) {
     return this.authService.changePassword(data);
+  }
+
+  @GrpcMethod(GrpcModuleName.IAM.AUTH, 'Logout')
+  logout(data: LogoutRequest) {
+    return this.authService.logout(data);
   }
 
   @GrpcMethod(GrpcModuleName.IAM.AUTH, 'ValidateToken')

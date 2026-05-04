@@ -27,7 +27,11 @@ export class UpdateProductRequestDto extends createZodDto(
 ) {}
 
 export class DeleteProductRequestDto extends createZodDto(
-  DeleteProductRequestSchema.omit({ processId: true, deletedById: true }),
+  DeleteProductRequestSchema.omit({
+    processId: true,
+    deletedById: true,
+    shopId: true,
+  }),
 ) {}
 
 // ====================================================================================================

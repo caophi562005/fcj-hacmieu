@@ -49,3 +49,5 @@ terraform
 # Other apps không cần
 apps/bffs
 apps/services
+apps/webs/seller-web
+apps/webs/admin-web

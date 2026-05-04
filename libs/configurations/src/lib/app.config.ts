@@ -15,6 +15,8 @@ export const AppConfigurationSchema = z.object({
 
   CUSTOMER_BFF_URL: z.string(),
   CUSTOMER_WEB_URL: z.string(),
+  SELLER_BFF_URL: z.string().optional(),
+  SELLER_WEB_URL: z.string().optional(),
 });
 
 const configServer = AppConfigurationSchema.safeParse(process.env);

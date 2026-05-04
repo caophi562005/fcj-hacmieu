@@ -6,11 +6,17 @@ service AuthModule {
   rpc RefreshSession(RefreshSessionRequest) returns (RefreshSessionResponse);
   rpc ChangePassword(ChangePasswordRequest) returns (Message);
   rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse);
+  rpc Logout(LogoutRequest) returns (Message);
 }
 
 message RefreshSessionRequest {
   optional string processId = 1;
   string refreshToken = 2;
+}
+
+message LogoutRequest {
+  optional string processId = 1;
+  string accessToken = 2;
 }
 
 message ChangePasswordRequest {

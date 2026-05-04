@@ -9,9 +9,11 @@ import { GroupType } from '@common/constants/user.constant';
 import {
   ChangePasswordRequest,
   GetAllPermissionsResponse,
+  LogoutRequest,
   RefreshSessionRequest,
   ValidateTokenRequest,
 } from '@common/interfaces/models/iam';
+import { generateTokenCacheKey } from '@common/utils/cache-key.util';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import {
   Inject,
@@ -64,6 +66,10 @@ export class AuthService {
     return {
       message: 'Password changed successfully',
     };
+  }
+
+  async logout(data: LogoutRequest) {
+    await this.cacheManager.del(generateTokenCacheKey(data.accessToken));
   }
 
   async validateToken(data: ValidateTokenRequest) {

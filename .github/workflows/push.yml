@@ -52,6 +52,7 @@ jobs:
             {"name":"customer-bff","dockerfile":"apps/bffs/customer-bff/Dockerfile","path":"apps/bffs/customer-bff"},
             {"name":"seller-bff","dockerfile":"apps/bffs/seller-bff/Dockerfile","path":"apps/bffs/seller-bff"},
             {"name":"customer-web","dockerfile":"apps/webs/customer-web/Dockerfile","path":"apps/webs/customer-web"},
+            {"name":"seller-web","dockerfile":"apps/webs/seller-web/Dockerfile","path":"apps/webs/seller-web"},
             {"name":"catalog-service","dockerfile":"apps/services/catalog-service/Dockerfile","path":"apps/services/catalog-service"},
             {"name":"iam-service","dockerfile":"apps/services/iam-service/Dockerfile","path":"apps/services/iam-service"},
             {"name":"order-service","dockerfile":"apps/services/order-service/Dockerfile","path":"apps/services/order-service"},

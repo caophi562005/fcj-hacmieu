@@ -15,6 +15,9 @@ export const SqsConfigurationSchema = z.object({
 
   SEND_NOTIFICATION_QUEUE_NAME: z.string(),
   SEND_NOTIFICATION_QUEUE_URL: z.string(),
+
+  CREATE_USER_QUEUE_NAME: z.string(),
+  CREATE_USER_QUEUE_URL: z.string(),
 });
 
 const configServer = SqsConfigurationSchema.safeParse(process.env);

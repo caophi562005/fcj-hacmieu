@@ -15,6 +15,11 @@ export interface RefreshSessionRequest {
   refreshToken: string;
 }
 
+export interface LogoutRequest {
+  processId?: string | undefined;
+  accessToken: string;
+}
+
 export interface ChangePasswordRequest {
   processId?: string | undefined;
   previousPassword: string;
@@ -267,6 +272,8 @@ export interface AuthModuleClient {
   changePassword(request: ChangePasswordRequest): Observable<Message>;
 
   validateToken(request: ValidateTokenRequest): Observable<ValidateTokenResponse>;
+
+  logout(request: LogoutRequest): Observable<Message>;
 }
 
 export interface AuthModuleController {
@@ -279,11 +286,13 @@ export interface AuthModuleController {
   validateToken(
     request: ValidateTokenRequest,
   ): Promise<ValidateTokenResponse> | Observable<ValidateTokenResponse> | ValidateTokenResponse;
+
+  logout(request: LogoutRequest): Promise<Message> | Observable<Message> | Message;
 }
 
 export function AuthModuleControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = ["refreshSession", "changePassword", "validateToken"];
+    const grpcMethods: string[] = ["refreshSession", "changePassword", "validateToken", "logout"];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
       GrpcMethod("AuthModule", method)(constructor.prototype[method], method, descriptor);

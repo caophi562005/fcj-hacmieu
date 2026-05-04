@@ -43,6 +43,11 @@ export async function changePassword(
   await api.post('/iam/auth/change-password', payload);
 }
 
+export async function logout(): Promise<void> {
+  const api = await createServerApi();
+  await api.post('/iam/auth/logout');
+}
+
 export async function createPresignedUrl(
   payload: Omit<CreatePresignedUrlRequest, 'processId' | 'userId'>,
 ): Promise<CreatePresignedUrlResponse> {

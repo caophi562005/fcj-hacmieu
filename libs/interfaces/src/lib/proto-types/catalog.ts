@@ -33,6 +33,7 @@ export interface GetManyProductsResponse {
 export interface GetProductRequest {
   processId?: string | undefined;
   id: string;
+  shopId?: string | undefined;
 }
 
 export interface CreateProductRequest {

@@ -23,6 +23,14 @@ export const ValidateTokenRequestSchema = z
   })
   .strict();
 
+export const LogoutRequestSchema = z
+  .object({
+    processId: z.uuid().optional(),
+    accessToken: z.string(),
+  })
+  .strict();
+
 export type RefreshSessionRequest = z.infer<typeof RefreshSessionRequestSchema>;
 export type ChangePasswordRequest = z.infer<typeof ChangePasswordRequestSchema>;
 export type ValidateTokenRequest = z.infer<typeof ValidateTokenRequestSchema>;
+export type LogoutRequest = z.infer<typeof LogoutRequestSchema>;
