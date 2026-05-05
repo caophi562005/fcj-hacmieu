@@ -6,7 +6,9 @@ import { ArrowLeft, ImageIcon, Plus, Save, Trash2, X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
+import { toast } from 'react-toastify';
 import type { BrandOption, CategoryOption } from '../../../lib/catalog';
+import { fileToBase64DataUrl } from '../../../lib/image-base64';
 import type {
   DistrictResponse,
   ProvinceResponse,
@@ -24,6 +26,8 @@ type Sku = { value: string; price: number; stock: number; image?: string };
 type Attribute = { name: string; value: string };
 
 type Status = (typeof ProductStatusValues)[keyof typeof ProductStatusValues];
+
+const ALLOWED_IMAGE_MIME = ['image/png', 'image/jpeg', 'image/jpg'];
 
 // Category gắn vào product (từ ProductResponse) — đủ để suy ra parent/child.
 type ProductCategoryRef = {
@@ -109,7 +113,6 @@ export function ProductForm({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string>('');
-  const [success, setSuccess] = useState<string>('');
 
   const [name, setName] = useState(initial.name);
   const [description, setDescription] = useState(initial.description);
@@ -118,10 +121,23 @@ export function ProductForm({
   const [status, setStatus] = useState<Status>(initial.status);
   const [brandId, setBrandId] = useState(initial.brandId ?? '');
   const [sizeGuide, setSizeGuide] = useState(initial.sizeGuide ?? '');
-  const [images, setImages] = useState<string[]>(initial.images);
+  const [existingImages, setExistingImages] = useState<string[]>(
+    initial.images,
+  );
+  const [newImageBase64DataUrls, setNewImageBase64DataUrls] = useState<
+    string[]
+  >([]);
   const [variants, setVariants] = useState<Variant[]>(initial.variants);
   const [skus, setSkus] = useState<Sku[]>(initial.skus);
   const [attributes, setAttributes] = useState<Attribute[]>(initial.attributes);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const skuImageInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
+  const [skuImagePreviewOverrides, setSkuImagePreviewOverrides] = useState<
+    Record<number, string>
+  >({});
+  const [newSkuImageBase64ByIndex, setNewSkuImageBase64ByIndex] = useState<
+    Record<number, string>
+  >({});
 
   // Suy diễn parent / child category id từ refs khi edit.
   const initialParentCategory = useMemo(() => {
@@ -324,14 +340,129 @@ export function ProductForm({
     setSkus((prev) => regenerateSkus(next, prev));
   };
 
-  // Images: comma separated URLs
-  const imagesText = images.join('\n');
-  const onImagesChange = (text: string) => {
-    const list = text
-      .split(/[\n,]/)
-      .map((s) => s.trim())
-      .filter(Boolean);
-    setImages(list);
+  const imagePreviewItems = useMemo(
+    () => [
+      ...existingImages.map((src, index) => ({
+        id: `existing-${index}-${src}`,
+        src,
+        index,
+        isNew: false,
+      })),
+      ...newImageBase64DataUrls.map((src, index) => ({
+        id: `new-${index}`,
+        src,
+        index,
+        isNew: true,
+      })),
+    ],
+    [existingImages, newImageBase64DataUrls],
+  );
+
+  const onImageFilesChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const fileList = Array.from(files);
+    const hasInvalidMime = fileList.some(
+      (file) => !ALLOWED_IMAGE_MIME.includes(file.type),
+    );
+
+    if (hasInvalidMime) {
+      setError('Chỉ chấp nhận ảnh PNG, JPG hoặc JPEG.');
+      e.target.value = '';
+      return;
+    }
+
+    try {
+      const nextBase64DataUrls = await Promise.all(
+        fileList.map((file) => fileToBase64DataUrl(file)),
+      );
+      setNewImageBase64DataUrls((prev) => [...prev, ...nextBase64DataUrls]);
+      setError('');
+    } catch {
+      setError('Không thể đọc file ảnh. Vui lòng thử lại.');
+    } finally {
+      e.target.value = '';
+    }
+  };
+
+  const removeExistingImage = (index: number) => {
+    setExistingImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const removeNewImage = (index: number) => {
+    setNewImageBase64DataUrls((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  useEffect(() => {
+    setSkuImagePreviewOverrides((prev) => {
+      const next: Record<number, string> = {};
+      for (const [rawIndex, base64] of Object.entries(prev)) {
+        const index = Number(rawIndex);
+        if (Number.isInteger(index) && index >= 0 && index < skus.length) {
+          next[index] = base64;
+        }
+      }
+      return next;
+    });
+
+    setNewSkuImageBase64ByIndex((prev) => {
+      const next: Record<number, string> = {};
+      for (const [rawIndex, base64] of Object.entries(prev)) {
+        const index = Number(rawIndex);
+        if (Number.isInteger(index) && index >= 0 && index < skus.length) {
+          next[index] = base64;
+        }
+      }
+      return next;
+    });
+  }, [skus.length]);
+
+  const onSkuImageChange = async (
+    skuIndex: number,
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!ALLOWED_IMAGE_MIME.includes(file.type)) {
+      setError('Chỉ chấp nhận ảnh PNG, JPG hoặc JPEG.');
+      e.target.value = '';
+      return;
+    }
+
+    try {
+      const base64DataUrl = await fileToBase64DataUrl(file);
+      setSkuImagePreviewOverrides((prev) => ({
+        ...prev,
+        [skuIndex]: base64DataUrl,
+      }));
+      setNewSkuImageBase64ByIndex((prev) => ({
+        ...prev,
+        [skuIndex]: base64DataUrl,
+      }));
+      setError('');
+    } catch {
+      setError('Không thể đọc file ảnh SKU. Vui lòng thử lại.');
+    } finally {
+      e.target.value = '';
+    }
+  };
+
+  const removeSkuImagePreview = (skuIndex: number) => {
+    setSkuImagePreviewOverrides((prev) => {
+      const next = { ...prev };
+      delete next[skuIndex];
+      return next;
+    });
+    setNewSkuImageBase64ByIndex((prev) => {
+      const next = { ...prev };
+      delete next[skuIndex];
+      return next;
+    });
+    if (skuImageInputRefs.current[skuIndex]) {
+      skuImageInputRefs.current[skuIndex]!.value = '';
+    }
   };
 
   // Attributes
@@ -348,7 +479,6 @@ export function ProductForm({
 
   const submit = () => {
     setError('');
-    setSuccess('');
 
     // Validate cơ bản
     if (!name.trim()) return setError('Vui lòng nhập tên sản phẩm.');
@@ -394,7 +524,7 @@ export function ProductForm({
       status,
       brandId: brandId || undefined,
       sizeGuide: sizeGuide || undefined,
-      images,
+      images: existingImages,
       variants,
       skus: finalSkus,
       attributes,
@@ -408,15 +538,49 @@ export function ProductForm({
     };
 
     startTransition(async () => {
+      const skuImageUploadInput = Object.entries(newSkuImageBase64ByIndex)
+        .map(([rawIndex, base64DataUrl]) => {
+          const skuIndex = Number(rawIndex);
+          if (!Number.isInteger(skuIndex) || skuIndex < 0) return null;
+          const skuValue = finalSkus[skuIndex]?.value ?? '';
+          return {
+            skuIndex,
+            skuValue,
+            base64DataUrl,
+          };
+        })
+        .filter(
+          (
+            item,
+          ): item is {
+            skuIndex: number;
+            skuValue: string;
+            base64DataUrl: string;
+          } => !!item,
+        );
+
       const result =
         mode === 'create'
-          ? await createProductAction(payload)
-          : await updateProductAction(initial.id!, payload);
+          ? await createProductAction(
+              payload,
+              {
+                base64DataUrls: newImageBase64DataUrls,
+              },
+              skuImageUploadInput,
+            )
+          : await updateProductAction(
+              initial.id!,
+              payload,
+              {
+                base64DataUrls: newImageBase64DataUrls,
+              },
+              skuImageUploadInput,
+            );
       if (!result.ok) {
         setError(result.message ?? 'Đã xảy ra lỗi.');
         return;
       }
-      setSuccess(
+      toast.success(
         mode === 'create' ? 'Tạo sản phẩm thành công.' : 'Cập nhật thành công.',
       );
       if (mode === 'create' && result.id) {
@@ -467,17 +631,13 @@ export function ProductForm({
         )}
       </div>
 
-      {(error || success) && (
+      {error && (
         <div
           role="status"
           aria-live="polite"
-          className={`p-3 rounded-md text-sm font-medium ${
-            error
-              ? 'bg-red-50 text-danger border border-red-200'
-              : 'bg-emerald-50 text-success border border-emerald-200'
-          }`}
+          className="p-3 rounded-md text-sm font-medium bg-red-50 text-danger border border-red-200"
         >
-          {error || success}
+          {error}
         </div>
       )}
 
@@ -604,32 +764,62 @@ export function ProductForm({
       {/* Ảnh */}
       <Section
         title="Hình ảnh"
-        description="Mỗi dòng là 1 URL ảnh. Ảnh đầu tiên sẽ là ảnh đại diện."
+        description="Tải ảnh PNG/JPG/JPEG. Ảnh mới sẽ được preview tạm thời trước khi lưu."
       >
-        <textarea
-          rows={3}
-          className="input resize-y font-mono text-xs"
-          value={imagesText}
-          onChange={(e) => onImagesChange(e.target.value)}
-          placeholder="https://..."
+        <input
+          ref={imageInputRef}
+          type="file"
+          accept="image/png,image/jpeg,image/jpg"
+          multiple
+          className="hidden"
+          onChange={onImageFilesChange}
         />
-        {images.length > 0 && (
-          <div className="flex flex-wrap gap-2 mt-3">
-            {images.map((src, i) => (
+
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={() => imageInputRef.current?.click()}
+            disabled={isPending}
+            className="btn-outline btn-sm cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            <Plus className="w-4 h-4" />
+            Chọn ảnh để tải lên
+          </button>
+          <p className="text-xs text-ink-muted">
+            Hỗ trợ chọn nhiều ảnh cùng lúc. Ảnh đầu tiên sẽ là ảnh đại diện.
+          </p>
+        </div>
+
+        {imagePreviewItems.length > 0 && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mt-3">
+            {imagePreviewItems.map((item) => (
               <div
-                key={`${src}-${i}`}
-                className="w-20 h-20 rounded border border-slate-200 bg-surface-muted overflow-hidden flex items-center justify-center"
+                key={item.id}
+                className="relative rounded border border-slate-200 bg-surface-muted overflow-hidden"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={src}
-                  alt={`image-${i}`}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    (e.currentTarget as HTMLImageElement).style.display =
-                      'none';
-                  }}
+                  src={item.src}
+                  alt="product-upload-preview"
+                  className="w-full aspect-square object-cover"
                 />
+
+                <span className="absolute left-2 top-2 text-[11px] px-1.5 py-0.5 rounded bg-white/90 border border-slate-200 text-ink-muted">
+                  {item.isNew ? 'Ảnh mới' : 'Ảnh hiện tại'}
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    item.isNew
+                      ? removeNewImage(item.index)
+                      : removeExistingImage(item.index)
+                  }
+                  className="absolute right-2 top-2 w-7 h-7 rounded-full bg-white/90 border border-slate-200 text-danger hover:bg-red-50 transition-colors duration-200 flex items-center justify-center cursor-pointer"
+                  aria-label="Xoá ảnh"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
             ))}
           </div>
@@ -805,7 +995,12 @@ export function ProductForm({
                   Giá (VND)
                 </th>
                 <th className="py-2 px-3 text-right font-semibold">Tồn kho</th>
-                <th className="py-2 px-3 text-left font-semibold">Ảnh URL</th>
+                <th className="py-2 pl-3 pr-1 text-left font-semibold">
+                  Ảnh SKU
+                </th>
+                <th className="py-2 pl-1 pr-3 text-left font-semibold">
+                  Hoàn tác
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -840,13 +1035,22 @@ export function ProductForm({
                       }
                     />
                   </td>
-                  <td className="py-2 px-3">
+                  <td className="py-2 pl-3 pr-1">
+                    <input
+                      ref={(el) => {
+                        skuImageInputRefs.current[i] = el;
+                      }}
+                      type="file"
+                      accept="image/png,image/jpeg,image/jpg"
+                      className="hidden"
+                      onChange={(e) => onSkuImageChange(i, e)}
+                    />
                     <div className="flex items-center gap-2">
                       <div className="w-9 h-9 rounded bg-surface-muted border border-slate-200 flex items-center justify-center overflow-hidden shrink-0">
-                        {sku.image ? (
+                        {skuImagePreviewOverrides[i] || sku.image ? (
                           /* eslint-disable-next-line @next/next/no-img-element */
                           <img
-                            src={sku.image}
+                            src={skuImagePreviewOverrides[i] || sku.image}
                             alt=""
                             className="w-full h-full object-cover"
                           />
@@ -854,15 +1058,24 @@ export function ProductForm({
                           <ImageIcon className="w-4 h-4 text-ink-subtle" />
                         )}
                       </div>
-                      <input
-                        className="input font-mono text-xs"
-                        value={sku.image ?? ''}
-                        onChange={(e) =>
-                          updateSkuField(i, { image: e.target.value })
-                        }
-                        placeholder="https://..."
-                      />
+                      <button
+                        type="button"
+                        onClick={() => skuImageInputRefs.current[i]?.click()}
+                        className="btn-outline btn-sm h-9 px-2.5 cursor-pointer"
+                      >
+                        Chọn ảnh
+                      </button>
                     </div>
+                  </td>
+                  <td className="py-2 pl-1 pr-3">
+                    <button
+                      type="button"
+                      onClick={() => removeSkuImagePreview(i)}
+                      disabled={!skuImagePreviewOverrides[i]}
+                      className="h-9 px-2.5 rounded border border-slate-200 text-ink-muted transition-colors duration-200 text-xs disabled:opacity-50 disabled:cursor-not-allowed enabled:hover:text-danger enabled:hover:border-red-200 enabled:hover:bg-red-50"
+                    >
+                      Hoàn tác ảnh
+                    </button>
                   </td>
                 </tr>
               ))}

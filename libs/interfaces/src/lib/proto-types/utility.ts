@@ -84,6 +84,7 @@ export interface CreatePresignedUrlRequest {
   userId: string;
   fileName: string;
   type: string;
+  productId?: string | undefined;
 }
 
 export interface CreatePresignedUrlResponse {

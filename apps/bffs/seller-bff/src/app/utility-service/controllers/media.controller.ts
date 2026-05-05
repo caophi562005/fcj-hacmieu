@@ -27,6 +27,7 @@ export class MediaController {
       userId,
       fileName: body.fileName,
       type: body.type,
+      productId: body.productId,
     });
   }
 }

@@ -8,12 +8,13 @@ import type {
   UpdateProductRequest,
 } from '@common/interfaces/models/catalog';
 import type { Response as ApiResponse } from '@common/interfaces/models/common/response.model';
+import { cache } from 'react';
 import { createServerApi } from './api';
 
 export type BrandOption = GetManyBrandsResponse['brands'][number];
 export type CategoryOption = GetManyCategoriesResponse['categories'][number];
 
-export async function getManyBrands(): Promise<BrandOption[]> {
+const _getManyBrandsCached = cache(async (): Promise<BrandOption[]> => {
   const api = await createServerApi();
   const res = await api.get<ApiResponse<GetManyBrandsResponse>>(
     '/catalog/brand',
@@ -24,21 +25,31 @@ export async function getManyBrands(): Promise<BrandOption[]> {
   );
   if (res.status === 404) return [];
   return res.data?.data?.brands ?? [];
+});
+
+const _getCategoriesByParentCached = cache(
+  async (parentCategoryId: string | null): Promise<CategoryOption[]> => {
+    const api = await createServerApi();
+    const res = await api.get<ApiResponse<GetManyCategoriesResponse>>(
+      '/catalog/category',
+      {
+        params: parentCategoryId ? { parentCategoryId } : {},
+        validateStatus: (s) => (s >= 200 && s < 300) || s === 404,
+      },
+    );
+    if (res.status === 404) return [];
+    return res.data?.data?.categories ?? [];
+  },
+);
+
+export function getManyBrands(): Promise<BrandOption[]> {
+  return _getManyBrandsCached();
 }
 
-export async function getCategoriesByParent(
+export function getCategoriesByParent(
   parentCategoryId?: string,
 ): Promise<CategoryOption[]> {
-  const api = await createServerApi();
-  const res = await api.get<ApiResponse<GetManyCategoriesResponse>>(
-    '/catalog/category',
-    {
-      params: parentCategoryId ? { parentCategoryId } : {},
-      validateStatus: (s) => (s >= 200 && s < 300) || s === 404,
-    },
-  );
-  if (res.status === 404) return [];
-  return res.data?.data?.categories ?? [];
+  return _getCategoriesByParentCached(parentCategoryId ?? null);
 }
 
 export type ProductListItem = GetManyProductsResponse['products'][number];

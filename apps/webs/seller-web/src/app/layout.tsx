@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { SellerSidebar } from '../components/SellerSidebar';
 import { SellerTopbar } from '../components/SellerTopbar';
+import { ToastProvider } from '../components/ToastProvider';
 import './global.css';
 
 export const metadata: Metadata = {
@@ -22,6 +23,7 @@ export default function RootLayout({
         <main className="ml-sidebar pt-topbar min-h-screen">
           <div className="p-6">{children}</div>
         </main>
+        <ToastProvider />
       </body>
     </html>
   );

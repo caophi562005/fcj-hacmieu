@@ -90,6 +90,7 @@ message CreatePresignedUrlRequest {
   string userId = 2;
   string fileName = 3;
   string type = 4;
+  optional string productId = 5;
 }
 
 message CreatePresignedUrlResponse {

@@ -6,6 +6,7 @@ export const CreatePresignedUrlRequestSchema = z
     fileName: z.string(),
     type: ImageTypeEnums,
     userId: z.uuid(),
+    productId: z.uuid().optional(),
     processId: z.uuid().optional(),
   })
   .strict();

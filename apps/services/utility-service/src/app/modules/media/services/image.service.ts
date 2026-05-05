@@ -21,13 +21,22 @@ export class MediaService {
         : generateRandomFileName(fileName);
 
     const folder = type.toLowerCase();
-    const key = `${userId}/${folder}/${finalFileName}`;
+    let key = '';
+    if (type === ImageTypeValues.AVATAR) {
+      key = `${userId}/${folder}/${finalFileName}`;
+    } else if (
+      type === ImageTypeValues.PRODUCT &&
+      body.productId !== undefined
+    ) {
+      key = `${userId}/${folder}/${body.productId}/${finalFileName}`;
+    } else {
+      key = `${userId}/${folder}/${finalFileName}`;
+    }
 
     const presignedUrl = await this.s3Service.createPresignedUrlWithClient(key);
 
     // Tạo public URL để access file sau khi upload
     const endpoint = S3Configuration.S3_ENDPOINT;
-    const bucket = S3Configuration.S3_IMAGE_BUCKET;
     const url = `${endpoint}/${key}`;
 
     return {
