@@ -14,11 +14,11 @@ import {
 import { createZodDto } from 'nestjs-zod';
 
 export class GetManyOrdersRequestDto extends createZodDto(
-  GetManyOrdersRequestSchema.omit({ processId: true }),
+  GetManyOrdersRequestSchema.omit({ processId: true, shopId: true }),
 ) {}
 
 export class GetOrderRequestDto extends createZodDto(
-  GetOrderRequestSchema.omit({ processId: true }),
+  GetOrderRequestSchema.omit({ processId: true, shopId: true }),
 ) {}
 
 export class CreateOrderRequestDto extends createZodDto(
@@ -26,11 +26,15 @@ export class CreateOrderRequestDto extends createZodDto(
 ) {}
 
 export class UpdateOrderStatusRequestDto extends createZodDto(
-  UpdateStatusOrderRequestSchema.omit({ processId: true }),
+  UpdateStatusOrderRequestSchema.omit({ processId: true, shopId: true }),
 ) {}
 
 export class CancelOrderRequestDto extends createZodDto(
-  CancelOrderRequestSchema.omit({ processId: true, userId: true }),
+  CancelOrderRequestSchema.omit({
+    processId: true,
+    userId: true,
+    shopId: true,
+  }),
 ) {}
 
 export class DashboardSellerRequestDto extends createZodDto(

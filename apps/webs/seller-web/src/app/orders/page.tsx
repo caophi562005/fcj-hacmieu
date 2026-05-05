@@ -1,270 +1,255 @@
 import {
-  Calendar,
-  CheckCircle2,
-  CreditCard,
-  Filter,
-  ImageIcon,
-  Printer,
-  Search,
-  Tag,
-  User,
-  XCircle,
-} from 'lucide-react';
-import {
-  formatCurrency,
-  formatDateTime,
-  mockOrders,
-  ORDER_STATUS_LABEL,
-  type Order,
+  OrderStatusEnums,
+  OrderStatusValues,
   type OrderStatus,
-} from '../../lib/mockData';
+} from '@common/constants/order.constant';
+import { Eye, ImageIcon } from 'lucide-react';
+import Link from 'next/link';
+import { CopyButton } from '../../components/CopyButton';
+import { Pagination } from '../../components/Pagination';
+import { getSellerOrders } from '../../lib/order';
 
 export const metadata = { title: 'Quản lý Đơn hàng — V-Shop Seller' };
 
-const TABS: { key: 'all' | OrderStatus; label: string }[] = [
+type TabKey = 'all' | OrderStatus;
+
+type SearchParams = { status?: string; page?: string };
+
+const TABS: { key: TabKey; label: string }[] = [
   { key: 'all', label: 'Tất cả' },
-  { key: 'pending', label: 'Chờ xác nhận' },
-  { key: 'processing', label: 'Đang xử lý' },
-  { key: 'shipping', label: 'Đang giao' },
-  { key: 'delivered', label: 'Đã giao' },
-  { key: 'cancelled', label: 'Đã hủy' },
+  { key: OrderStatusValues.PENDING, label: 'Chờ xác nhận' },
+  { key: OrderStatusValues.CONFIRMED, label: 'Đã xác nhận' },
+  { key: OrderStatusValues.SHIPPING, label: 'Đang giao' },
+  { key: OrderStatusValues.COMPLETED, label: 'Đã giao' },
+  { key: OrderStatusValues.CANCELLED, label: 'Đã hủy' },
+  { key: OrderStatusValues.REFUNDED, label: 'Đã hoàn tiền' },
 ];
 
-export default function OrdersPage() {
-  const pendingCount = mockOrders.filter((o) => o.status === 'pending').length;
+const STATUS_STYLE: Record<string, string> = {
+  [OrderStatusValues.CREATING]: 'bg-slate-100 text-slate-600 border-slate-200',
+  [OrderStatusValues.PENDING]: 'bg-amber-100 text-amber-700 border-amber-200',
+  [OrderStatusValues.CONFIRMED]: 'bg-blue-100 text-blue-700 border-blue-200',
+  [OrderStatusValues.SHIPPING]:
+    'bg-indigo-100 text-indigo-700 border-indigo-200',
+  [OrderStatusValues.COMPLETED]:
+    'bg-emerald-100 text-emerald-700 border-emerald-200',
+  [OrderStatusValues.CANCELLED]: 'bg-red-100 text-red-700 border-red-200',
+  [OrderStatusValues.REFUNDED]:
+    'bg-purple-100 text-purple-700 border-purple-200',
+};
+
+const STATUS_LABEL: Record<string, string> = {
+  [OrderStatusValues.CREATING]: 'Đang tạo',
+  [OrderStatusValues.PENDING]: 'Chờ xác nhận',
+  [OrderStatusValues.CONFIRMED]: 'Đã xác nhận',
+  [OrderStatusValues.SHIPPING]: 'Đang giao',
+  [OrderStatusValues.COMPLETED]: 'Đã giao',
+  [OrderStatusValues.CANCELLED]: 'Đã hủy',
+  [OrderStatusValues.REFUNDED]: 'Đã hoàn tiền',
+};
+
+function parsePage(raw?: string): number {
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n < 1) return 1;
+  return Math.floor(n);
+}
+
+function parseStatus(raw?: string): OrderStatus | undefined {
+  if (!raw) return undefined;
+  const ok = OrderStatusEnums.safeParse(raw);
+  return ok.success ? ok.data : undefined;
+}
+
+function buildHref(opts: { status: TabKey; page?: number }): string {
+  const sp = new URLSearchParams();
+  if (opts.status !== 'all') sp.set('status', opts.status);
+  if (opts.page && opts.page > 1) sp.set('page', String(opts.page));
+  const qs = sp.toString();
+  return qs ? `/orders?${qs}` : '/orders';
+}
+
+function formatCurrency(n: number): string {
+  return (n ?? 0).toLocaleString('vi-VN') + 'đ';
+}
+
+export default async function OrdersPage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}) {
+  const sp = (await searchParams) ?? {};
+  const page = parsePage(sp.page);
+  const status = parseStatus(sp.status);
+  const activeKey: TabKey = status ?? 'all';
+  const limit = 10;
+
+  const data = await getSellerOrders({
+    page,
+    limit,
+    status: status ?? null,
+  });
+  const totalPages = Math.max(data.totalPages || 1, 1);
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-ink">Quản lý Đơn hàng</h1>
         <p className="text-ink-muted text-sm mt-1">
-          Theo dõi và xử lý các đơn hàng của shop bạn.
+          Theo dõi và xử lý các đơn hàng của shop bạn. Tổng cộng{' '}
+          {data.totalItems} đơn.
         </p>
       </div>
 
-      {/* Tabs */}
+      {/* Tabs theo trạng thái */}
       <div className="card p-2 flex gap-1 overflow-x-auto">
         {TABS.map((t) => {
-          const isActive = t.key === 'all';
+          const isActive = t.key === activeKey;
           return (
-            <button
+            <Link
               key={t.key}
-              type="button"
-              className={`px-5 py-2 rounded text-sm font-semibold whitespace-nowrap transition-colors relative ${
+              href={buildHref({ status: t.key })}
+              className={`px-5 py-2 rounded text-sm font-semibold whitespace-nowrap transition-colors ${
                 isActive
                   ? 'bg-primary-50 text-primary'
                   : 'text-ink-muted hover:bg-surface-muted'
               }`}
             >
               {t.label}
-              {t.key === 'pending' && pendingCount > 0 && (
-                <span className="absolute -top-0.5 -right-1 bg-danger text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
-                  {pendingCount}
-                </span>
-              )}
-            </button>
+            </Link>
           );
         })}
       </div>
 
-      {/* Filters */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="card p-5">
-          <label htmlFor="order-code" className="label-field text-xs uppercase tracking-wider">
-            Mã đơn hàng
-          </label>
-          <div className="relative">
-            <Tag className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-ink-subtle pointer-events-none" />
-            <input id="order-code" type="search" placeholder="Nhập mã đơn..." className="input pl-9" />
-          </div>
+      {/* Table */}
+      <section className="card overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-surface-alt border-b border-slate-100 text-ink-muted">
+                <th className="py-3 px-4 text-left font-semibold w-[130px]">
+                  ID
+                </th>
+                <th className="py-3 px-4 text-left font-semibold whitespace-nowrap">
+                  Mã đơn
+                </th>
+                <th className="py-3 px-4 text-left font-semibold">Sản phẩm</th>
+                <th className="py-3 px-4 text-center font-semibold">
+                  Trạng thái
+                </th>
+                <th className="py-3 px-4 text-right font-semibold whitespace-nowrap">
+                  Tạm tính
+                </th>
+                <th className="py-3 px-4 text-right font-semibold whitespace-nowrap">
+                  Giảm giá
+                </th>
+                <th className="py-3 px-4 text-right font-semibold whitespace-nowrap">
+                  Thành tiền
+                </th>
+                <th className="py-3 px-4 text-center font-semibold">
+                  Thao tác
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 text-ink">
+              {data.orders.length === 0 && (
+                <tr>
+                  <td colSpan={8} className="py-12 text-center text-ink-muted">
+                    Chưa có đơn hàng nào.
+                  </td>
+                </tr>
+              )}
+              {data.orders.map((o) => (
+                <tr
+                  key={o.id}
+                  className="hover:bg-surface-alt transition-colors"
+                >
+                  <td className="py-3 px-4 align-middle">
+                    <div className="flex items-center gap-1">
+                      <span
+                        className="font-mono text-xs text-ink-subtle truncate max-w-[80px]"
+                        title={o.id}
+                      >
+                        {o.id.slice(0, 8)}…
+                      </span>
+                      <CopyButton value={o.id} label="Copy ID" />
+                    </div>
+                  </td>
+                  <td className="py-3 px-4 align-middle whitespace-nowrap">
+                    <Link
+                      href={`/orders/${o.id}`}
+                      className="font-semibold text-primary hover:underline cursor-pointer"
+                    >
+                      {o.code}
+                    </Link>
+                  </td>
+                  <td className="py-3 px-4 align-middle">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-12 h-12 rounded bg-surface-muted border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center">
+                        {o.firstProductImage ? (
+                          /* eslint-disable-next-line @next/next/no-img-element */
+                          <img
+                            src={o.firstProductImage}
+                            alt=""
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <ImageIcon className="w-4 h-4 text-ink-subtle" />
+                        )}
+                      </div>
+                      <span
+                        className="text-sm text-ink line-clamp-2 max-w-xs"
+                        title={o.firstProductName}
+                      >
+                        {o.firstProductName || '—'}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="py-3 px-4 text-center align-middle">
+                    <span
+                      className={`inline-flex px-2.5 py-0.5 rounded-full border text-[11px] font-bold uppercase tracking-wider ${
+                        STATUS_STYLE[o.status] ??
+                        'bg-slate-100 text-slate-600 border-slate-200'
+                      }`}
+                    >
+                      {STATUS_LABEL[o.status] ?? o.status}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 text-right align-middle font-medium whitespace-nowrap">
+                    {formatCurrency(o.itemTotal)}
+                  </td>
+                  <td className="py-3 px-4 text-right align-middle whitespace-nowrap">
+                    <span className="text-success">
+                      {formatCurrency(o.discount)}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 text-right align-middle whitespace-nowrap">
+                    <span className="font-bold text-primary">
+                      {formatCurrency(o.grandTotal)}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 text-center align-middle">
+                    <Link
+                      href={`/orders/${o.id}`}
+                      className="inline-flex items-center justify-center w-8 h-8 rounded text-ink-muted hover:text-primary hover:bg-primary-50 transition-colors cursor-pointer"
+                      aria-label="Xem chi tiết"
+                      title="Xem chi tiết"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-        <div className="card p-5">
-          <label htmlFor="customer" className="label-field text-xs uppercase tracking-wider">
-            Tên khách hàng
-          </label>
-          <div className="relative">
-            <User className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-ink-subtle pointer-events-none" />
-            <input id="customer" type="search" placeholder="Nhập tên khách..." className="input pl-9" />
-          </div>
-        </div>
-        <div className="card p-5 md:col-span-2">
-          <label className="label-field text-xs uppercase tracking-wider">
-            Khoảng ngày đặt hàng
-          </label>
-          <div className="flex items-center gap-2">
-            <div className="relative flex-1">
-              <Calendar className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-ink-subtle pointer-events-none" />
-              <input type="date" className="input pl-9" aria-label="Từ ngày" />
-            </div>
-            <span className="text-ink-subtle">–</span>
-            <div className="relative flex-1">
-              <Calendar className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-ink-subtle pointer-events-none" />
-              <input type="date" className="input pl-9" aria-label="Đến ngày" />
-            </div>
-            <button type="button" className="btn-primary btn-md shrink-0">
-              <Filter className="w-4 h-4" />
-              <span>Lọc</span>
-            </button>
-          </div>
-        </div>
-      </div>
+      </section>
 
-      {/* Order cards */}
-      <div className="flex flex-col gap-4">
-        {mockOrders.map((o) => (
-          <OrderCard key={o.id} order={o} />
-        ))}
-      </div>
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        buildHref={(n) => buildHref({ status: activeKey, page: n })}
+        ariaLabel="Phân trang đơn hàng"
+      />
     </div>
-  );
-}
-
-function OrderCard({ order }: { order: Order }) {
-  return (
-    <article className="card overflow-hidden hover:shadow-floating transition-shadow">
-      {/* Header */}
-      <header className="bg-surface-alt px-5 py-3 flex items-center justify-between border-b border-slate-100">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-ink-muted">Mã ĐH:</span>
-            <span className="text-base font-bold text-primary cursor-pointer hover:underline">
-              #{order.code}
-            </span>
-          </div>
-          <span className="w-px h-4 bg-slate-200" aria-hidden />
-          <time
-            dateTime={order.createdAt}
-            className="text-sm text-ink-muted flex items-center gap-1.5"
-          >
-            <Calendar className="w-4 h-4" />
-            {formatDateTime(order.createdAt)}
-          </time>
-        </div>
-        <StatusBadge status={order.status} />
-      </header>
-
-      {/* Body */}
-      <div className="p-5 flex flex-col md:flex-row gap-6">
-        <div className="flex-1 flex flex-col gap-4">
-          {order.items.map((it, idx) => (
-            <div
-              key={idx}
-              className={idx > 0 ? 'pt-4 border-t border-slate-100 flex gap-4' : 'flex gap-4'}
-            >
-              <div className="w-20 h-20 rounded-md bg-surface-muted border border-slate-200 flex items-center justify-center shrink-0">
-                <ImageIcon className="w-6 h-6 text-ink-subtle" />
-              </div>
-              <div className="flex-1 min-w-0 flex flex-col justify-between">
-                <div>
-                  <h3 className="text-[15px] font-semibold text-ink line-clamp-2">
-                    {it.name}
-                  </h3>
-                  {it.variant && (
-                    <p className="text-sm text-ink-muted mt-0.5">
-                      Phân loại: {it.variant}
-                    </p>
-                  )}
-                </div>
-                <div className="flex items-center justify-between mt-2">
-                  <span className="text-sm font-semibold text-ink">x{it.quantity}</span>
-                  <span className="text-sm font-medium text-ink-muted">
-                    {formatCurrency(it.price)}
-                  </span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="md:w-64 md:border-l md:border-slate-100 md:pl-6 flex flex-col justify-center gap-2">
-          <Row
-            label="Tổng thanh toán"
-            value={
-              <span className="text-lg font-bold text-ink">
-                {formatCurrency(order.total)}
-              </span>
-            }
-          />
-          <Row
-            label="Thanh toán"
-            value={
-              <span className="text-sm text-ink flex items-center gap-1.5">
-                <CreditCard className="w-4 h-4 text-ink-subtle" />
-                {order.paymentMethod === 'COD' ? 'Tiền mặt (COD)' : order.paymentMethod}
-              </span>
-            }
-          />
-          <Row
-            label="Trạng thái"
-            value={
-              order.paymentStatus === 'paid' ? (
-                <span className="text-sm text-success flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4" /> Đã thanh toán
-                </span>
-              ) : (
-                <span className="text-sm text-ink-muted">Chưa thanh toán</span>
-              )
-            }
-          />
-        </div>
-      </div>
-
-      {/* Actions */}
-      <footer className="bg-surface-alt px-5 py-4 border-t border-slate-100 flex justify-end gap-3">
-        {order.status === 'pending' && (
-          <>
-            <button type="button" className="btn-outline btn-sm">
-              <XCircle className="w-4 h-4" />
-              Hủy đơn
-            </button>
-            <button type="button" className="btn-primary btn-sm">
-              <CheckCircle2 className="w-4 h-4" />
-              Xác nhận đơn
-            </button>
-          </>
-        )}
-        {(order.status === 'processing' || order.status === 'shipping') && (
-          <button
-            type="button"
-            className="btn btn-sm bg-white border border-primary text-primary hover:bg-primary-50"
-          >
-            <Printer className="w-4 h-4" />
-            In vận đơn
-          </button>
-        )}
-        {order.status === 'delivered' && (
-          <span className="text-sm text-ink-muted">Đơn hàng đã hoàn tất.</span>
-        )}
-        {order.status === 'cancelled' && (
-          <span className="text-sm text-danger">Đơn hàng đã bị hủy.</span>
-        )}
-      </footer>
-    </article>
-  );
-}
-
-function Row({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div className="flex items-center justify-between">
-      <span className="text-sm text-ink-muted">{label}:</span>
-      {value}
-    </div>
-  );
-}
-
-function StatusBadge({ status }: { status: OrderStatus }) {
-  const map: Record<OrderStatus, string> = {
-    pending: 'bg-orange-100 text-orange-700 border-orange-200',
-    processing: 'bg-blue-100 text-blue-700 border-blue-200',
-    shipping: 'bg-indigo-100 text-indigo-700 border-indigo-200',
-    delivered: 'bg-emerald-100 text-emerald-700 border-emerald-200',
-    cancelled: 'bg-red-100 text-red-700 border-red-200',
-  };
-  return (
-    <span
-      className={`px-3 py-1 rounded-full border text-[11px] font-bold uppercase tracking-wider ${map[status]}`}
-    >
-      {ORDER_STATUS_LABEL[status]}
-    </span>
   );
 }

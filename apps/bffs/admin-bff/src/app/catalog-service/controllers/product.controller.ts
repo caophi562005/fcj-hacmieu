@@ -97,6 +97,7 @@ export class ProductController {
       ...params,
       processId,
       deletedById: userId,
+      shopId: 'test',
     });
   }
 }
