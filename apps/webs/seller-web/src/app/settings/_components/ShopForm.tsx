@@ -2,7 +2,13 @@
 
 import { ShopStatusEnums } from '@common/schemas/shop';
 import { ImagePlus, Save, Store, Undo2, X } from 'lucide-react';
-import { useEffect, useRef, useState, useTransition, type ChangeEvent } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  useTransition,
+  type ChangeEvent,
+} from 'react';
 import { toast } from 'react-toastify';
 import { fileToBase64DataUrl } from '../../../lib/image-base64';
 import { createShopAction, updateShopAction } from '../actions';
@@ -55,8 +61,12 @@ export function ShopForm({ mode, initial, merchantId }: Props) {
   const [description, setDescription] = useState(initial.description);
   const [phone, setPhone] = useState(initial.phone);
   const [status, setStatus] = useState<ShopStatus>(initial.status);
-  const [pickupAddress, setPickupAddress] = useState(initial.pickupAddress ?? '');
-  const [returnAddress, setReturnAddress] = useState(initial.returnAddress ?? '');
+  const [pickupAddress, setPickupAddress] = useState(
+    initial.pickupAddress ?? '',
+  );
+  const [returnAddress, setReturnAddress] = useState(
+    initial.returnAddress ?? '',
+  );
 
   // Image state: existing = URL từ server, newBase64 = preview ảnh user vừa
   // chọn chưa upload. Khi submit, nếu có newBase64 thì upload → URL mới; nếu
@@ -87,7 +97,7 @@ export function ShopForm({ mode, initial, merchantId }: Props) {
     if (!file) return;
 
     if (!ALLOWED_IMAGE_MIME.includes(file.type)) {
-      toast.error('Chỉ chấp nhận ảnh PNG hoặc JPG.');
+      toast.error('Chỉ chấp nhận ảnh PNG hoặc JPG hoặc JPEG.');
       return;
     }
     if (file.size > MAX_IMAGE_SIZE_MB * 1024 * 1024) {
