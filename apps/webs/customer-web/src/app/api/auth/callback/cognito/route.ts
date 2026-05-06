@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
 
     // Truyền state + nonce để lib tự verify (sẽ throw nếu mismatch).
     const tokenSet = await client.callback(
-      AuthConfiguration.REDIRECT_URI,
+      AuthConfiguration.CUSTOMER_REDIRECT_URI,
       params,
       {
         nonce: cookieNonce,

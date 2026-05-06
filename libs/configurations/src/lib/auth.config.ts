@@ -2,12 +2,17 @@ import z from 'zod';
 
 export const AuthConfigurationSchema = z.object({
   COGNITO_DOMAIN: z.string(),
-  CLIENT_ID: z.string(),
-  CLIENT_SECRET: z.string(),
-  REDIRECT_URI: z.string(),
-  LOGOUT_URI: z.string(),
+
+  CUSTOMER_CLIENT_ID: z.string(),
+  CUSTOMER_CLIENT_SECRET: z.string(),
+  CUSTOMER_REDIRECT_URI: z.string(),
+  CUSTOMER_LOGOUT_URI: z.string(),
+
+  SELLER_CLIENT_ID: z.string(),
+  SELLER_CLIENT_SECRET: z.string(),
   SELLER_REDIRECT_URI: z.string(),
   SELLER_LOGOUT_URI: z.string(),
+
   USER_POOL_ID: z.string(),
   PAYMENT_API_KEY: z.string(),
 });

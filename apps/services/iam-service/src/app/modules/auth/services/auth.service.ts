@@ -5,7 +5,7 @@ import {
 } from '@aws-sdk/client-cognito-identity-provider';
 import { AuthConfiguration } from '@common/configurations/auth.config';
 import { BaseConfiguration } from '@common/configurations/base.config';
-import { GroupType } from '@common/constants/user.constant';
+import { GroupType, GroupValues } from '@common/constants/user.constant';
 import {
   ChangePasswordRequest,
   GetAllPermissionsResponse,
@@ -37,8 +37,14 @@ export class AuthService {
 
   async refreshSession(data: RefreshSessionRequest) {
     const command = new GetTokensFromRefreshTokenCommand({
-      ClientId: AuthConfiguration.CLIENT_ID,
-      ClientSecret: AuthConfiguration.CLIENT_SECRET,
+      ClientId:
+        data.type === GroupValues.CUSTOMER
+          ? AuthConfiguration.CUSTOMER_CLIENT_ID
+          : AuthConfiguration.SELLER_CLIENT_ID,
+      ClientSecret:
+        data.type === GroupValues.CUSTOMER
+          ? AuthConfiguration.CUSTOMER_CLIENT_SECRET
+          : AuthConfiguration.SELLER_CLIENT_SECRET,
       RefreshToken: data.refreshToken,
     });
 
@@ -76,12 +82,18 @@ export class AuthService {
     const accessVerifier = CognitoJwtVerifier.create({
       userPoolId: AuthConfiguration.USER_POOL_ID,
       tokenUse: 'access',
-      clientId: AuthConfiguration.CLIENT_ID,
+      clientId:
+        data.type === GroupValues.CUSTOMER
+          ? AuthConfiguration.CUSTOMER_CLIENT_ID
+          : AuthConfiguration.SELLER_CLIENT_ID,
     });
     const idVerifier = CognitoJwtVerifier.create({
       userPoolId: AuthConfiguration.USER_POOL_ID,
       tokenUse: 'id',
-      clientId: AuthConfiguration.CLIENT_ID,
+      clientId:
+        data.type === GroupValues.CUSTOMER
+          ? AuthConfiguration.CUSTOMER_CLIENT_ID
+          : AuthConfiguration.SELLER_CLIENT_ID,
     });
 
     const invalidResponse = {

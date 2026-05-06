@@ -1,3 +1,4 @@
+import { GroupValues } from '@common/constants/user.constant';
 import { IsPublic } from '@common/decorators/auth.decorator';
 import { ProcessId } from '@common/decorators/process-id.decorator';
 import { Body, Controller, Headers, Post } from '@nestjs/common';
@@ -16,7 +17,11 @@ export class AuthController {
     @ProcessId() processId: string,
     @Headers('x-refresh-token') refreshToken: string,
   ) {
-    return this.authService.refreshSession({ refreshToken, processId });
+    return this.authService.refreshSession({
+      refreshToken,
+      processId,
+      type: GroupValues.ADMIN,
+    });
   }
 
   @Post('change-password')
@@ -31,15 +36,5 @@ export class AuthController {
   ) {
     const accessToken = authorization.split(' ')[1];
     return this.authService.changePassword({ ...body, accessToken, processId });
-  }
-
-  @Post('validate')
-  validateToken(
-    @Headers('authorization') authorization: string,
-    @Headers('x-id-token') idToken: string,
-    @ProcessId() processId: string,
-  ) {
-    const accessToken = authorization.split(' ')[1];
-    return this.authService.validateToken({ accessToken, idToken, processId });
   }
 }

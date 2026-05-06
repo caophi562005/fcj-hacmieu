@@ -6,6 +6,7 @@ import { AuthenticationGuard } from '@common/guards/authentication.guard';
 import { PaymentAPIKeyGuard } from '@common/guards/payment-api-key.guard';
 import { ExceptionInterceptor } from '@common/interceptors/exception.interceptor';
 import { LoggerMiddleware } from '@common/middlewares/logger.middleware';
+import { GroupValues } from '@common/constants/user.constant';
 import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ClientsModule } from '@nestjs/microservices';
@@ -26,6 +27,10 @@ import { UtilityModule } from './utility-service/utility.module';
     ClientsModule.register([GrpcClientProvider(GrpcService.IAM_SERVICE)]),
   ],
   providers: [
+    {
+      provide: 'APP_TYPE',
+      useValue: GroupValues.SELLER,
+    },
     AccessTokenGuard,
     PaymentAPIKeyGuard,
     // {

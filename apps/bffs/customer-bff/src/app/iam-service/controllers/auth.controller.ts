@@ -5,7 +5,8 @@ import {
   MessageResponseDto,
   RefreshSessionResponseDto,
 } from '@common/interfaces/dtos/iam';
-import { getAccessToken, getIdToken } from '@common/utils/get-access.util';
+import { getAccessToken } from '@common/utils/get-access.util';
+import { GroupValues } from '@common/constants/user.constant';
 import { Body, Controller, Headers, Post, Req } from '@nestjs/common';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { AuthService } from '../services/auth.service';
@@ -22,7 +23,11 @@ export class AuthController {
     @ProcessId() processId: string,
     @Headers('x-refresh-token') refreshToken: string,
   ) {
-    return this.authService.refreshSession({ refreshToken, processId });
+    return this.authService.refreshSession({
+      refreshToken,
+      processId,
+      type: GroupValues.CUSTOMER,
+    });
   }
 
   @Post('change-password')
@@ -41,16 +46,5 @@ export class AuthController {
   logout(@Req() req: any, @ProcessId() processId: string) {
     const accessToken = getAccessToken(req);
     return this.authService.logout({ accessToken, processId });
-  }
-
-  @Post('validate')
-  validateToken(@Req() req: any, @ProcessId() processId: string) {
-    const accessToken = getAccessToken(req);
-    const idToken = getIdToken(req);
-    return this.authService.validateToken({
-      accessToken,
-      idToken,
-      processId,
-    });
   }
 }

@@ -4,7 +4,6 @@ import {
   ChangePasswordRequest,
   IAM_SERVICE_PACKAGE_NAME,
   RefreshSessionRequest,
-  ValidateTokenRequest,
 } from '@common/interfaces/proto-types/iam';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
@@ -31,9 +30,5 @@ export class AuthService implements OnModuleInit {
 
   async changePassword(data: ChangePasswordRequest) {
     return firstValueFrom(this.authModule.changePassword(data));
-  }
-
-  async validateToken(data: ValidateTokenRequest) {
-    return firstValueFrom(this.authModule.validateToken(data));
   }
 }

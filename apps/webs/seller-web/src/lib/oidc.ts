@@ -1,7 +1,6 @@
 import { AuthConfiguration } from '@common/configurations/auth.config';
 import { BaseConfiguration } from '@common/configurations/base.config';
 import { Issuer, type Client } from 'openid-client';
-import { SellerWebConfig } from './config';
 
 let cachedClient: Client | null = null;
 
@@ -13,9 +12,9 @@ export async function getOidcClient(): Promise<Client> {
 
   const issuer = await Issuer.discover(issuerUrl);
   cachedClient = new issuer.Client({
-    client_id: AuthConfiguration.CLIENT_ID,
-    client_secret: AuthConfiguration.CLIENT_SECRET,
-    redirect_uris: [SellerWebConfig.redirectUri()],
+    client_id: AuthConfiguration.SELLER_CLIENT_ID,
+    client_secret: AuthConfiguration.SELLER_CLIENT_SECRET,
+    redirect_uris: [AuthConfiguration.SELLER_REDIRECT_URI],
     response_types: ['code'],
   });
 

@@ -13,9 +13,9 @@ export async function getOidcClient(): Promise<Client> {
 
   const issuer = await Issuer.discover(issuerUrl);
   cachedClient = new issuer.Client({
-    client_id: AuthConfiguration.CLIENT_ID,
-    client_secret: AuthConfiguration.CLIENT_SECRET,
-    redirect_uris: [AuthConfiguration.REDIRECT_URI],
+    client_id: AuthConfiguration.CUSTOMER_CLIENT_ID,
+    client_secret: AuthConfiguration.CUSTOMER_CLIENT_SECRET,
+    redirect_uris: [AuthConfiguration.CUSTOMER_REDIRECT_URI],
     response_types: ['code'],
   });
 

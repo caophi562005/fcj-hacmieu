@@ -1,9 +1,11 @@
+import { GroupEnums } from '@common/constants/user.constant';
 import z from 'zod';
 
 export const RefreshSessionRequestSchema = z
   .object({
     processId: z.uuid().optional(),
     refreshToken: z.string(),
+    type: GroupEnums,
   })
   .strict();
 
@@ -20,6 +22,7 @@ export const ValidateTokenRequestSchema = z
     processId: z.uuid().optional(),
     accessToken: z.string(),
     idToken: z.string(),
+    type: GroupEnums,
   })
   .strict();
 

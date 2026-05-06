@@ -13,6 +13,7 @@ export const protobufPackage = "IAM_SERVICE";
 export interface RefreshSessionRequest {
   processId?: string | undefined;
   refreshToken: string;
+  type: string;
 }
 
 export interface LogoutRequest {
@@ -31,6 +32,7 @@ export interface ValidateTokenRequest {
   processId?: string | undefined;
   accessToken: string;
   idToken: string;
+  type: string;
 }
 
 export interface RefreshSessionResponse {

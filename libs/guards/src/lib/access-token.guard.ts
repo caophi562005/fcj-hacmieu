@@ -16,6 +16,7 @@ import {
   Inject,
   Injectable,
   OnModuleInit,
+  Optional,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
@@ -23,6 +24,7 @@ import { Cache } from 'cache-manager';
 import { keyBy } from 'lodash';
 import ms, { StringValue } from 'ms';
 import { firstValueFrom } from 'rxjs';
+import { GroupValues } from '@common/constants/user.constant';
 
 @Injectable()
 export class AccessTokenGuard implements CanActivate, OnModuleInit {
@@ -32,6 +34,7 @@ export class AccessTokenGuard implements CanActivate, OnModuleInit {
     @Inject(IAM_SERVICE_PACKAGE_NAME)
     private iamClient: ClientGrpc,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    @Optional() @Inject('APP_TYPE') private appType?: string,
   ) {}
 
   onModuleInit() {
@@ -69,6 +72,7 @@ export class AccessTokenGuard implements CanActivate, OnModuleInit {
           accessToken,
           idToken,
           processId,
+          type: this.appType || GroupValues.CUSTOMER,
         }),
       );
 

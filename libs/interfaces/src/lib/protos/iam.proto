@@ -12,6 +12,7 @@ service AuthModule {
 message RefreshSessionRequest {
   optional string processId = 1;
   string refreshToken = 2;
+  string type = 3;
 }
 
 message LogoutRequest {
@@ -30,6 +31,7 @@ message ValidateTokenRequest {
   optional string processId = 1;
   string accessToken = 2;
   string idToken = 3;
+  string type = 4;
 }
 
 message RefreshSessionResponse {
