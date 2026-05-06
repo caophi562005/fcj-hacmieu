@@ -57,6 +57,7 @@ model Shop {
     id          String     @id @default(uuid())
     merchantId  String     @unique
     merchant    Merchant   @relation(fields: [merchantId], references: [id])
+    userId      String     @default("")
     name        String     @db.VarChar(500)
     description String     @default("")
     logo        String?    @db.VarChar(1000)

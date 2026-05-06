@@ -16,7 +16,7 @@ export async function GET() {
   const state = generators.state();
 
   const authUrl = client.authorizationUrl({
-    scope: 'aws.cognito.signin.user.admin email openid phone',
+    scope: 'aws.cognito.signin.user.admin email openid phone profile',
     state,
     nonce,
   });

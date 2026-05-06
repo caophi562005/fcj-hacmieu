@@ -34,6 +34,7 @@ export class ShopService implements OnModuleInit {
     return {
       id: response.id,
       name: response.name,
+      userId: response.userId,
       description: response.description,
       logo: response.logo,
       banner: response.banner,

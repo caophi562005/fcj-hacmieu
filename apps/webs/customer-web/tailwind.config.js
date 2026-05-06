@@ -14,6 +14,10 @@ module.exports = {
   content: [
     './{src,pages,components,app}/**/*.{ts,tsx,js,jsx,html}',
     '!./{src,pages,components,app}/**/*.{stories,spec}.{ts,tsx,js,jsx,html}',
+    // Quét shared chat UI ở libs/convex để Tailwind generate đầy đủ class
+    // (md:grid-cols-[340px_1fr], justify-end, flex-row-reverse, max-w-[80%]…).
+    // Nếu thiếu, layout sẽ sập về 1 cột và bubble không align đúng.
+    '../../../libs/convex/src/**/*.{ts,tsx,js,jsx}',
     //     ...createGlobPatternsForDependencies(__dirname)
   ],
   theme: {

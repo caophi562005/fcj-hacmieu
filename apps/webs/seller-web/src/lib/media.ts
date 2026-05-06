@@ -60,3 +60,13 @@ export type PresignedImageInput = {
   base64DataUrl: string;
   type: ImageType;
 };
+
+export function buildShopLogoFileName(mimeType: string): string {
+  const extension = imageMimeTypeToExtension(mimeType);
+  return `shop-logo-${Date.now()}.${extension}`;
+}
+
+export function buildShopBannerFileName(mimeType: string): string {
+  const extension = imageMimeTypeToExtension(mimeType);
+  return `shop-banner-${Date.now()}.${extension}`;
+}

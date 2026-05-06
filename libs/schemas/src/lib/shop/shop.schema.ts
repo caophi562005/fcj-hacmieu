@@ -10,6 +10,7 @@ export const ShopStatusEnums = z.enum([
 
 export const ShopSchema = BaseSchema.extend({
   merchantId: z.uuid(),
+  userId: z.uuid(),
   name: z.string().max(500),
   description: z.string(),
   logo: z.string().max(1000).nullable(),

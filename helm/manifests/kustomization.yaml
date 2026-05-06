@@ -10,14 +10,14 @@ resources:
   - iam-service/service.yaml
   - iam-service/deployment.yaml
   # Catalog Service
-  # - catalog-service/service.yaml
-  # - catalog-service/deployment.yaml
+  - catalog-service/service.yaml
+  - catalog-service/deployment.yaml
   # # Shop Service
-  # - shop-service/service.yaml
-  # - shop-service/deployment.yaml
+  - shop-service/service.yaml
+  - shop-service/deployment.yaml
   # # Order Service
-  # - order-service/service.yaml
-  # - order-service/deployment.yaml
+  - order-service/service.yaml
+  - order-service/deployment.yaml
   # # Payment Service
   # - payment-service/service.yaml
   # - payment-service/deployment.yaml
@@ -42,3 +42,11 @@ resources:
   - customer-web/service.yaml
   - customer-web/deployment.yaml
   - customer-web/ingress.yaml
+  # Seller BFF
+  - seller-bff/service.yaml
+  - seller-bff/deployment.yaml
+  - seller-bff/ingress.yaml
+  # Seller Web
+  - seller-web/service.yaml
+  - seller-web/deployment.yaml
+  - seller-web/ingress.yaml

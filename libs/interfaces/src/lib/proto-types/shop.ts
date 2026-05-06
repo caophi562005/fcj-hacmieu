@@ -129,6 +129,7 @@ export interface DeleteShopRequest {
 export interface ShopResponse {
   id: string;
   merchantId: string;
+  userId: string;
   name: string;
   description: string;
   logo: string;

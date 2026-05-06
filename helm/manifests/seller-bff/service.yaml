@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: seller-bff
+spec:
+  type: ClusterIP
+  selector:
+    app: seller-bff
+  ports:
+    - protocol: TCP
+      port: 3200
+      targetPort: 3200

@@ -1,0 +1,16 @@
+{
+  "name": "convex",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/convex/src",
+  "projectType": "library",
+  "tags": [],
+  "// targets": "to see all targets run: nx show project convex --web",
+  "targets": {
+    "dev": {
+      "command": "convex dev",
+      "options": {
+        "cwd": "{projectRoot}"
+      }
+    }
+  }
+}

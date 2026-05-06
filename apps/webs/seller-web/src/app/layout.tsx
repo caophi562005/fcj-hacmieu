@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { SellerConvexProvider } from '../components/ConvexProvider';
 import { SellerSidebar } from '../components/SellerSidebar';
 import { SellerTopbar } from '../components/SellerTopbar';
 import { ToastProvider } from '../components/ToastProvider';
@@ -18,12 +19,14 @@ export default function RootLayout({
   return (
     <html lang="vi" suppressHydrationWarning>
       <body className="min-h-screen bg-background text-ink">
-        <SellerSidebar />
-        <SellerTopbar />
-        <main className="ml-sidebar pt-topbar min-h-screen">
-          <div className="p-6">{children}</div>
-        </main>
-        <ToastProvider />
+        <SellerConvexProvider>
+          <SellerSidebar />
+          <SellerTopbar />
+          <main className="ml-sidebar pt-topbar min-h-screen">
+            <div className="p-6">{children}</div>
+          </main>
+          <ToastProvider />
+        </SellerConvexProvider>
       </body>
     </html>
   );

@@ -5,6 +5,7 @@ import {
   DeleteShopRequest,
   GetManyShopsRequest,
   GetShopRequest,
+  ShopResponse,
   UpdateShopRequest,
 } from '@common/interfaces/models/shop';
 import { Controller, UseInterceptors } from '@nestjs/common';
@@ -22,7 +23,7 @@ export class ShopGrpcController {
   }
 
   @GrpcMethod(GrpcModuleName.SHOP.SHOP, 'GetShop')
-  getShop(data: GetShopRequest) {
+  getShop(data: GetShopRequest): Promise<ShopResponse> {
     return this.shopService.findById(data);
   }
 

@@ -120,7 +120,7 @@ export default async function ShopDetailPage({
               </div>
               <div className="flex gap-2 shrink-0">
                 <Link
-                  href={`/chat?to=${shop.id}`}
+                  href={`/chat?to=${shop.userId}&name=${encodeURIComponent(shop.name)}&avatar=${encodeURIComponent(shop.logo ?? '')}`}
                   className="inline-flex items-center gap-2 h-11 px-4 md:px-5 rounded bg-accent text-primary font-semibold text-sm hover:bg-accent/80 transition-colors cursor-pointer"
                 >
                   <MessageCircle className="w-4 h-4" />

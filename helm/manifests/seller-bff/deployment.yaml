@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: seller-bff-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: seller-bff
+  template:
+    metadata:
+      labels:
+        app: seller-bff
+    spec:
+      serviceAccountName: hacmieu-sa
+      containers:
+        - name: seller-bff
+          image: public.ecr.aws/h5u5b6t3/hacmieu/seller-bff:latest
+          imagePullPolicy: Always
+          envFrom:
+            - secretRef:
+                name: hacmieu-secrets
+          ports:
+            - containerPort: 3200
+          resources:
+            requests:
+              cpu: '250m'
+              memory: '512Mi'
+            limits:
+              cpu: '500m'
+              memory: '1Gi'

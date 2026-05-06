@@ -27,7 +27,8 @@
       "@common/decorators/*": ["libs/decorators/src/lib/*"],
       "@common/guards/*": ["libs/guards/src/lib/*"],
       "@common/utils/*": ["libs/utils/src/lib/*"],
-      "@common/middlewares/*": ["libs/middlewares/src/lib/*"]
+      "@common/middlewares/*": ["libs/middlewares/src/lib/*"],
+      "@common/convex/*": ["libs/convex/src/*"]
     }
   },
   "exclude": ["node_modules", "tmp"]

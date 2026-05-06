@@ -116,7 +116,7 @@ export default async function ProductDetail({
             </div>
             <div className="flex gap-2 shrink-0">
               <Link
-                href={`/chat?to=${shop.id}`}
+                href={`/chat?to=${shop.userId}&name=${encodeURIComponent(shop.name)}&avatar=${encodeURIComponent(shop.logo ?? '')}`}
                 className="btn-outline btn-sm cursor-pointer"
               >
                 <MessageCircle className="w-4 h-4" /> Chat ngay
