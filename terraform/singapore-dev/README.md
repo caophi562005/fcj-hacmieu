@@ -58,4 +58,7 @@ kubectl config use-context arn:aws:eks:ap-southeast-1:491333778094:cluster/fcj-h
 #Get cluster info
 kubectl cluster-info
 
+kubectl apply -f helm/manifests/metrics-server.yaml
 kubectl apply -k helm/manifests/
+
+kubectl delete -k helm/manifests/
