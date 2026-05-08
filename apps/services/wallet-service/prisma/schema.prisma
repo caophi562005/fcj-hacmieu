@@ -26,6 +26,19 @@ enum WalletTransactionSource {
     OTHER // khác
 }
 
+enum CreditTransactionType {
+    CREDIT
+    DEBIT
+}
+
+enum CreditTransactionSource {
+    ORDER_REVENUE
+    WITHDRAWAL
+    REFUND
+    SYSTEM
+    OTHER
+}
+
 model Wallet {
     id        String   @id @default(uuid())
     userId    String   @unique
@@ -54,4 +67,34 @@ model WalletTransaction {
     @@index([userId, createdAt])
     @@index([walletId, createdAt])
     @@index([userId, source])
+}
+
+model Credit {
+    id        String   @id @default(uuid())
+    shopId    String   @unique
+    balance   Int      @default(0)
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    transactions CreditTransaction[]
+
+    @@index([shopId])
+}
+
+model CreditTransaction {
+    id           String                  @id @default(uuid())
+    creditId     String
+    credit       Credit                  @relation(fields: [creditId], references: [id], onDelete: Cascade)
+    shopId       String
+    type         CreditTransactionType
+    source       CreditTransactionSource @default(OTHER)
+    referenceId  String?
+    amount       Int
+    balanceAfter Int
+    description  String
+    createdAt    DateTime                @default(now())
+
+    @@index([shopId, createdAt])
+    @@index([creditId, createdAt])
+    @@index([shopId, source])
 }

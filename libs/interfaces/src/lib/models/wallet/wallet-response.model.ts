@@ -1,4 +1,9 @@
-import { WalletSchema, WalletTransactionSchema } from '@common/schemas/wallet';
+import {
+  CreditSchema,
+  CreditTransactionSchema,
+  WalletSchema,
+  WalletTransactionSchema,
+} from '@common/schemas/wallet';
 import z from 'zod';
 import { PaginationQueryResponseSchema } from '../common/pagination.model';
 
@@ -11,10 +16,26 @@ export const GetMyTransactionsResponseSchema =
     transactions: z.array(WalletTransactionResponseSchema),
   });
 
+export const CreditResponseSchema = CreditSchema;
+
+export const CreditTransactionResponseSchema = CreditTransactionSchema;
+
+export const GetShopCreditTransactionsResponseSchema =
+  PaginationQueryResponseSchema.extend({
+    transactions: z.array(CreditTransactionResponseSchema),
+  });
+
 export type WalletResponse = z.infer<typeof WalletResponseSchema>;
 export type WalletTransactionResponse = z.infer<
   typeof WalletTransactionResponseSchema
 >;
 export type GetMyTransactionsResponse = z.infer<
   typeof GetMyTransactionsResponseSchema
+>;
+export type CreditResponse = z.infer<typeof CreditResponseSchema>;
+export type CreditTransactionResponse = z.infer<
+  typeof CreditTransactionResponseSchema
+>;
+export type GetShopCreditTransactionsResponse = z.infer<
+  typeof GetShopCreditTransactionsResponseSchema
 >;

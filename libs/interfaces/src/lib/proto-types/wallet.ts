@@ -37,6 +37,32 @@ export interface GetMyTransactionsRequest {
   source?: string | undefined;
 }
 
+export interface GetShopCreditRequest {
+  processId?: string | undefined;
+  shopId: string;
+}
+
+export interface AdjustShopCreditRequest {
+  processId?: string | undefined;
+  shopId: string;
+  /** CREDIT | DEBIT */
+  type: string;
+  /** ORDER_REVENUE | WITHDRAWAL | REFUND | SYSTEM | OTHER */
+  source: string;
+  referenceId?: string | undefined;
+  amount: number;
+  description: string;
+}
+
+export interface GetShopCreditTransactionsRequest {
+  processId?: string | undefined;
+  shopId: string;
+  page: number;
+  limit: number;
+  type?: string | undefined;
+  source?: string | undefined;
+}
+
 /** Response Messages */
 export interface WalletResponse {
   id: string;
@@ -65,6 +91,35 @@ export interface GetMyTransactionsResponse {
   totalItems: number;
   totalPages: number;
   transactions: WalletTransactionResponse[];
+}
+
+export interface CreditResponse {
+  id: string;
+  shopId: string;
+  balance: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreditTransactionResponse {
+  id: string;
+  creditId: string;
+  shopId: string;
+  type: string;
+  source: string;
+  referenceId?: string | undefined;
+  amount: number;
+  balanceAfter: number;
+  description: string;
+  createdAt: string;
+}
+
+export interface GetShopCreditTransactionsResponse {
+  page: number;
+  limit: number;
+  totalItems: number;
+  totalPages: number;
+  transactions: CreditTransactionResponse[];
 }
 
 export const WALLET_SERVICE_PACKAGE_NAME = "WALLET_SERVICE";
@@ -103,3 +158,43 @@ export function WalletModuleControllerMethods() {
 }
 
 export const WALLET_MODULE_SERVICE_NAME = "WalletModule";
+
+export interface CreditModuleClient {
+  getShopCredit(request: GetShopCreditRequest): Observable<CreditResponse>;
+
+  adjustShopCredit(request: AdjustShopCreditRequest): Observable<CreditResponse>;
+
+  getShopCreditTransactions(request: GetShopCreditTransactionsRequest): Observable<GetShopCreditTransactionsResponse>;
+}
+
+export interface CreditModuleController {
+  getShopCredit(request: GetShopCreditRequest): Promise<CreditResponse> | Observable<CreditResponse> | CreditResponse;
+
+  adjustShopCredit(
+    request: AdjustShopCreditRequest,
+  ): Promise<CreditResponse> | Observable<CreditResponse> | CreditResponse;
+
+  getShopCreditTransactions(
+    request: GetShopCreditTransactionsRequest,
+  ):
+    | Promise<GetShopCreditTransactionsResponse>
+    | Observable<GetShopCreditTransactionsResponse>
+    | GetShopCreditTransactionsResponse;
+}
+
+export function CreditModuleControllerMethods() {
+  return function (constructor: Function) {
+    const grpcMethods: string[] = ["getShopCredit", "adjustShopCredit", "getShopCreditTransactions"];
+    for (const method of grpcMethods) {
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcMethod("CreditModule", method)(constructor.prototype[method], method, descriptor);
+    }
+    const grpcStreamMethods: string[] = [];
+    for (const method of grpcStreamMethods) {
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcStreamMethod("CreditModule", method)(constructor.prototype[method], method, descriptor);
+    }
+  };
+}
+
+export const CREDIT_MODULE_SERVICE_NAME = "CreditModule";

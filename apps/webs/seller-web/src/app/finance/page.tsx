@@ -1,4 +1,9 @@
 import {
+  CreditTransactionSourceValues,
+  CreditTransactionTypeValues,
+} from '@common/constants/credit.constant';
+import type { CreditTransactionResponse } from '@common/interfaces/models/wallet';
+import {
   ArrowDown,
   ArrowUp,
   BarChart3,
@@ -7,20 +12,67 @@ import {
   RotateCcw,
   Wallet,
 } from 'lucide-react';
+import { getShopCredit, getShopCreditTransactions } from '../../lib/credit';
 import {
   currentShop,
   formatCurrency,
   formatDateTime,
-  mockTransactions,
   revenue7Days,
-  type Transaction,
-  type TransactionStatus,
-  type TransactionType,
 } from '../../lib/mockData';
 
 export const metadata = { title: 'Tài chính — V-Shop Seller' };
 
-export default function FinancePage() {
+type TransactionType = 'withdraw' | 'revenue' | 'refund';
+type TransactionStatus = 'processing' | 'completed' | 'failed';
+
+type Transaction = {
+  id: string;
+  code: string;
+  createdAt: string;
+  type: TransactionType;
+  description: string;
+  amount: number;
+  status: TransactionStatus;
+};
+
+function mapTransactionType(source: string): TransactionType {
+  if (source === CreditTransactionSourceValues.WITHDRAWAL) return 'withdraw';
+  if (source === CreditTransactionSourceValues.REFUND) return 'refund';
+  return 'revenue';
+}
+
+function mapCreditTransaction(tx: CreditTransactionResponse): Transaction {
+  const sourcePrefix: Record<string, string> = {
+    [CreditTransactionSourceValues.WITHDRAWAL]: 'WD',
+    [CreditTransactionSourceValues.ORDER_REVENUE]: 'OR',
+    [CreditTransactionSourceValues.REFUND]: 'RF',
+    [CreditTransactionSourceValues.SYSTEM]: 'SY',
+    [CreditTransactionSourceValues.OTHER]: 'OT',
+  };
+
+  const prefix = sourcePrefix[tx.source] ?? 'TX';
+  const codeSource = tx.referenceId || tx.id;
+  const code = `${prefix}-${codeSource.replace(/-/g, '').slice(-6).toUpperCase()}`;
+
+  return {
+    id: tx.id,
+    code,
+    createdAt: tx.createdAt,
+    type: mapTransactionType(tx.source),
+    description: tx.description,
+    amount:
+      tx.type === CreditTransactionTypeValues.CREDIT ? tx.amount : -tx.amount,
+    status: 'completed',
+  };
+}
+
+export default async function FinancePage() {
+  const [credit, creditTransactions] = await Promise.all([
+    getShopCredit(),
+    getShopCreditTransactions({ page: 1, limit: 10 }),
+  ]);
+  const transactions =
+    creditTransactions.transactions.map(mapCreditTransaction);
   const maxRev = Math.max(...revenue7Days.map((d) => d.value));
 
   return (
@@ -43,14 +95,14 @@ export default function FinancePage() {
               </h3>
             </div>
             <div className="text-3xl font-bold text-ink mb-2">
-              {formatCurrency(currentShop.walletBalance)}
+              {formatCurrency(credit?.balance ?? 0)}
             </div>
             <p className="text-sm text-ink-muted">
               Số tiền có thể rút ngay lập tức.
             </p>
           </div>
           <div className="mt-6">
-            <button type="button" className="btn-primary btn-md">
+            <button type="button" className="btn-primary btn-md cursor-pointer">
               Yêu cầu rút tiền
             </button>
           </div>
@@ -66,7 +118,7 @@ export default function FinancePage() {
             </div>
             <button
               type="button"
-              className="text-primary hover:bg-primary-50 p-2 rounded-full transition-colors"
+              className="text-primary hover:bg-primary-50 p-2 rounded-full transition-colors cursor-pointer"
               aria-label="Chỉnh sửa"
             >
               <Edit3 className="w-4 h-4" />
@@ -100,7 +152,7 @@ export default function FinancePage() {
               Doanh thu thực nhận
             </h3>
           </div>
-          <select className="input w-auto">
+          <select className="input w-auto cursor-pointer">
             <option>7 ngày qua</option>
             <option>30 ngày qua</option>
             <option>Tháng này</option>
@@ -128,9 +180,11 @@ export default function FinancePage() {
         <div className="p-5 border-b border-slate-100 flex justify-between items-center">
           <div className="flex items-center gap-2">
             <List className="w-5 h-5 text-primary" />
-            <h3 className="text-lg font-semibold text-ink">Lịch sử giao dịch</h3>
+            <h3 className="text-lg font-semibold text-ink">
+              Lịch sử giao dịch
+            </h3>
           </div>
-          <button className="text-sm text-primary font-semibold hover:bg-primary-50 px-3 py-1.5 rounded transition-colors">
+          <button className="text-sm text-primary font-semibold hover:bg-primary-50 px-3 py-1.5 rounded transition-colors cursor-pointer">
             Xem tất cả
           </button>
         </div>
@@ -156,9 +210,19 @@ export default function FinancePage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-ink">
-              {mockTransactions.map((t) => (
+              {transactions.map((t) => (
                 <TransactionRow key={t.id} tx={t} />
               ))}
+              {transactions.length === 0 && (
+                <tr>
+                  <td
+                    colSpan={5}
+                    className="py-8 px-6 text-center text-ink-muted"
+                  >
+                    Chưa có giao dịch số dư.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -172,7 +236,9 @@ function TransactionRow({ tx }: { tx: Transaction }) {
   return (
     <tr className="hover:bg-surface-alt transition-colors">
       <td className="py-4 px-6 font-medium text-blue-700">#{tx.code}</td>
-      <td className="py-4 px-6 text-ink-muted">{formatDateTime(tx.createdAt)}</td>
+      <td className="py-4 px-6 text-ink-muted">
+        {formatDateTime(tx.createdAt)}
+      </td>
       <td className="py-4 px-6">
         <div className="flex items-center gap-2">
           <TxIcon type={tx.type} />

@@ -8,6 +8,12 @@ service WalletModule {
   rpc GetMyTransactions(GetMyTransactionsRequest) returns (GetMyTransactionsResponse);
 }
 
+service CreditModule {
+  rpc GetShopCredit(GetShopCreditRequest) returns (CreditResponse);
+  rpc AdjustShopCredit(AdjustShopCreditRequest) returns (CreditResponse);
+  rpc GetShopCreditTransactions(GetShopCreditTransactionsRequest) returns (GetShopCreditTransactionsResponse);
+}
+
 // Request Messages
 message GetMyWalletRequest {
   optional string processId = 1;
@@ -27,6 +33,30 @@ message AdjustWalletRequest {
 message GetMyTransactionsRequest {
   optional string processId = 1;
   string userId = 2;
+  int32 page = 3;
+  int32 limit = 4;
+  optional string type = 5;
+  optional string source = 6;
+}
+
+message GetShopCreditRequest {
+  optional string processId = 1;
+  string shopId = 2;
+}
+
+message AdjustShopCreditRequest {
+  optional string processId = 1;
+  string shopId = 2;
+  string type = 3; // CREDIT | DEBIT
+  string source = 4; // ORDER_REVENUE | WITHDRAWAL | REFUND | SYSTEM | OTHER
+  optional string referenceId = 5;
+  int32 amount = 6;
+  string description = 7;
+}
+
+message GetShopCreditTransactionsRequest {
+  optional string processId = 1;
+  string shopId = 2;
   int32 page = 3;
   int32 limit = 4;
   optional string type = 5;
@@ -61,4 +91,33 @@ message GetMyTransactionsResponse {
   int32 totalItems = 3;
   int32 totalPages = 4;
   repeated WalletTransactionResponse transactions = 5;
+}
+
+message CreditResponse {
+  string id = 1;
+  string shopId = 2;
+  int32 balance = 3;
+  string createdAt = 4;
+  string updatedAt = 5;
+}
+
+message CreditTransactionResponse {
+  string id = 1;
+  string creditId = 2;
+  string shopId = 3;
+  string type = 4;
+  string source = 5;
+  optional string referenceId = 6;
+  int32 amount = 7;
+  int32 balanceAfter = 8;
+  string description = 9;
+  string createdAt = 10;
+}
+
+message GetShopCreditTransactionsResponse {
+  int32 page = 1;
+  int32 limit = 2;
+  int32 totalItems = 3;
+  int32 totalPages = 4;
+  repeated CreditTransactionResponse transactions = 5;
 }

@@ -135,7 +135,6 @@ export interface ShopResponse {
   logo: string;
   banner: string;
   phone: string;
-  credit: number;
   status: string;
   pickupAddress: string;
   returnAddress: string;

@@ -51,7 +51,6 @@ export class GetShopResponseByUserDto extends createZodDto(
   ResponseSchema(
     ShopResponseSchema.omit({
       merchantId: true,
-      credit: true,
       status: true,
     }),
   ),
