@@ -95,22 +95,5 @@
     "typescript": "~5.9.2",
     "typescript-eslint": "^8.40.0",
     "webpack-cli": "^5.1.4"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "@nestjs/core",
-      "@parcel/watcher",
-      "@prisma/engines",
-      "@scarf/scarf",
-      "@swc/core",
-      "esbuild",
-      "less",
-      "msgpackr-extract",
-      "nx",
-      "prisma",
-      "protobufjs",
-      "sharp",
-      "unrs-resolver"
-    ]
   }
 }
