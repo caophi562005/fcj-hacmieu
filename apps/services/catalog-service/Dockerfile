@@ -4,7 +4,7 @@ RUN apt-get update \
 	&& apt-get install -y --no-install-recommends openssl \
 	&& rm -rf /var/lib/apt/lists/*
 
-RUN corepack enable
+RUN corepack enable && corepack prepare pnpm@10.25.0 --activate
 
 WORKDIR /workspace
 
@@ -26,7 +26,7 @@ RUN apt-get update \
 	&& apt-get install -y --no-install-recommends openssl \
 	&& rm -rf /var/lib/apt/lists/*
 
-RUN corepack enable
+RUN corepack enable && corepack prepare pnpm@10.25.0 --activate
 
 WORKDIR /app
 
