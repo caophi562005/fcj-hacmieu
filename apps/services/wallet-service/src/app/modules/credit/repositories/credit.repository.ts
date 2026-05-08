@@ -1,7 +1,12 @@
-import { CreditTransactionTypeValues } from '@common/constants/credit.constant';
+import {
+  CreditTransactionSourceValues,
+  CreditTransactionTypeValues,
+} from '@common/constants/credit.constant';
+import { PrismaErrorValues } from '@common/constants/prisma.constant';
 import {
   AdjustShopCreditRequest,
   GetShopCreditTransactionsRequest,
+  GetShopRevenueSummaryRequest,
 } from '@common/interfaces/models/wallet';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { Prisma } from '../../../../generated/prisma-client/client';
@@ -20,43 +25,75 @@ export class CreditRepository {
   }
 
   async adjust(data: AdjustShopCreditRequest) {
-    return this.prismaService.$transaction(async (tx) => {
-      const credit = await tx.credit.upsert({
-        where: { shopId: data.shopId },
-        update: {},
-        create: { shopId: data.shopId, balance: 0 },
+    try {
+      return await this.prismaService.$transaction(async (tx) => {
+        const credit = await tx.credit.upsert({
+          where: { shopId: data.shopId },
+          update: {},
+          create: { shopId: data.shopId, balance: 0 },
+        });
+
+        const isOrderRevenueSettlement =
+          data.source === CreditTransactionSourceValues.ORDER_REVENUE &&
+          !!data.referenceId;
+
+        if (isOrderRevenueSettlement) {
+          const settledTransaction = await tx.creditTransaction.findFirst({
+            where: {
+              shopId: data.shopId,
+              source: CreditTransactionSourceValues.ORDER_REVENUE,
+              referenceId: data.referenceId,
+            },
+            select: { id: true },
+          });
+
+          if (settledTransaction) {
+            return credit;
+          }
+        }
+
+        const delta =
+          data.type === CreditTransactionTypeValues.CREDIT
+            ? data.amount
+            : -data.amount;
+
+        const newBalance = credit.balance + delta;
+        if (newBalance < 0) {
+          throw new BadRequestException('Error.CreditInsufficientBalance');
+        }
+
+        const updated = await tx.credit.update({
+          where: { id: credit.id },
+          data: { balance: newBalance },
+        });
+
+        await tx.creditTransaction.create({
+          data: {
+            creditId: credit.id,
+            shopId: data.shopId,
+            type: data.type,
+            source: data.source,
+            referenceId: data.referenceId ?? null,
+            amount: data.amount,
+            balanceAfter: newBalance,
+            description: data.description,
+          },
+        });
+
+        return updated;
       });
+    } catch (error) {
+      const isDuplicateSettlement =
+        error?.code === PrismaErrorValues.UNIQUE_CONSTRAINT_VIOLATION &&
+        data.source === CreditTransactionSourceValues.ORDER_REVENUE &&
+        !!data.referenceId;
 
-      const delta =
-        data.type === CreditTransactionTypeValues.CREDIT
-          ? data.amount
-          : -data.amount;
-
-      const newBalance = credit.balance + delta;
-      if (newBalance < 0) {
-        throw new BadRequestException('Error.CreditInsufficientBalance');
+      if (isDuplicateSettlement) {
+        return this.upsert(data.shopId);
       }
 
-      const updated = await tx.credit.update({
-        where: { id: credit.id },
-        data: { balance: newBalance },
-      });
-
-      await tx.creditTransaction.create({
-        data: {
-          creditId: credit.id,
-          shopId: data.shopId,
-          type: data.type,
-          source: data.source,
-          referenceId: data.referenceId ?? null,
-          amount: data.amount,
-          balanceAfter: newBalance,
-          description: data.description,
-        },
-      });
-
-      return updated;
-    });
+      throw error;
+    }
   }
 
   async listTransactions(data: GetShopCreditTransactionsRequest) {
@@ -84,6 +121,59 @@ export class CreditRepository {
       totalItems,
       totalPages: Math.ceil(totalItems / limit),
       transactions,
+    };
+  }
+
+  async getRevenueSummary(data: GetShopRevenueSummaryRequest) {
+    const days = data.days || 7;
+    const today = new Date();
+    const endOfToday = new Date(today);
+    endOfToday.setHours(23, 59, 59, 999);
+
+    const start = new Date(today);
+    start.setHours(0, 0, 0, 0);
+    start.setDate(start.getDate() - (days - 1));
+
+    const transactions = await this.prismaService.creditTransaction.findMany({
+      where: {
+        shopId: data.shopId,
+        source: CreditTransactionSourceValues.ORDER_REVENUE,
+        type: CreditTransactionTypeValues.CREDIT,
+        createdAt: {
+          gte: start,
+          lte: endOfToday,
+        },
+      },
+      select: {
+        amount: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    const points = Array.from({ length: days }, (_, idx) => {
+      const day = new Date(start);
+      day.setDate(start.getDate() + idx);
+      return {
+        date: day.toISOString().slice(0, 10),
+        amount: 0,
+      };
+    });
+
+    const pointMap = new Map(points.map((p) => [p.date, p]));
+
+    for (const tx of transactions) {
+      const date = new Date(tx.createdAt).toISOString().slice(0, 10);
+      const point = pointMap.get(date);
+      if (point) {
+        point.amount += tx.amount;
+      }
+    }
+
+    return {
+      days,
+      totalRevenue: points.reduce((sum, p) => sum + p.amount, 0),
+      points,
     };
   }
 }

@@ -34,6 +34,11 @@ import { OrderService } from './services/order.service';
           queueUrl: SqsConfiguration.CREATE_ORDER_QUEUE_URL,
           region: BaseConfiguration.AWS_REGION,
         },
+        {
+          name: SqsConfiguration.SETTLE_ORDER_REVENUE_QUEUE_NAME,
+          queueUrl: SqsConfiguration.SETTLE_ORDER_REVENUE_QUEUE_URL,
+          region: BaseConfiguration.AWS_REGION,
+        },
       ],
     }),
   ],

@@ -12,15 +12,37 @@ import {
   RotateCcw,
   Wallet,
 } from 'lucide-react';
-import { getShopCredit, getShopCreditTransactions } from '../../lib/credit';
+import Link from 'next/link';
+import {
+  getShopCredit,
+  getShopCreditTransactions,
+  getShopRevenueSummary,
+} from '../../lib/credit';
 import {
   currentShop,
   formatCurrency,
   formatDateTime,
-  revenue7Days,
 } from '../../lib/mockData';
 
 export const metadata = { title: 'Tài chính — V-Shop Seller' };
+
+type SearchParams = { days?: string };
+const REVENUE_DAY_FILTERS = [7, 14, 30] as const;
+
+function parseRevenueDays(raw?: string): (typeof REVENUE_DAY_FILTERS)[number] {
+  const days = Number(raw);
+  if (days === 14 || days === 30) return days;
+  return 7;
+}
+
+function buildFinanceHref(days: (typeof REVENUE_DAY_FILTERS)[number]): string {
+  const sp = new URLSearchParams();
+  if (days !== 7) {
+    sp.set('days', String(days));
+  }
+  const qs = sp.toString();
+  return qs ? `/finance?${qs}` : '/finance';
+}
 
 type TransactionType = 'withdraw' | 'revenue' | 'refund';
 type TransactionStatus = 'processing' | 'completed' | 'failed';
@@ -66,14 +88,26 @@ function mapCreditTransaction(tx: CreditTransactionResponse): Transaction {
   };
 }
 
-export default async function FinancePage() {
-  const [credit, creditTransactions] = await Promise.all([
+export default async function FinancePage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}) {
+  const sp = (await searchParams) ?? {};
+  const selectedDays = parseRevenueDays(sp.days);
+
+  const [credit, creditTransactions, revenue] = await Promise.all([
     getShopCredit(),
     getShopCreditTransactions({ page: 1, limit: 10 }),
+    getShopRevenueSummary(selectedDays),
   ]);
   const transactions =
     creditTransactions.transactions.map(mapCreditTransaction);
-  const maxRev = Math.max(...revenue7Days.map((d) => d.value));
+  const revenuePoints = revenue.points.map((p) => ({
+    day: p.date.slice(5),
+    value: p.amount,
+  }));
+  const maxRev = Math.max(1, ...revenuePoints.map((d) => d.value));
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
@@ -149,17 +183,31 @@ export default async function FinancePage() {
           <div className="flex items-center gap-2">
             <BarChart3 className="w-5 h-5 text-primary" />
             <h3 className="text-lg font-semibold text-ink">
-              Doanh thu thực nhận
+              Doanh thu thực nhận ({selectedDays} ngày)
             </h3>
           </div>
-          <select className="input w-auto cursor-pointer">
-            <option>7 ngày qua</option>
-            <option>30 ngày qua</option>
-            <option>Tháng này</option>
-          </select>
+          <div className="inline-flex items-center rounded-md border border-slate-200 bg-white p-1">
+            {REVENUE_DAY_FILTERS.map((days) => {
+              const isActive = selectedDays === days;
+
+              return (
+                <Link
+                  key={days}
+                  href={buildFinanceHref(days)}
+                  className={`rounded px-3 py-1.5 text-sm font-medium transition-colors cursor-pointer ${
+                    isActive
+                      ? 'bg-primary text-white'
+                      : 'text-ink-muted hover:bg-surface-alt'
+                  }`}
+                >
+                  {days} ngày
+                </Link>
+              );
+            })}
+          </div>
         </div>
         <div className="h-64 w-full flex items-end justify-between gap-2 px-2 pt-4 border-b border-l border-slate-200 relative">
-          {revenue7Days.map((d) => (
+          {revenuePoints.map((d) => (
             <div
               key={d.day}
               className="relative flex-1 flex flex-col items-center group"

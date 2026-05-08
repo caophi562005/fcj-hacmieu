@@ -12,6 +12,7 @@ service CreditModule {
   rpc GetShopCredit(GetShopCreditRequest) returns (CreditResponse);
   rpc AdjustShopCredit(AdjustShopCreditRequest) returns (CreditResponse);
   rpc GetShopCreditTransactions(GetShopCreditTransactionsRequest) returns (GetShopCreditTransactionsResponse);
+  rpc GetShopRevenueSummary(GetShopRevenueSummaryRequest) returns (GetShopRevenueSummaryResponse);
 }
 
 // Request Messages
@@ -61,6 +62,12 @@ message GetShopCreditTransactionsRequest {
   int32 limit = 4;
   optional string type = 5;
   optional string source = 6;
+}
+
+message GetShopRevenueSummaryRequest {
+  optional string processId = 1;
+  string shopId = 2;
+  int32 days = 3;
 }
 
 // Response Messages
@@ -120,4 +127,15 @@ message GetShopCreditTransactionsResponse {
   int32 totalItems = 3;
   int32 totalPages = 4;
   repeated CreditTransactionResponse transactions = 5;
+}
+
+message ShopRevenueDayPoint {
+  string date = 1;
+  int32 amount = 2;
+}
+
+message GetShopRevenueSummaryResponse {
+  int32 days = 1;
+  int32 totalRevenue = 2;
+  repeated ShopRevenueDayPoint points = 3;
 }

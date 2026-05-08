@@ -5,6 +5,8 @@ import {
   CreditResponseDto,
   GetShopCreditTransactionsRequestDto,
   GetShopCreditTransactionsResponseDto,
+  GetShopRevenueSummaryRequestDto,
+  GetShopRevenueSummaryResponseDto,
 } from '@common/interfaces/dtos/wallet';
 import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
@@ -32,6 +34,20 @@ export class CreditController {
     @UserData('shopId') shopId: string,
   ) {
     return this.creditService.getShopCreditTransactions({
+      ...query,
+      shopId,
+      processId,
+    });
+  }
+
+  @Get('revenue-summary')
+  @ApiOkResponse({ type: GetShopRevenueSummaryResponseDto })
+  async getShopRevenueSummary(
+    @Query() query: GetShopRevenueSummaryRequestDto,
+    @ProcessId() processId: string,
+    @UserData('shopId') shopId: string,
+  ) {
+    return this.creditService.getShopRevenueSummary({
       ...query,
       shopId,
       processId,

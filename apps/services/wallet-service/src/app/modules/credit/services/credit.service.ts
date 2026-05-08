@@ -4,6 +4,8 @@ import {
   GetShopCreditRequest,
   GetShopCreditTransactionsRequest,
   GetShopCreditTransactionsResponse,
+  GetShopRevenueSummaryRequest,
+  GetShopRevenueSummaryResponse,
 } from '@common/interfaces/models/wallet';
 import { Injectable } from '@nestjs/common';
 import { CreditRepository } from '../repositories/credit.repository';
@@ -12,7 +14,9 @@ import { CreditRepository } from '../repositories/credit.repository';
 export class CreditService {
   constructor(private readonly creditRepository: CreditRepository) {}
 
-  async getShopCredit({ shopId }: GetShopCreditRequest): Promise<CreditResponse> {
+  async getShopCredit({
+    shopId,
+  }: GetShopCreditRequest): Promise<CreditResponse> {
     return this.creditRepository.upsert(shopId);
   }
 
@@ -28,5 +32,12 @@ export class CreditService {
     ...data
   }: GetShopCreditTransactionsRequest): Promise<GetShopCreditTransactionsResponse> {
     return this.creditRepository.listTransactions(data);
+  }
+
+  async getShopRevenueSummary({
+    processId: _,
+    ...data
+  }: GetShopRevenueSummaryRequest): Promise<GetShopRevenueSummaryResponse> {
+    return this.creditRepository.getRevenueSummary(data);
   }
 }

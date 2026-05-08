@@ -15,6 +15,14 @@ export const GetMyWalletRequestSchema = z
   })
   .strict();
 
+export const GetShopRevenueSummaryRequestSchema = z
+  .object({
+    processId: z.uuid().optional(),
+    shopId: z.uuid(),
+    days: z.coerce.number().int().positive().max(90).default(7),
+  })
+  .strict();
+
 export const GetShopCreditRequestSchema = z
   .object({
     processId: z.uuid().optional(),
@@ -79,4 +87,7 @@ export type AdjustShopCreditRequest = z.infer<
 >;
 export type GetShopCreditTransactionsRequest = z.infer<
   typeof GetShopCreditTransactionsRequestSchema
+>;
+export type GetShopRevenueSummaryRequest = z.infer<
+  typeof GetShopRevenueSummaryRequestSchema
 >;

@@ -8,6 +8,8 @@ import {
   GetShopCreditRequestSchema,
   GetShopCreditTransactionsRequestSchema,
   GetShopCreditTransactionsResponseSchema,
+  GetShopRevenueSummaryRequestSchema,
+  GetShopRevenueSummaryResponseSchema,
   WalletResponseSchema,
 } from '@common/interfaces/models/wallet';
 import { createZodDto } from 'nestjs-zod';
@@ -25,6 +27,10 @@ export class GetShopCreditTransactionsRequestDto extends createZodDto(
     processId: true,
     shopId: true,
   }),
+) {}
+
+export class GetShopRevenueSummaryRequestDto extends createZodDto(
+  GetShopRevenueSummaryRequestSchema.omit({ processId: true, shopId: true }),
 ) {}
 
 export class AdjustWalletRequestDto extends createZodDto(
@@ -51,4 +57,8 @@ export class GetMyTransactionsResponseDto extends createZodDto(
 
 export class GetShopCreditTransactionsResponseDto extends createZodDto(
   ResponseSchema(GetShopCreditTransactionsResponseSchema),
+) {}
+
+export class GetShopRevenueSummaryResponseDto extends createZodDto(
+  ResponseSchema(GetShopRevenueSummaryResponseSchema),
 ) {}

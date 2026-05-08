@@ -1,5 +1,10 @@
 import { SqsConfiguration } from '@common/configurations/sqs.config';
 import {
+  CreditTransactionSourceValues,
+  CreditTransactionTypeValues,
+} from '@common/constants/credit.constant';
+import { OrderStatusValues } from '@common/constants/order.constant';
+import {
   PaymentMethodValues,
   PaymentStatusValues,
 } from '@common/constants/payment.constant';
@@ -16,6 +21,7 @@ import {
   UpdateStatusOrderRequest,
 } from '@common/interfaces/models/order';
 import { CreatePromotionRedemptionRequest } from '@common/interfaces/models/promotion';
+import { AdjustShopCreditRequest } from '@common/interfaces/models/wallet';
 import {
   CATALOG_SERVICE_PACKAGE_NAME,
   PRODUCT_MODULE_SERVICE_NAME,
@@ -383,7 +389,23 @@ export class OrderService implements OnModuleInit {
   async updateStatus({ processId, ...data }: UpdateStatusOrderRequest) {
     try {
       const order = await this.orderRepository.updateStatus(data);
-      // this.kafkaService.emit(QueueTopics.ORDER.UPDATE_ORDER, order);
+
+      if (order.status === OrderStatusValues.COMPLETED) {
+        const settlementPayload: AdjustShopCreditRequest = {
+          processId,
+          shopId: order.shopId,
+          type: CreditTransactionTypeValues.CREDIT,
+          source: CreditTransactionSourceValues.ORDER_REVENUE,
+          referenceId: order.id,
+          amount: order.itemTotal,
+          description: `Doanh thu đơn hàng ${order.code}`,
+        };
+
+        await this.sendQueueMessage(
+          SqsConfiguration.SETTLE_ORDER_REVENUE_QUEUE_NAME,
+          settlementPayload,
+        );
+      }
       return order;
     } catch (error) {
       if (error.code === PrismaErrorValues.RECORD_NOT_FOUND) {

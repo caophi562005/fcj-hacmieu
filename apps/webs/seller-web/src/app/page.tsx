@@ -6,26 +6,37 @@ import { Boxes, Clock3, Truck, Wallet } from 'lucide-react';
 import Link from 'next/link';
 import { CopyButton } from '../components/CopyButton';
 import { getSellerProducts } from '../lib/catalog';
-import { getShopCredit } from '../lib/credit';
-import { formatCurrency, revenue7Days } from '../lib/mockData';
+import { getShopCredit, getShopRevenueSummary } from '../lib/credit';
+import { formatCurrency } from '../lib/mockData';
 import { getSellerOrders } from '../lib/order';
 
 export default async function DashboardPage() {
-  const [credit, pendingOrders, shippingOrders, products, recentOrders] =
-    await Promise.all([
-      getShopCredit(),
-      getSellerOrders({ page: 1, limit: 1, status: OrderStatusValues.PENDING }),
-      getSellerOrders({
-        page: 1,
-        limit: 1,
-        status: OrderStatusValues.SHIPPING,
-      }),
-      getSellerProducts({ page: 1, limit: 1 }),
-      getSellerOrders({ page: 1, limit: 5 }),
-    ]);
+  const [
+    credit,
+    pendingOrders,
+    shippingOrders,
+    products,
+    recentOrders,
+    revenue,
+  ] = await Promise.all([
+    getShopCredit(),
+    getSellerOrders({ page: 1, limit: 1, status: OrderStatusValues.PENDING }),
+    getSellerOrders({
+      page: 1,
+      limit: 1,
+      status: OrderStatusValues.SHIPPING,
+    }),
+    getSellerProducts({ page: 1, limit: 1 }),
+    getSellerOrders({ page: 1, limit: 5 }),
+    getShopRevenueSummary(7),
+  ]);
 
   const latestOrders = recentOrders.orders ?? [];
-  const maxRev = Math.max(...revenue7Days.map((d) => d.value));
+  const revenue7Days = revenue.points.map((p) => ({
+    day: p.date.slice(5),
+    value: p.amount,
+  }));
+  const maxRev = Math.max(1, ...revenue7Days.map((d) => d.value));
 
   const shortenOrderCode = (code: string) => {
     if (!code || code.length <= 12) return code;

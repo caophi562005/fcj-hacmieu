@@ -94,6 +94,7 @@ model CreditTransaction {
     description  String
     createdAt    DateTime                @default(now())
 
+    @@unique([shopId, source, referenceId])
     @@index([shopId, createdAt])
     @@index([creditId, createdAt])
     @@index([shopId, source])

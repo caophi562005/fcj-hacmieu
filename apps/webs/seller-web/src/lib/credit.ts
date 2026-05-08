@@ -2,6 +2,7 @@ import type { Response as ApiResponse } from '@common/interfaces/models/common/r
 import type {
   CreditResponse,
   GetShopCreditTransactionsResponse,
+  GetShopRevenueSummaryResponse,
 } from '@common/interfaces/models/wallet';
 import { cache } from 'react';
 import { createServerApi } from './api';
@@ -19,6 +20,12 @@ const EMPTY_TRANSACTIONS: GetShopCreditTransactionsResponse = {
   totalItems: 0,
   totalPages: 0,
   transactions: [],
+};
+
+const EMPTY_REVENUE_SUMMARY: GetShopRevenueSummaryResponse = {
+  days: 7,
+  totalRevenue: 0,
+  points: [],
 };
 
 function normalizeTransactionsResponse(
@@ -71,6 +78,29 @@ const _getShopCreditTransactionsCached = cache(
   },
 );
 
+const _getShopRevenueSummaryCached = cache(
+  async (days: number): Promise<GetShopRevenueSummaryResponse> => {
+    const api = await createServerApi();
+    const res = await api.get<ApiResponse<GetShopRevenueSummaryResponse>>(
+      '/wallet/credit/revenue-summary',
+      {
+        params: { days },
+        validateStatus: (s) => (s >= 200 && s < 300) || s === 404,
+      },
+    );
+
+    if (res.status === 404) {
+      return { ...EMPTY_REVENUE_SUMMARY, days };
+    }
+
+    return {
+      days: res.data?.data?.days ?? days,
+      totalRevenue: res.data?.data?.totalRevenue ?? 0,
+      points: Array.isArray(res.data?.data?.points) ? res.data.data.points : [],
+    };
+  },
+);
+
 export function getShopCredit(): Promise<CreditResponse | null> {
   return _getShopCreditCached();
 }
@@ -84,4 +114,8 @@ export function getShopCreditTransactions(
     query.type ?? null,
     query.source ?? null,
   );
+}
+
+export function getShopRevenueSummary(days = 7) {
+  return _getShopRevenueSummaryCached(days);
 }

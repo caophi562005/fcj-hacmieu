@@ -6,6 +6,8 @@ import {
   GetShopCreditRequest,
   GetShopCreditTransactionsRequest,
   GetShopCreditTransactionsResponse,
+  GetShopRevenueSummaryRequest,
+  GetShopRevenueSummaryResponse,
   WALLET_SERVICE_PACKAGE_NAME,
 } from '@common/interfaces/proto-types/wallet';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
@@ -41,5 +43,11 @@ export class CreditService implements OnModuleInit {
     data: GetShopCreditTransactionsRequest,
   ): Promise<GetShopCreditTransactionsResponse> {
     return firstValueFrom(this.creditModule.getShopCreditTransactions(data));
+  }
+
+  async getShopRevenueSummary(
+    data: GetShopRevenueSummaryRequest,
+  ): Promise<GetShopRevenueSummaryResponse> {
+    return firstValueFrom(this.creditModule.getShopRevenueSummary(data));
   }
 }

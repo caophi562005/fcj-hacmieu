@@ -63,6 +63,12 @@ export interface GetShopCreditTransactionsRequest {
   source?: string | undefined;
 }
 
+export interface GetShopRevenueSummaryRequest {
+  processId?: string | undefined;
+  shopId: string;
+  days: number;
+}
+
 /** Response Messages */
 export interface WalletResponse {
   id: string;
@@ -122,6 +128,17 @@ export interface GetShopCreditTransactionsResponse {
   transactions: CreditTransactionResponse[];
 }
 
+export interface ShopRevenueDayPoint {
+  date: string;
+  amount: number;
+}
+
+export interface GetShopRevenueSummaryResponse {
+  days: number;
+  totalRevenue: number;
+  points: ShopRevenueDayPoint[];
+}
+
 export const WALLET_SERVICE_PACKAGE_NAME = "WALLET_SERVICE";
 
 export interface WalletModuleClient {
@@ -165,6 +182,8 @@ export interface CreditModuleClient {
   adjustShopCredit(request: AdjustShopCreditRequest): Observable<CreditResponse>;
 
   getShopCreditTransactions(request: GetShopCreditTransactionsRequest): Observable<GetShopCreditTransactionsResponse>;
+
+  getShopRevenueSummary(request: GetShopRevenueSummaryRequest): Observable<GetShopRevenueSummaryResponse>;
 }
 
 export interface CreditModuleController {
@@ -180,11 +199,20 @@ export interface CreditModuleController {
     | Promise<GetShopCreditTransactionsResponse>
     | Observable<GetShopCreditTransactionsResponse>
     | GetShopCreditTransactionsResponse;
+
+  getShopRevenueSummary(
+    request: GetShopRevenueSummaryRequest,
+  ): Promise<GetShopRevenueSummaryResponse> | Observable<GetShopRevenueSummaryResponse> | GetShopRevenueSummaryResponse;
 }
 
 export function CreditModuleControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = ["getShopCredit", "adjustShopCredit", "getShopCreditTransactions"];
+    const grpcMethods: string[] = [
+      "getShopCredit",
+      "adjustShopCredit",
+      "getShopCreditTransactions",
+      "getShopRevenueSummary",
+    ];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
       GrpcMethod("CreditModule", method)(constructor.prototype[method], method, descriptor);
