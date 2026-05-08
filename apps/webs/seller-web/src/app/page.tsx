@@ -1,17 +1,36 @@
-import { AlertTriangle, Clock3, Truck, Wallet } from 'lucide-react';
-import Link from 'next/link';
 import {
-  dashboardStats,
-  formatCurrency,
-  mockOrders,
-  ORDER_STATUS_LABEL,
-  revenue7Days,
+  OrderStatusValues,
   type OrderStatus,
-} from '../lib/mockData';
+} from '@common/constants/order.constant';
+import { Boxes, Clock3, Truck, Wallet } from 'lucide-react';
+import Link from 'next/link';
+import { CopyButton } from '../components/CopyButton';
+import { getSellerProducts } from '../lib/catalog';
+import { getShopCredit } from '../lib/credit';
+import { formatCurrency, revenue7Days } from '../lib/mockData';
+import { getSellerOrders } from '../lib/order';
 
-export default function DashboardPage() {
-  const recentOrders = mockOrders.slice(0, 5);
+export default async function DashboardPage() {
+  const [credit, pendingOrders, shippingOrders, products, recentOrders] =
+    await Promise.all([
+      getShopCredit(),
+      getSellerOrders({ page: 1, limit: 1, status: OrderStatusValues.PENDING }),
+      getSellerOrders({
+        page: 1,
+        limit: 1,
+        status: OrderStatusValues.SHIPPING,
+      }),
+      getSellerProducts({ page: 1, limit: 1 }),
+      getSellerOrders({ page: 1, limit: 5 }),
+    ]);
+
+  const latestOrders = recentOrders.orders ?? [];
   const maxRev = Math.max(...revenue7Days.map((d) => d.value));
+
+  const shortenOrderCode = (code: string) => {
+    if (!code || code.length <= 12) return code;
+    return `${code.slice(0, 8)}…${code.slice(-4)}`;
+  };
 
   return (
     <div className="space-y-6">
@@ -22,34 +41,34 @@ export default function DashboardPage() {
           iconBg="bg-primary-50"
           iconColor="text-primary"
           label="Số dư ví"
-          value={formatCurrency(dashboardStats.walletBalance)}
+          value={formatCurrency(credit?.balance ?? 0)}
         />
         <StatCard
           icon={Clock3}
           iconBg="bg-blue-50"
           iconColor="text-blue-600"
           label="Đơn chờ xác nhận"
-          value={String(dashboardStats.pendingOrders)}
+          value={String(pendingOrders.totalItems ?? 0)}
         />
         <StatCard
           icon={Truck}
           iconBg="bg-indigo-50"
           iconColor="text-indigo-600"
           label="Đơn đang giao"
-          value={String(dashboardStats.shippingOrders)}
+          value={String(shippingOrders.totalItems ?? 0)}
         />
         <StatCard
-          icon={AlertTriangle}
-          iconBg="bg-red-50"
-          iconColor="text-red-600"
-          label="Sản phẩm hết hàng"
-          value={String(dashboardStats.outOfStock)}
+          icon={Boxes}
+          iconBg="bg-emerald-50"
+          iconColor="text-emerald-600"
+          label="Số sản phẩm"
+          value={String(products.totalItems ?? 0)}
         />
       </div>
 
       {/* Chart + Recent orders */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <section className="lg:col-span-2 card p-5">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        <section className="lg:col-span-3 card p-5">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-semibold text-ink">
               Doanh thu 7 ngày gần nhất
@@ -78,7 +97,7 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        <section className="card p-5 flex flex-col">
+        <section className="lg:col-span-2 card p-5 flex flex-col">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-ink">
               Đơn hàng mới nhất
@@ -95,7 +114,9 @@ export default function DashboardPage() {
               <thead>
                 <tr className="bg-surface-muted text-ink-muted">
                   <th className="py-2.5 px-2 text-left font-semibold">Mã</th>
-                  <th className="py-2.5 px-2 text-left font-semibold">Khách</th>
+                  <th className="py-2.5 px-2 text-left font-semibold">
+                    Sản phẩm
+                  </th>
                   <th className="py-2.5 px-2 text-right font-semibold">Tổng</th>
                   <th className="py-2.5 px-2 text-center font-semibold">
                     Trạng thái
@@ -103,25 +124,64 @@ export default function DashboardPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {recentOrders.map((o) => (
+                {latestOrders.map((o) => (
                   <tr
                     key={o.id}
                     className="hover:bg-surface-alt transition-colors"
                   >
                     <td className="py-2.5 px-2 font-medium text-ink">
-                      #{o.code}
+                      <div className="flex items-center gap-1">
+                        <Link
+                          href={`/orders/${o.id}`}
+                          className="font-semibold text-ink hover:text-primary transition-colors cursor-pointer"
+                          title={o.code}
+                        >
+                          #{shortenOrderCode(o.code)}
+                        </Link>
+                        <CopyButton
+                          value={o.code}
+                          label="Copy mã đơn"
+                          className="relative z-10"
+                        />
+                      </div>
                     </td>
                     <td className="py-2.5 px-2 text-ink-muted truncate max-w-[120px]">
-                      {o.customerName}
+                      <Link
+                        href={`/orders/${o.id}`}
+                        className="block text-ink-muted hover:text-ink transition-colors cursor-pointer"
+                        title={o.firstProductName}
+                      >
+                        {o.firstProductName}
+                      </Link>
                     </td>
                     <td className="py-2.5 px-2 text-right font-medium">
-                      {formatCurrency(o.total)}
+                      <Link
+                        href={`/orders/${o.id}`}
+                        className="block hover:text-primary transition-colors cursor-pointer"
+                      >
+                        {formatCurrency(o.grandTotal)}
+                      </Link>
                     </td>
                     <td className="py-2.5 px-2 text-center">
-                      <StatusBadge status={o.status} />
+                      <Link
+                        href={`/orders/${o.id}`}
+                        className="inline-flex cursor-pointer"
+                      >
+                        <StatusBadge status={o.status as OrderStatus} />
+                      </Link>
                     </td>
                   </tr>
                 ))}
+                {latestOrders.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={4}
+                      className="py-6 px-2 text-center text-sm text-ink-muted"
+                    >
+                      Chưa có đơn hàng.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -158,14 +218,39 @@ function StatCard({
 }
 
 function StatusBadge({ status }: { status: OrderStatus }) {
-  const map: Record<OrderStatus, string> = {
-    pending: 'bg-orange-100 text-orange-800',
-    processing: 'bg-blue-100 text-blue-800',
-    shipping: 'bg-indigo-100 text-indigo-800',
-    delivered: 'bg-emerald-100 text-emerald-800',
-    cancelled: 'bg-red-100 text-red-800',
+  const map: Record<OrderStatus, { cls: string; label: string }> = {
+    CREATING: {
+      cls: 'bg-slate-100 text-slate-700',
+      label: 'Đang tạo',
+    },
+    PENDING: {
+      cls: 'bg-orange-100 text-orange-800',
+      label: 'Chờ xác nhận',
+    },
+    CONFIRMED: {
+      cls: 'bg-blue-100 text-blue-800',
+      label: 'Đã xác nhận',
+    },
+    SHIPPING: {
+      cls: 'bg-indigo-100 text-indigo-800',
+      label: 'Đang giao',
+    },
+    COMPLETED: {
+      cls: 'bg-emerald-100 text-emerald-800',
+      label: 'Đã giao',
+    },
+    CANCELLED: {
+      cls: 'bg-red-100 text-red-800',
+      label: 'Đã hủy',
+    },
+    REFUNDED: {
+      cls: 'bg-purple-100 text-purple-800',
+      label: 'Đã hoàn tiền',
+    },
   };
-  return (
-    <span className={`chip ${map[status]}`}>{ORDER_STATUS_LABEL[status]}</span>
-  );
+  const current = map[status] ?? {
+    cls: 'bg-slate-100 text-slate-700',
+    label: status,
+  };
+  return <span className={`chip ${current.cls}`}>{current.label}</span>;
 }

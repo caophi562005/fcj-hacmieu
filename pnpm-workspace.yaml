@@ -1,5 +1,19 @@
 autoInstallPeers: true
 ignoreWorkspaceRootCheck: true
+onlyBuiltDependencies:
+  - '@nestjs/core'
+  - '@parcel/watcher'
+  - '@prisma/engines'
+  - '@scarf/scarf'
+  - '@swc/core'
+  - esbuild
+  - less
+  - msgpackr-extract
+  - nx
+  - prisma
+  - protobufjs
+  - sharp
+  - unrs-resolver
 packages:
   - 'apps/**'
   - 'libs/**'
