@@ -6,6 +6,3 @@ autoInstallPeers: true
 
 ignoreWorkspaceRootCheck: true
 
-ignoredBuiltDependencies:
-  - esbuild
-  - onnxruntime-node
