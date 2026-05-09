@@ -3,8 +3,6 @@ import { PaymentMethodValues } from '@common/constants/payment.constant';
 import { PrismaErrorValues } from '@common/constants/prisma.constant';
 import {
   CreatePaymentRequest,
-  DashboardPaymentRequest,
-  DashboardPaymentResponse,
   DeletePaymentRequest,
   GetManyPaymentsRequest,
   GetManyPaymentsResponse,
@@ -80,12 +78,5 @@ export class PaymentService {
       }
       throw error;
     }
-  }
-
-  async dashboard({
-    processId,
-  }: DashboardPaymentRequest): Promise<DashboardPaymentResponse> {
-    const totalAmount = await this.paymentRepository.dashboard();
-    return { totalAmount };
   }
 }

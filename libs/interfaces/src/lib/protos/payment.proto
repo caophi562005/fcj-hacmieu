@@ -7,7 +7,6 @@ service PaymentModule {
   rpc GetPayment(GetPaymentRequest) returns (PaymentResponse);
   rpc CreatePayment(CreatePaymentRequest) returns (PaymentResponse);
   rpc UpdatePaymentStatus(UpdatePaymentStatusRequest) returns (PaymentResponse);
-  rpc DashboardPayment(DashboardPaymentRequest) returns (DashboardPaymentResponse);
 }
 
 service TransactionModule {
@@ -109,15 +108,6 @@ message UpdatePaymentStatusRequest {
   string id = 2;
   string status = 3;
   optional string updatedById = 4;
-}
-
-//==================== DashboardPayment ====================
-message DashboardPaymentRequest {
-  optional string processId = 1;
-}
-
-message DashboardPaymentResponse {
-  int32 totalAmount = 1;
 }
 
 //==================== GetRefund ====================//

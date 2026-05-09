@@ -94,13 +94,4 @@ export class PaymentRepository {
           },
         });
   }
-
-  async dashboard() {
-    const result = await this.prismaService.payment.aggregate({
-      _sum: {
-        amount: true,
-      },
-    });
-    return result._sum.amount || 0;
-  }
 }

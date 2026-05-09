@@ -9,12 +9,12 @@ import {
 } from '@common/interfaces/dtos/payment';
 import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
-import { PaymentService } from '../services/payment.service';
+import { RefundService } from '../services/refund.service';
 
 @Controller('payment/refund')
 @ApiTags('Payment/Refund')
 export class RefundController {
-  constructor(private readonly paymentService: PaymentService) {}
+  constructor(private readonly refundService: RefundService) {}
 
   @Get()
   @ApiOkResponse({
@@ -24,7 +24,7 @@ export class RefundController {
     @Query() queries: GetManyRefundsRequestDto,
     @ProcessId() processId: string,
   ) {
-    return this.paymentService.getManyRefunds({
+    return this.refundService.getManyRefunds({
       ...queries,
       processId,
     });
@@ -38,7 +38,7 @@ export class RefundController {
     @Param() params: GetRefundRequestDto,
     @ProcessId() processId: string,
   ) {
-    return this.paymentService.getRefund({
+    return this.refundService.getRefund({
       ...params,
       processId,
     });
@@ -52,7 +52,7 @@ export class RefundController {
     @Body() body: CreateRefundRequestDto,
     @ProcessId() processId: string,
   ) {
-    return this.paymentService.createRefund({
+    return this.refundService.createRefund({
       ...body,
       processId,
     });
@@ -66,7 +66,7 @@ export class RefundController {
     @Body() body: UpdateRefundStatusRequestDto,
     @ProcessId() processId: string,
   ) {
-    return this.paymentService.updateRefundStatus({
+    return this.refundService.updateRefundStatus({
       ...body,
       processId,
     });

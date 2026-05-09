@@ -1,8 +1,6 @@
 import { ProcessId } from '@common/decorators/process-id.decorator';
 import {
   CreatePaymentRequestDto,
-  DashboardPaymentRequestDto,
-  DashboardPaymentResponseDto,
   GetManyPaymentsRequestDto,
   GetManyPaymentsResponseDto,
   GetPaymentRequestDto,
@@ -71,20 +69,6 @@ export class PaymentController {
   ) {
     return this.paymentService.updatePaymentStatus({
       ...body,
-      processId,
-    });
-  }
-
-  @Get('dashboard/summary')
-  @ApiOkResponse({
-    type: DashboardPaymentResponseDto,
-  })
-  async dashboardPayment(
-    @Query() queries: DashboardPaymentRequestDto,
-    @ProcessId() processId: string,
-  ) {
-    return this.paymentService.dashboardPayment({
-      ...queries,
       processId,
     });
   }

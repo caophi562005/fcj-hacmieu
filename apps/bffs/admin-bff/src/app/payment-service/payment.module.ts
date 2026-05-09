@@ -5,12 +5,13 @@ import { ClientsModule } from '@nestjs/microservices';
 import { PaymentController } from './controllers/payment.controller';
 import { RefundController } from './controllers/refund.controller';
 import { PaymentService } from './services/payment.service';
+import { RefundService } from './services/refund.service';
 
 @Module({
   imports: [
     ClientsModule.register([GrpcClientProvider(GrpcService.PAYMENT_SERVICE)]),
   ],
   controllers: [PaymentController, RefundController],
-  providers: [PaymentService],
+  providers: [PaymentService, RefundService],
 })
 export class PaymentModule {}
