@@ -57,5 +57,6 @@ export const GrpcModuleName = {
   WALLET: {
     WALLET: 'WalletModule',
     CREDIT: 'CreditModule',
+    PAYOUT: 'PayoutModule',
   },
 } as const;

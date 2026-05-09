@@ -8,14 +8,6 @@ service WalletModule {
   rpc GetMyTransactions(GetMyTransactionsRequest) returns (GetMyTransactionsResponse);
 }
 
-service CreditModule {
-  rpc GetShopCredit(GetShopCreditRequest) returns (CreditResponse);
-  rpc AdjustShopCredit(AdjustShopCreditRequest) returns (CreditResponse);
-  rpc GetShopCreditTransactions(GetShopCreditTransactionsRequest) returns (GetShopCreditTransactionsResponse);
-  rpc GetShopRevenueSummary(GetShopRevenueSummaryRequest) returns (GetShopRevenueSummaryResponse);
-}
-
-// Request Messages
 message GetMyWalletRequest {
   optional string processId = 1;
   string userId = 2;
@@ -38,6 +30,42 @@ message GetMyTransactionsRequest {
   int32 limit = 4;
   optional string type = 5;
   optional string source = 6;
+}
+
+message WalletResponse {
+  string id = 1;
+  string userId = 2;
+  int32 balance = 3;
+  string createdAt = 4;
+  string updatedAt = 5;
+}
+
+message WalletTransactionResponse {
+  string id = 1;
+  string walletId = 2;
+  string userId = 3;
+  string type = 4;
+  string source = 5;
+  optional string referenceId = 6;
+  int32 amount = 7;
+  int32 balanceAfter = 8;
+  string description = 9;
+  string createdAt = 10;
+}
+
+message GetMyTransactionsResponse {
+  int32 page = 1;
+  int32 limit = 2;
+  int32 totalItems = 3;
+  int32 totalPages = 4;
+  repeated WalletTransactionResponse transactions = 5;
+}
+
+service CreditModule {
+  rpc GetShopCredit(GetShopCreditRequest) returns (CreditResponse);
+  rpc AdjustShopCredit(AdjustShopCreditRequest) returns (CreditResponse);
+  rpc GetShopCreditTransactions(GetShopCreditTransactionsRequest) returns (GetShopCreditTransactionsResponse);
+  rpc GetShopRevenueSummary(GetShopRevenueSummaryRequest) returns (GetShopRevenueSummaryResponse);
 }
 
 message GetShopCreditRequest {
@@ -68,36 +96,6 @@ message GetShopRevenueSummaryRequest {
   optional string processId = 1;
   string shopId = 2;
   int32 days = 3;
-}
-
-// Response Messages
-message WalletResponse {
-  string id = 1;
-  string userId = 2;
-  int32 balance = 3;
-  string createdAt = 4;
-  string updatedAt = 5;
-}
-
-message WalletTransactionResponse {
-  string id = 1;
-  string walletId = 2;
-  string userId = 3;
-  string type = 4;
-  string source = 5;
-  optional string referenceId = 6;
-  int32 amount = 7;
-  int32 balanceAfter = 8;
-  string description = 9;
-  string createdAt = 10;
-}
-
-message GetMyTransactionsResponse {
-  int32 page = 1;
-  int32 limit = 2;
-  int32 totalItems = 3;
-  int32 totalPages = 4;
-  repeated WalletTransactionResponse transactions = 5;
 }
 
 message CreditResponse {
@@ -138,4 +136,74 @@ message GetShopRevenueSummaryResponse {
   int32 days = 1;
   int32 totalRevenue = 2;
   repeated ShopRevenueDayPoint points = 3;
+}
+
+service PayoutModule {
+  rpc CreateShopPayout(CreateShopPayoutRequest) returns (ShopPayoutResponse);
+  rpc GetShopPayoutById(GetShopPayoutByIdRequest) returns (ShopPayoutResponse);
+  rpc GetShopPayouts(GetShopPayoutsRequest) returns (GetShopPayoutsResponse);
+  rpc UpdateShopPayoutStatus(UpdateShopPayoutStatusRequest) returns (ShopPayoutResponse);
+  rpc DeleteShopPayout(DeleteShopPayoutRequest) returns (ShopPayoutResponse);
+}
+
+message CreateShopPayoutRequest {
+  optional string processId = 1;
+  string shopId = 2;
+  int32 amount = 3;
+  string bankName = 4;
+  string accountNumber = 5;
+  string accountHolder = 6;
+  optional string note = 7;
+}
+
+message GetShopPayoutByIdRequest {
+  optional string processId = 1;
+  string shopId = 2;
+  string payoutId = 3;
+}
+
+message GetShopPayoutsRequest {
+  optional string processId = 1;
+  string shopId = 2;
+  int32 page = 3;
+  int32 limit = 4;
+  optional string status = 5;
+}
+
+message UpdateShopPayoutStatusRequest {
+  optional string processId = 1;
+  string shopId = 2;
+  string payoutId = 3;
+  string status = 4;
+  optional string rejectReason = 5;
+}
+
+message DeleteShopPayoutRequest {
+  optional string processId = 1;
+  string shopId = 2;
+  string payoutId = 3;
+}
+
+message ShopPayoutResponse {
+  string id = 1;
+  string creditId = 2;
+  string shopId = 3;
+  int32 amount = 4;
+  string bankName = 5;
+  string accountNumber = 6;
+  string accountHolder = 7;
+  optional string note = 8;
+  string status = 9;
+  optional string rejectReason = 10;
+  optional string processedAt = 11;
+  string createdAt = 12;
+  string updatedAt = 13;
+}
+
+message GetShopPayoutsResponse {
+  int32 page = 1;
+  int32 limit = 2;
+  int32 totalItems = 3;
+  int32 totalPages = 4;
+  repeated ShopPayoutResponse payouts = 5;
 }

@@ -1,8 +1,12 @@
 import type { Response as ApiResponse } from '@common/interfaces/models/common/response.model';
 import type {
+  CreateShopPayoutRequest,
   CreditResponse,
   GetShopCreditTransactionsResponse,
+  GetShopPayoutsResponse,
   GetShopRevenueSummaryResponse,
+  ShopPayoutResponse,
+  UpdateShopPayoutStatusRequest,
 } from '@common/interfaces/models/wallet';
 import { cache } from 'react';
 import { createServerApi } from './api';
@@ -13,6 +17,21 @@ export type SellerCreditTransactionsQuery = {
   type?: string;
   source?: string;
 };
+
+export type SellerPayoutsQuery = {
+  page?: number;
+  limit?: number;
+  status?: string;
+};
+
+export type CreatePayoutPayload = Omit<
+  CreateShopPayoutRequest,
+  'shopId' | 'processId'
+>;
+export type UpdatePayoutStatusPayload = Omit<
+  UpdateShopPayoutStatusRequest,
+  'shopId' | 'processId' | 'payoutId'
+>;
 
 const EMPTY_TRANSACTIONS: GetShopCreditTransactionsResponse = {
   page: 1,
@@ -26,6 +45,14 @@ const EMPTY_REVENUE_SUMMARY: GetShopRevenueSummaryResponse = {
   days: 7,
   totalRevenue: 0,
   points: [],
+};
+
+const EMPTY_PAYOUTS: GetShopPayoutsResponse = {
+  page: 1,
+  limit: 10,
+  totalItems: 0,
+  totalPages: 0,
+  payouts: [],
 };
 
 function normalizeTransactionsResponse(
@@ -118,4 +145,100 @@ export function getShopCreditTransactions(
 
 export function getShopRevenueSummary(days = 7) {
   return _getShopRevenueSummaryCached(days);
+}
+
+export async function createShopPayout(
+  payload: CreatePayoutPayload,
+): Promise<ShopPayoutResponse> {
+  const api = await createServerApi();
+  const res = await api.post<ApiResponse<ShopPayoutResponse>>(
+    '/wallet/payout/request',
+    payload,
+  );
+
+  if (!res.data?.data) {
+    throw new Error('Tạo yêu cầu rút tiền thất bại.');
+  }
+
+  return res.data.data;
+}
+
+export async function getShopPayoutById(payoutId: string) {
+  const api = await createServerApi();
+  const res = await api.get<ApiResponse<ShopPayoutResponse>>(
+    `/wallet/payout/${payoutId}`,
+  );
+
+  if (!res.data?.data) {
+    throw new Error('Không tìm thấy yêu cầu rút tiền.');
+  }
+
+  return res.data.data;
+}
+
+export async function getShopPayouts(
+  query: SellerPayoutsQuery = {},
+): Promise<GetShopPayoutsResponse> {
+  const api = await createServerApi();
+  const res = await api.get<ApiResponse<GetShopPayoutsResponse>>(
+    '/wallet/payout',
+    {
+      params: {
+        page: query.page ?? 1,
+        limit: query.limit ?? 10,
+        ...(query.status ? { status: query.status } : {}),
+      },
+      validateStatus: (s) => (s >= 200 && s < 300) || s === 404,
+    },
+  );
+
+  if (res.status === 404) {
+    return {
+      ...EMPTY_PAYOUTS,
+      page: query.page ?? 1,
+      limit: query.limit ?? 10,
+    };
+  }
+
+  return {
+    page: res.data?.data?.page ?? query.page ?? 1,
+    limit: res.data?.data?.limit ?? query.limit ?? 10,
+    totalItems: res.data?.data?.totalItems ?? 0,
+    totalPages: res.data?.data?.totalPages ?? 0,
+    payouts: Array.isArray(res.data?.data?.payouts)
+      ? res.data.data.payouts
+      : [],
+  };
+}
+
+export async function updateShopPayoutStatus(
+  payoutId: string,
+  payload: UpdatePayoutStatusPayload,
+): Promise<ShopPayoutResponse> {
+  const api = await createServerApi();
+  const res = await api.patch<ApiResponse<ShopPayoutResponse>>(
+    `/wallet/payout/${payoutId}/status`,
+    payload,
+  );
+
+  if (!res.data?.data) {
+    throw new Error('Cập nhật trạng thái rút tiền thất bại.');
+  }
+
+  return res.data.data;
+}
+
+export async function deleteShopPayout(
+  payoutId: string,
+): Promise<ShopPayoutResponse> {
+  const api = await createServerApi();
+  const res = await api.delete<ApiResponse<ShopPayoutResponse>>(
+    `/wallet/payout/${payoutId}`,
+  );
+
+  if (!res.data?.data) {
+    throw new Error('Huỷ yêu cầu rút tiền thất bại.');
+  }
+
+  return res.data.data;
 }

@@ -6,6 +6,8 @@ namespace: default
 resources:
   # Secrets
   - secret.yaml
+  # Secrets api-mb
+  - api-mb/secret.yaml
   # IAM Service
   - iam-service/service.yaml
   - iam-service/deployment.yaml
@@ -50,3 +52,6 @@ resources:
   - seller-web/service.yaml
   - seller-web/deployment.yaml
   - seller-web/ingress.yaml
+  # API MB
+  - api-mb/service.yaml
+  - api-mb/deployment.yaml

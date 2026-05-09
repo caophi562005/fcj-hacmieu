@@ -19,6 +19,10 @@ export const ShopSchema = BaseSchema.extend({
   status: ShopStatusEnums,
   pickupAddress: z.string().nullable(),
   returnAddress: z.string().nullable(),
+  bankName: z.string().max(255).nullable(),
+  bankAccountNumber: z.string().max(50).nullable(),
+  bankCode: z.string().max(50).nullable(),
+  bankAccountName: z.string().max(255).nullable(),
 });
 
 export type Shop = z.infer<typeof ShopSchema>;

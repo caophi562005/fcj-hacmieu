@@ -1,0 +1,16 @@
+{
+  "name": "admin-web",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/webs/admin-web",
+  "projectType": "application",
+  "tags": [],
+  "// targets": "to see all targets run: nx show project admin-web --web",
+  "targets": {
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm nx dev admin-web"
+      }
+    }
+  }
+}

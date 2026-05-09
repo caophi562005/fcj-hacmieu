@@ -10,7 +10,6 @@ import { Observable } from "rxjs";
 
 export const protobufPackage = "WALLET_SERVICE";
 
-/** Request Messages */
 export interface GetMyWalletRequest {
   processId?: string | undefined;
   userId: string;
@@ -35,6 +34,35 @@ export interface GetMyTransactionsRequest {
   limit: number;
   type?: string | undefined;
   source?: string | undefined;
+}
+
+export interface WalletResponse {
+  id: string;
+  userId: string;
+  balance: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WalletTransactionResponse {
+  id: string;
+  walletId: string;
+  userId: string;
+  type: string;
+  source: string;
+  referenceId?: string | undefined;
+  amount: number;
+  balanceAfter: number;
+  description: string;
+  createdAt: string;
+}
+
+export interface GetMyTransactionsResponse {
+  page: number;
+  limit: number;
+  totalItems: number;
+  totalPages: number;
+  transactions: WalletTransactionResponse[];
 }
 
 export interface GetShopCreditRequest {
@@ -67,36 +95,6 @@ export interface GetShopRevenueSummaryRequest {
   processId?: string | undefined;
   shopId: string;
   days: number;
-}
-
-/** Response Messages */
-export interface WalletResponse {
-  id: string;
-  userId: string;
-  balance: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface WalletTransactionResponse {
-  id: string;
-  walletId: string;
-  userId: string;
-  type: string;
-  source: string;
-  referenceId?: string | undefined;
-  amount: number;
-  balanceAfter: number;
-  description: string;
-  createdAt: string;
-}
-
-export interface GetMyTransactionsResponse {
-  page: number;
-  limit: number;
-  totalItems: number;
-  totalPages: number;
-  transactions: WalletTransactionResponse[];
 }
 
 export interface CreditResponse {
@@ -137,6 +135,68 @@ export interface GetShopRevenueSummaryResponse {
   days: number;
   totalRevenue: number;
   points: ShopRevenueDayPoint[];
+}
+
+export interface CreateShopPayoutRequest {
+  processId?: string | undefined;
+  shopId: string;
+  amount: number;
+  bankName: string;
+  accountNumber: string;
+  accountHolder: string;
+  note?: string | undefined;
+}
+
+export interface GetShopPayoutByIdRequest {
+  processId?: string | undefined;
+  shopId: string;
+  payoutId: string;
+}
+
+export interface GetShopPayoutsRequest {
+  processId?: string | undefined;
+  shopId: string;
+  page: number;
+  limit: number;
+  status?: string | undefined;
+}
+
+export interface UpdateShopPayoutStatusRequest {
+  processId?: string | undefined;
+  shopId: string;
+  payoutId: string;
+  status: string;
+  rejectReason?: string | undefined;
+}
+
+export interface DeleteShopPayoutRequest {
+  processId?: string | undefined;
+  shopId: string;
+  payoutId: string;
+}
+
+export interface ShopPayoutResponse {
+  id: string;
+  creditId: string;
+  shopId: string;
+  amount: number;
+  bankName: string;
+  accountNumber: string;
+  accountHolder: string;
+  note?: string | undefined;
+  status: string;
+  rejectReason?: string | undefined;
+  processedAt?: string | undefined;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GetShopPayoutsResponse {
+  page: number;
+  limit: number;
+  totalItems: number;
+  totalPages: number;
+  payouts: ShopPayoutResponse[];
 }
 
 export const WALLET_SERVICE_PACKAGE_NAME = "WALLET_SERVICE";
@@ -226,3 +286,60 @@ export function CreditModuleControllerMethods() {
 }
 
 export const CREDIT_MODULE_SERVICE_NAME = "CreditModule";
+
+export interface PayoutModuleClient {
+  createShopPayout(request: CreateShopPayoutRequest): Observable<ShopPayoutResponse>;
+
+  getShopPayoutById(request: GetShopPayoutByIdRequest): Observable<ShopPayoutResponse>;
+
+  getShopPayouts(request: GetShopPayoutsRequest): Observable<GetShopPayoutsResponse>;
+
+  updateShopPayoutStatus(request: UpdateShopPayoutStatusRequest): Observable<ShopPayoutResponse>;
+
+  deleteShopPayout(request: DeleteShopPayoutRequest): Observable<ShopPayoutResponse>;
+}
+
+export interface PayoutModuleController {
+  createShopPayout(
+    request: CreateShopPayoutRequest,
+  ): Promise<ShopPayoutResponse> | Observable<ShopPayoutResponse> | ShopPayoutResponse;
+
+  getShopPayoutById(
+    request: GetShopPayoutByIdRequest,
+  ): Promise<ShopPayoutResponse> | Observable<ShopPayoutResponse> | ShopPayoutResponse;
+
+  getShopPayouts(
+    request: GetShopPayoutsRequest,
+  ): Promise<GetShopPayoutsResponse> | Observable<GetShopPayoutsResponse> | GetShopPayoutsResponse;
+
+  updateShopPayoutStatus(
+    request: UpdateShopPayoutStatusRequest,
+  ): Promise<ShopPayoutResponse> | Observable<ShopPayoutResponse> | ShopPayoutResponse;
+
+  deleteShopPayout(
+    request: DeleteShopPayoutRequest,
+  ): Promise<ShopPayoutResponse> | Observable<ShopPayoutResponse> | ShopPayoutResponse;
+}
+
+export function PayoutModuleControllerMethods() {
+  return function (constructor: Function) {
+    const grpcMethods: string[] = [
+      "createShopPayout",
+      "getShopPayoutById",
+      "getShopPayouts",
+      "updateShopPayoutStatus",
+      "deleteShopPayout",
+    ];
+    for (const method of grpcMethods) {
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcMethod("PayoutModule", method)(constructor.prototype[method], method, descriptor);
+    }
+    const grpcStreamMethods: string[] = [];
+    for (const method of grpcStreamMethods) {
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcStreamMethod("PayoutModule", method)(constructor.prototype[method], method, descriptor);
+    }
+  };
+}
+
+export const PAYOUT_MODULE_SERVICE_NAME = "PayoutModule";

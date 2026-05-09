@@ -27,7 +27,7 @@ FROM node:22-slim AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
-ENV PORT=3001
+ENV PORT=4001
 ENV HOSTNAME=0.0.0.0
 
 # Standalone output bao gồm server.js + node_modules tối thiểu
@@ -36,7 +36,7 @@ COPY --from=builder /workspace/apps/webs/seller-web/.next/standalone ./
 COPY --from=builder /workspace/apps/webs/seller-web/.next/static ./apps/webs/seller-web/.next/static
 COPY --from=builder /workspace/apps/webs/seller-web/public ./apps/webs/seller-web/public
 
-EXPOSE 3001
+EXPOSE 4001
 
 USER node
 

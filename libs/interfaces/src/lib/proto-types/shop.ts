@@ -102,7 +102,11 @@ export interface CreateShopRequest {
   status: string;
   pickupAddress?: string | undefined;
   returnAddress?: string | undefined;
+  bankAccountNumber?: string | undefined;
+  bankCode?: string | undefined;
+  bankAccountName?: string | undefined;
   createdById?: string | undefined;
+  bankName?: string | undefined;
 }
 
 export interface UpdateShopRequest {
@@ -117,7 +121,11 @@ export interface UpdateShopRequest {
   status?: string | undefined;
   pickupAddress?: string | undefined;
   returnAddress?: string | undefined;
+  bankAccountNumber?: string | undefined;
+  bankCode?: string | undefined;
+  bankAccountName?: string | undefined;
   updatedById?: string | undefined;
+  bankName?: string | undefined;
 }
 
 export interface DeleteShopRequest {
@@ -138,12 +146,16 @@ export interface ShopResponse {
   status: string;
   pickupAddress: string;
   returnAddress: string;
+  bankAccountNumber: string;
+  bankCode: string;
+  bankAccountName: string;
   createdById: string;
   updatedById: string;
   deletedById: string;
   deletedAt: string;
   createdAt: string;
   updatedAt: string;
+  bankName: string;
 }
 
 export interface GetManyShopsResponse {

@@ -7,7 +7,6 @@ import {
   ArrowDown,
   ArrowUp,
   BarChart3,
-  Edit3,
   List,
   RotateCcw,
   Wallet,
@@ -18,11 +17,9 @@ import {
   getShopCreditTransactions,
   getShopRevenueSummary,
 } from '../../lib/credit';
-import {
-  currentShop,
-  formatCurrency,
-  formatDateTime,
-} from '../../lib/mockData';
+import { formatCurrency, formatDateTime } from '../../lib/mockData';
+import { getMerchant, getShop } from '../../lib/shop';
+import { BankAccountCard } from './BankAccountCard';
 
 export const metadata = { title: 'Tài chính — V-Shop Seller' };
 
@@ -96,11 +93,14 @@ export default async function FinancePage({
   const sp = (await searchParams) ?? {};
   const selectedDays = parseRevenueDays(sp.days);
 
-  const [credit, creditTransactions, revenue] = await Promise.all([
-    getShopCredit(),
-    getShopCreditTransactions({ page: 1, limit: 10 }),
-    getShopRevenueSummary(selectedDays),
-  ]);
+  const [credit, creditTransactions, revenue, shop, merchant] =
+    await Promise.all([
+      getShopCredit(),
+      getShopCreditTransactions({ page: 1, limit: 10 }),
+      getShopRevenueSummary(selectedDays),
+      getShop(),
+      getMerchant(),
+    ]);
   const transactions =
     creditTransactions.transactions.map(mapCreditTransaction);
   const revenuePoints = revenue.points.map((p) => ({
@@ -136,45 +136,21 @@ export default async function FinancePage({
             </p>
           </div>
           <div className="mt-6">
-            <button type="button" className="btn-primary btn-md cursor-pointer">
+            <Link href="/finance/payouts" className="btn-primary btn-md">
               Yêu cầu rút tiền
-            </button>
+            </Link>
           </div>
         </div>
 
-        <div className="card p-6 relative overflow-hidden">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Wallet className="w-5 h-5 text-ink-muted" />
-              <h3 className="text-sm font-semibold text-ink-muted">
-                Tài khoản nhận tiền chính
-              </h3>
-            </div>
-            <button
-              type="button"
-              className="text-primary hover:bg-primary-50 p-2 rounded-full transition-colors cursor-pointer"
-              aria-label="Chỉnh sửa"
-            >
-              <Edit3 className="w-4 h-4" />
-            </button>
-          </div>
-          <div className="rounded-md p-5 text-white shadow-floating relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-            <div className="flex justify-between items-start mb-6">
-              <div className="text-base font-bold tracking-widest">
-                {currentShop.bank.name}
-              </div>
-              <span className="bg-white/20 px-2 py-0.5 rounded text-[10px] border border-white/20 backdrop-blur-sm">
-                Mặc định
-              </span>
-            </div>
-            <div className="text-lg tracking-widest opacity-90 mb-1">
-              {currentShop.bank.masked}
-            </div>
-            <div className="text-xs opacity-80 uppercase tracking-wider">
-              {currentShop.bank.holder}
-            </div>
-          </div>
-        </div>
+        <BankAccountCard
+          initialBank={{
+            bankName: shop?.bankName ?? null,
+            bankCode: shop?.bankCode ?? null,
+            bankAccountNumber: shop?.bankAccountNumber ?? null,
+            bankAccountName:
+              shop?.bankAccountName ?? merchant?.legalName ?? null,
+          }}
+        />
       </div>
 
       {/* Chart */}

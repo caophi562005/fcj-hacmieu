@@ -51,6 +51,10 @@ export default async function SettingsPage() {
         banner: shop.banner,
         pickupAddress: shop.pickupAddress,
         returnAddress: shop.returnAddress,
+        bankName: shop.bankName,
+        bankAccountNumber: shop.bankAccountNumber,
+        bankCode: shop.bankCode,
+        bankAccountName: shop.bankAccountName,
       }
     : EMPTY_SHOP;
 

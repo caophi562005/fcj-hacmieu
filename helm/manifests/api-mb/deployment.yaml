@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-mb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api-mb
+  template:
+    metadata:
+      labels:
+        app: api-mb
+    spec:
+      containers:
+        - name: api-mb
+          image: public.ecr.aws/h5u5b6t3/api-mb-account-name:latest
+          imagePullPolicy: Always
+          envFrom:
+            - secretRef:
+                name: api-mb-secret
+          ports:
+            - containerPort: 2836
+          resources:
+            requests:
+              cpu: '100m'
+              memory: '256Mi'
+            limits:
+              cpu: '500m'
+              memory: '1Gi'

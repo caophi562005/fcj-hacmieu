@@ -53,6 +53,7 @@ jobs:
             {"name":"seller-bff","dockerfile":"apps/bffs/seller-bff/Dockerfile","path":"apps/bffs/seller-bff"},
             {"name":"customer-web","dockerfile":"apps/webs/customer-web/Dockerfile","path":"apps/webs/customer-web"},
             {"name":"seller-web","dockerfile":"apps/webs/seller-web/Dockerfile","path":"apps/webs/seller-web"},
+            {"name":"admin-web","dockerfile":"apps/webs/admin-web/Dockerfile","path":"apps/webs/admin-web"},
             {"name":"catalog-service","dockerfile":"apps/services/catalog-service/Dockerfile","path":"apps/services/catalog-service"},
             {"name":"iam-service","dockerfile":"apps/services/iam-service/Dockerfile","path":"apps/services/iam-service"},
             {"name":"order-service","dockerfile":"apps/services/order-service/Dockerfile","path":"apps/services/order-service"},
@@ -138,12 +139,12 @@ jobs:
           docker push "$IMAGE:latest"
           docker push "$IMAGE:$TAG"
 
-      - name: Prune old ECR images (keep 3 latest)
+      - name: Prune old ECR images (keep 1 latest)
         if: ${{ github.event_name != 'pull_request' }}
         shell: bash
         env:
           REPO: hacmieu/${{ matrix.name }}
-          KEEP: 3
+          KEEP: 1
         run: |
           set -euo pipefail
 

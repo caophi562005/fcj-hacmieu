@@ -21,7 +21,7 @@ spec:
             - secretRef:
                 name: hacmieu-secrets
           ports:
-            - containerPort: 3000
+            - containerPort: 4000
           resources:
             requests:
               cpu: '250m'

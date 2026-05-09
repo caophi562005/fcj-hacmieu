@@ -34,6 +34,10 @@ export type ShopFormInitial = {
   banner: string | null;
   pickupAddress: string | null;
   returnAddress: string | null;
+  bankName: string | null;
+  bankAccountNumber: string | null;
+  bankCode: string | null;
+  bankAccountName: string | null;
 };
 
 export const EMPTY_SHOP: ShopFormInitial = {
@@ -45,6 +49,10 @@ export const EMPTY_SHOP: ShopFormInitial = {
   banner: null,
   pickupAddress: '',
   returnAddress: '',
+  bankName: '',
+  bankAccountNumber: '',
+  bankCode: '',
+  bankAccountName: '',
 };
 
 type Props = {
@@ -67,6 +75,14 @@ export function ShopForm({ mode, initial, merchantId }: Props) {
   const [returnAddress, setReturnAddress] = useState(
     initial.returnAddress ?? '',
   );
+  const [bankName, setBankName] = useState(initial.bankName ?? '');
+  const [bankAccountNumber, setBankAccountNumber] = useState(
+    initial.bankAccountNumber ?? '',
+  );
+  const [bankCode, setBankCode] = useState(initial.bankCode ?? '');
+  const [bankAccountName, setBankAccountName] = useState(
+    initial.bankAccountName ?? '',
+  );
 
   // Image state: existing = URL từ server, newBase64 = preview ảnh user vừa
   // chọn chưa upload. Khi submit, nếu có newBase64 thì upload → URL mới; nếu
@@ -84,6 +100,10 @@ export function ShopForm({ mode, initial, merchantId }: Props) {
     setStatus(initial.status);
     setPickupAddress(initial.pickupAddress ?? '');
     setReturnAddress(initial.returnAddress ?? '');
+    setBankName(initial.bankName ?? '');
+    setBankAccountNumber(initial.bankAccountNumber ?? '');
+    setBankCode(initial.bankCode ?? '');
+    setBankAccountName(initial.bankAccountName ?? '');
     setLogoNewBase64(null);
     setBannerNewBase64(null);
   }, [initial]);
@@ -129,6 +149,10 @@ export function ShopForm({ mode, initial, merchantId }: Props) {
       status,
       pickupAddress: pickupAddress.trim() || null,
       returnAddress: returnAddress.trim() || null,
+      bankName: bankName.trim() || null,
+      bankAccountNumber: bankAccountNumber.trim() || null,
+      bankCode: bankCode.trim() || null,
+      bankAccountName: bankAccountName.trim() || null,
       logo: logoExisting,
       banner: bannerExisting,
     };
@@ -275,6 +299,53 @@ export function ShopForm({ mode, initial, merchantId }: Props) {
           value={returnAddress}
           onChange={setReturnAddress}
           placeholder="Địa chỉ nhận lại hàng hoàn"
+        />
+
+        <div className="pt-2">
+          <h3 className="text-base font-semibold text-ink">
+            Tài khoản ngân hàng
+          </h3>
+          <p className="text-sm text-ink-muted mt-1">
+            Dùng làm tài khoản nhận tiền rút từ ví cửa hàng.
+          </p>
+        </div>
+
+        <div className="grid sm:grid-cols-2 gap-4">
+          <Field
+            id="shop-bank-name"
+            label="Tên ngân hàng"
+            value={bankName}
+            onChange={setBankName}
+            maxLength={255}
+            placeholder="Ví dụ: Vietcombank"
+          />
+
+          <Field
+            id="shop-bank-code"
+            label="Mã ngân hàng"
+            value={bankCode}
+            onChange={setBankCode}
+            maxLength={50}
+            placeholder="Ví dụ: VCB"
+          />
+
+          <Field
+            id="shop-bank-account-number"
+            label="Số tài khoản"
+            value={bankAccountNumber}
+            onChange={setBankAccountNumber}
+            maxLength={50}
+            placeholder="0123456789"
+          />
+        </div>
+
+        <Field
+          id="shop-bank-account-name"
+          label="Tên chủ tài khoản"
+          value={bankAccountName}
+          onChange={setBankAccountName}
+          maxLength={255}
+          placeholder="NGUYEN VAN A"
         />
       </section>
 

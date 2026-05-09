@@ -65,8 +65,12 @@ model Shop {
     phone       String?    @db.VarChar(20)
     status      ShopStatus @default(DRAFT)
 
-    pickupAddress String?
-    returnAddress String?
+    pickupAddress     String?
+    returnAddress     String?
+    bankName          String? @db.VarChar(255)
+    bankAccountNumber String? @db.VarChar(50)
+    bankCode          String? @db.VarChar(50)
+    bankAccountName   String? @db.VarChar(255)
 
     createdById String?
     updatedById String?

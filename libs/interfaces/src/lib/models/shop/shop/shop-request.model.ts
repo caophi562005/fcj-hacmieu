@@ -33,6 +33,10 @@ export const CreateShopRequestSchema = ShopSchema.pick({
   createdById: true,
 })
   .extend({
+    bankName: z.string().max(255).nullable().optional(),
+    bankAccountNumber: z.string().max(50).nullable().optional(),
+    bankCode: z.string().max(50).nullable().optional(),
+    bankAccountName: z.string().max(255).nullable().optional(),
     processId: z.uuid().optional(),
   })
   .strict();
@@ -47,6 +51,10 @@ export const UpdateShopRequestSchema = ShopSchema.pick({
   status: true,
   pickupAddress: true,
   returnAddress: true,
+  bankName: true,
+  bankAccountNumber: true,
+  bankCode: true,
+  bankAccountName: true,
   updatedById: true,
 })
   .partial()

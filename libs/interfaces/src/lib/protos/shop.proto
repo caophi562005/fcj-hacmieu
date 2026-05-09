@@ -110,7 +110,11 @@ message CreateShopRequest {
   string status = 8;
   optional string pickupAddress = 9;
   optional string returnAddress = 10;
-  optional string createdById = 11;
+  optional string bankAccountNumber = 11;
+  optional string bankCode = 12;
+  optional string bankAccountName = 13;
+  optional string createdById = 14;
+  optional string bankName = 15;
 }
 
 message UpdateShopRequest {
@@ -125,7 +129,11 @@ message UpdateShopRequest {
   optional string status = 9;
   optional string pickupAddress = 10;
   optional string returnAddress = 11;
-  optional string updatedById = 12;
+  optional string bankAccountNumber = 12;
+  optional string bankCode = 13;
+  optional string bankAccountName = 14;
+  optional string updatedById = 15;
+  optional string bankName = 16;
 }
 
 message DeleteShopRequest {
@@ -146,12 +154,16 @@ message ShopResponse {
   string status = 9;
   string pickupAddress = 10;
   string returnAddress = 11;
-  string createdById = 12;
-  string updatedById = 13;
-  string deletedById = 14;
-  string deletedAt = 15;
-  string createdAt = 16;
-  string updatedAt = 17;
+  string bankAccountNumber = 12;
+  string bankCode = 13;
+  string bankAccountName = 14;
+  string createdById = 15;
+  string updatedById = 16;
+  string deletedById = 17;
+  string deletedAt = 18;
+  string createdAt = 19;
+  string updatedAt = 20;
+  string bankName = 21;
 }
 
 message GetManyShopsResponse {

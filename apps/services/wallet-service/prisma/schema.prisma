@@ -39,6 +39,12 @@ enum CreditTransactionSource {
     OTHER
 }
 
+enum PayoutStatus {
+    PENDING
+    TRANSFERRED
+    REJECTED
+}
+
 model Wallet {
     id        String   @id @default(uuid())
     userId    String   @unique
@@ -77,6 +83,7 @@ model Credit {
     updatedAt DateTime @updatedAt
 
     transactions CreditTransaction[]
+    payouts      PayoutRequest[]
 
     @@index([shopId])
 }
@@ -98,4 +105,25 @@ model CreditTransaction {
     @@index([shopId, createdAt])
     @@index([creditId, createdAt])
     @@index([shopId, source])
+}
+
+model PayoutRequest {
+    id            String       @id @default(uuid())
+    creditId      String
+    credit        Credit       @relation(fields: [creditId], references: [id], onDelete: Cascade)
+    shopId        String
+    amount        Int
+    bankName      String
+    accountNumber String
+    accountHolder String
+    note          String?
+    status        PayoutStatus @default(PENDING)
+    rejectReason  String?
+    processedAt   DateTime?
+    createdAt     DateTime     @default(now())
+    updatedAt     DateTime     @updatedAt
+
+    @@index([shopId, createdAt])
+    @@index([creditId, createdAt])
+    @@index([shopId, status, createdAt])
 }
