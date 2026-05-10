@@ -39,7 +39,7 @@ RUN pnpm install --prod --no-frozen-lockfile \
 
 COPY --from=builder /workspace/dist/apps/bffs/admin-bff ./dist/apps/bffs/admin-bff
 
-EXPOSE 3100
+EXPOSE 3300
 
 USER node
 
