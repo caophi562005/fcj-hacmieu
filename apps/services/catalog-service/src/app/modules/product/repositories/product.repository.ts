@@ -410,18 +410,19 @@ export class ProductRepository {
     const limit =
       data.limit || PaginationConfiguration.DEFAULT_LIMIT_PAGINATION;
     const skip = (page - 1) * limit;
+    const where = {
+      deletedAt: null,
+      name: data.name
+        ? { contains: data.name, mode: 'insensitive' as const }
+        : undefined,
+      shopId: data.shopId || undefined,
+      isApproved: data.isApproved,
+      status: data.status || undefined,
+    };
 
     const [products, totalItems] = await Promise.all([
       this.prismaService.product.findMany({
-        where: {
-          deletedAt: null,
-          name: data.name
-            ? { contains: data.name, mode: 'insensitive' }
-            : undefined,
-          shopId: data.shopId ? data.shopId : undefined,
-          isApproved:
-            data.isApproved !== undefined ? data.isApproved : undefined,
-        },
+        where,
         skip,
         take: limit,
         include: {
@@ -429,15 +430,7 @@ export class ProductRepository {
         },
       }),
       this.prismaService.product.count({
-        where: {
-          deletedAt: null,
-          name: data.name
-            ? { contains: data.name, mode: 'insensitive' }
-            : undefined,
-          shopId: data.shopId ? data.shopId : undefined,
-          isApproved:
-            data.isApproved !== undefined ? data.isApproved : undefined,
-        },
+        where,
       }),
     ]);
 

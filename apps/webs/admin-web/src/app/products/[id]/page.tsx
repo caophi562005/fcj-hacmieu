@@ -85,6 +85,7 @@ export default async function ProductDetailPage({
   // Map ProductResponse → ProductFormInitial
   const initial: ProductFormInitial = {
     id: product.id,
+    shopId: product.shopId ?? '',
     name: product.name,
     description: product.description ?? '',
     basePrice: product.basePrice ?? 0,

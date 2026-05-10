@@ -4,6 +4,7 @@ import {
   CircleDollarSign,
   FolderTree,
   LayoutDashboard,
+  Megaphone,
   Package,
   Shapes,
   ShieldUser,
@@ -41,6 +42,7 @@ const ITEMS: NavItem[] = [
   { href: '/merchant', label: 'Quản lý duyệt', icon: ShieldUser },
   { href: '/shops', label: 'Quản lý shop', icon: Store },
   { href: '/payouts', label: 'Yêu cầu rút tiền', icon: CircleDollarSign },
+  { href: '/reports', label: 'Báo cáo vi phạm', icon: Megaphone },
 ];
 
 export function SellerSidebar() {

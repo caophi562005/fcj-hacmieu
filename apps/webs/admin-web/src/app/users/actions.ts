@@ -8,6 +8,35 @@ import { buildShopLogoFileName, createPresignedUrl } from '../../lib/media';
 
 const GROUP_OPTIONS = ['CUSTOMER', 'SELLER', 'ADMIN'] as const;
 
+function normalizeBirthdayToIsoDateTime(birthday?: string): string | undefined {
+  const value = birthday?.trim();
+  if (!value) return undefined;
+
+  if (value.includes('T')) {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return undefined;
+    return date.toISOString();
+  }
+
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) return undefined;
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const date = new Date(Date.UTC(year, month - 1, day));
+
+  if (
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() !== month - 1 ||
+    date.getUTCDate() !== day
+  ) {
+    return undefined;
+  }
+
+  return date.toISOString();
+}
+
 export async function updateUserAction(input: {
   id: string;
   phoneNumber?: string;
@@ -25,6 +54,11 @@ export async function updateUserAction(input: {
       (item): item is (typeof GROUP_OPTIONS)[number] =>
         GROUP_OPTIONS.includes(item as (typeof GROUP_OPTIONS)[number]),
     );
+
+    const birthday = normalizeBirthdayToIsoDateTime(input.birthday);
+    if (input.birthday?.trim() && !birthday) {
+      throw new Error('Ngày sinh không hợp lệ.');
+    }
 
     let avatar: string | undefined;
     if (input.avatarBase64) {
@@ -60,7 +94,7 @@ export async function updateUserAction(input: {
       phoneNumber: input.phoneNumber || undefined,
       avatar,
       gender,
-      birthday: input.birthday || undefined,
+      birthday,
       group,
     });
 
@@ -70,11 +104,13 @@ export async function updateUserAction(input: {
   } catch (error) {
     const data = (error as { response?: { data?: { message?: unknown } } })
       ?.response?.data;
+    const fallbackMessage =
+      error instanceof Error ? error.message : 'Cập nhật user thất bại.';
     const message = Array.isArray(data?.message)
       ? data.message.join(', ')
       : typeof data?.message === 'string'
         ? data.message
-        : 'Cập nhật user thất bại.';
+        : fallbackMessage;
 
     return { ok: false, message };
   }

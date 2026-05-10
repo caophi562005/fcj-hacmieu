@@ -48,13 +48,24 @@ export async function createCategory(payload: {
   parentCategoryId?: string | null;
 }): Promise<CategoryResponse> {
   const api = await createServerApi();
+  const body: {
+    name: string;
+    logo?: string | null;
+    parentCategoryId?: string | null;
+  } = {
+    name: payload.name,
+  };
+
+  if (payload.logo !== undefined) {
+    body.logo = payload.logo;
+  }
+  if (payload.parentCategoryId !== undefined) {
+    body.parentCategoryId = payload.parentCategoryId;
+  }
+
   const { data } = await api.post<ApiResponse<CategoryResponse>>(
     '/catalog/category',
-    {
-      name: payload.name,
-      logo: payload.logo ?? null,
-      parentCategoryId: payload.parentCategoryId ?? null,
-    },
+    body,
   );
   if (!data?.data) throw new Error('Tạo category thất bại.');
   return data.data;
@@ -227,7 +238,7 @@ export async function getAttributeById(
 
 export async function createAttribute(payload: {
   name: string;
-  url: string;
+  url?: string;
 }): Promise<AttributeResponse> {
   const api = await createServerApi();
   const { data } = await api.post<ApiResponse<AttributeResponse>>(

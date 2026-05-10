@@ -7,7 +7,7 @@ metadata:
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/healthcheck-path: /api/v1/docs
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}, {"HTTPS":443}]'
-    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:ap-southeast-1:491333778094:certificate/f87c1c2e-bc45-4c3e-861d-f824abdc26c7
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:ap-southeast-1:491333778094:certificate/6d276ee1-9995-4d2b-bed2-64a6d663b81c
     alb.ingress.kubernetes.io/ssl-redirect: '443'
     alb.ingress.kubernetes.io/group.name: hacmieu-public
     alb.ingress.kubernetes.io/group.order: '10'
@@ -18,7 +18,7 @@ spec:
       http:
         paths:
           - pathType: Prefix
-            path: /api
+            path: /api/v1
             backend:
               service:
                 name: admin-bff

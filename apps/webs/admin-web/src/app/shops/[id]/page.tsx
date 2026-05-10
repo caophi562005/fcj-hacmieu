@@ -28,6 +28,7 @@ export default async function ShopDetailPage({
         <ShopDetailForm
           shop={{
             id: shop.id,
+            merchantId: shop.merchantId,
             name: shop.name,
             description: shop.description,
             status: shop.status,
@@ -36,6 +37,10 @@ export default async function ShopDetailPage({
             phone: shop.phone,
             pickupAddress: shop.pickupAddress,
             returnAddress: shop.returnAddress,
+            bankName: shop.bankName,
+            bankAccountNumber: shop.bankAccountNumber,
+            bankCode: shop.bankCode,
+            bankAccountName: shop.bankAccountName,
           }}
         />
       </div>

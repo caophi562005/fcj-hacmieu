@@ -121,6 +121,7 @@ export default async function ProductsPage({
             <Link
               key={t.key}
               href={buildHref({ status: t.key, name, shopId })}
+              prefetch={false}
               className={`px-5 py-2 rounded text-sm font-semibold whitespace-nowrap transition-colors ${
                 isActive
                   ? 'bg-primary-50 text-primary'

@@ -1,9 +1,21 @@
-import Link from 'next/link';
+import { PromotionStatusValues } from '@common/constants/promotion.constant';
 import { Pagination } from '../../components/Pagination';
 import { getManyPromotions } from '../../lib/admin-promotion';
-import { PromotionCreateForm } from './ui';
+import { PromotionCardGrid, PromotionToolbar } from './ui';
 
-type SearchParams = { page?: string; code?: string; name?: string; status?: string };
+type SearchParams = {
+  page?: string;
+  code?: string;
+  name?: string;
+  status?: string;
+};
+
+const STATUS_LABEL: Record<string, string> = {
+  [PromotionStatusValues.DRAFT]: 'Nháp',
+  [PromotionStatusValues.ACTIVE]: 'Đang hoạt động',
+  [PromotionStatusValues.PAUSED]: 'Tạm dừng',
+  [PromotionStatusValues.ENDED]: 'Đã kết thúc',
+};
 
 function parsePage(raw?: string): number {
   const page = Number(raw);
@@ -11,7 +23,12 @@ function parsePage(raw?: string): number {
   return Math.floor(page);
 }
 
-function buildHref(query: { page?: number; code?: string; name?: string; status?: string }) {
+function buildHref(query: {
+  page?: number;
+  code?: string;
+  name?: string;
+  status?: string;
+}) {
   const sp = new URLSearchParams();
   if (query.code) sp.set('code', query.code);
   if (query.name) sp.set('name', query.name);
@@ -45,51 +62,56 @@ export default async function PromotionsPage({
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-ink">Quản lý voucher</h1>
-        <p className="text-ink-muted text-sm mt-1">Tổng cộng {data.totalItems} chương trình.</p>
+        <p className="text-ink-muted text-sm mt-1">
+          Tổng cộng {data.totalItems} chương trình.
+        </p>
       </div>
 
-      <form action="/promotions" method="GET" className="card p-4 grid grid-cols-1 md:grid-cols-4 gap-3">
-        <input name="code" defaultValue={code} placeholder="Code" className="input" />
-        <input name="name" defaultValue={name} placeholder="Tên" className="input" />
-        <input name="status" defaultValue={status} placeholder="Status" className="input" />
-        <button type="submit" className="btn-primary btn-md">Tìm kiếm</button>
+      <form
+        action="/promotions"
+        method="GET"
+        className="card p-4 grid grid-cols-1 md:grid-cols-4 gap-3"
+      >
+        <input
+          name="code"
+          defaultValue={code}
+          placeholder="Code"
+          className="input"
+        />
+        <input
+          name="name"
+          defaultValue={name}
+          placeholder="Tên"
+          className="input"
+        />
+        <select
+          name="status"
+          defaultValue={status}
+          className="input cursor-pointer"
+        >
+          <option value="">Tất cả trạng thái</option>
+          {Object.values(PromotionStatusValues).map((value) => (
+            <option key={value} value={value}>
+              {STATUS_LABEL[value]}
+            </option>
+          ))}
+        </select>
+        <button type="submit" className="btn-primary btn-md">
+          Tìm kiếm
+        </button>
       </form>
 
-      <PromotionCreateForm />
+      <PromotionToolbar />
 
-      <section className="card overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-surface-alt border-b border-slate-100 text-ink-muted">
-                <th className="py-3 px-4 text-left font-semibold">ID</th>
-                <th className="py-3 px-4 text-left font-semibold">Code</th>
-                <th className="py-3 px-4 text-left font-semibold">Tên</th>
-                <th className="py-3 px-4 text-left font-semibold">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 text-ink">
-              {data.promotions.length === 0 && (
-                <tr>
-                  <td colSpan={4} className="py-10 text-center text-ink-muted">Không có promotion.</td>
-                </tr>
-              )}
-              {data.promotions.map((p) => (
-                <tr key={p.id} className="hover:bg-surface-alt transition-colors">
-                  <td className="py-3 px-4">
-                    <Link href={`/promotions/${p.id}`} className="text-primary hover:underline cursor-pointer">
-                      {p.id.slice(0, 8)}…
-                    </Link>
-                  </td>
-                  <td className="py-3 px-4">{p.code}</td>
-                  <td className="py-3 px-4">{p.name}</td>
-                  <td className="py-3 px-4">{p.status}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+      <PromotionCardGrid
+        promotions={data.promotions.map((promotion) => ({
+          id: promotion.id,
+          code: promotion.code,
+          name: promotion.name,
+          usedCount: promotion.usedCount,
+          totalLimit: promotion.totalLimit,
+        }))}
+      />
 
       <Pagination
         page={page}

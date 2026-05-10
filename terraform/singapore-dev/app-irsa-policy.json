@@ -26,10 +26,7 @@
       "Sid": "S3Objects",
       "Effect": "Allow",
       "Action": ["s3:GetObject", "s3:PutObject"],
-      "Resource": [
-        "arn:aws:s3:::your-image-bucket/*",
-        "arn:aws:s3:::your-video-bucket/*"
-      ]
+      "Resource": ["arn:aws:s3:::fcj-hacmieu-491333778094-ap-southeast-1-an/*"]
     }
   ]
 }

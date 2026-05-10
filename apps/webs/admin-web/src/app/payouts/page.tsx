@@ -36,19 +36,45 @@ export default async function PayoutsPage({
     status: status || undefined,
     shopId: shopId || undefined,
   });
-  const totalPages = Math.max(data.totalPages || 1, 1);
+  const safeData = data ?? {
+    page,
+    limit: 10,
+    totalItems: 0,
+    totalPages: 0,
+    payouts: [],
+  };
+  const payouts = Array.isArray(safeData.payouts) ? safeData.payouts : [];
+  const totalPages = Math.max(safeData.totalPages || 1, 1);
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-ink">Yêu cầu rút tiền</h1>
-        <p className="text-ink-muted text-sm mt-1">Tổng cộng {data.totalItems} yêu cầu.</p>
+        <p className="text-ink-muted text-sm mt-1">
+          Tổng cộng {safeData.totalItems} yêu cầu.
+        </p>
       </div>
 
-      <form action="/payouts" method="GET" className="card p-4 grid grid-cols-1 md:grid-cols-3 gap-3">
-        <input name="status" defaultValue={status} placeholder="Status" className="input" />
-        <input name="shopId" defaultValue={shopId} placeholder="Shop ID" className="input" />
-        <button type="submit" className="btn-primary btn-md">Tìm kiếm</button>
+      <form
+        action="/payouts"
+        method="GET"
+        className="card p-4 grid grid-cols-1 md:grid-cols-3 gap-3"
+      >
+        <input
+          name="status"
+          defaultValue={status}
+          placeholder="Status"
+          className="input"
+        />
+        <input
+          name="shopId"
+          defaultValue={shopId}
+          placeholder="Shop ID"
+          className="input"
+        />
+        <button type="submit" className="btn-primary btn-md">
+          Tìm kiếm
+        </button>
       </form>
 
       <section className="card overflow-hidden">
@@ -64,13 +90,18 @@ export default async function PayoutsPage({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-ink">
-              {data.payouts.length === 0 && (
+              {payouts.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="py-10 text-center text-ink-muted">Không có payout.</td>
+                  <td colSpan={5} className="py-10 text-center text-ink-muted">
+                    Không có payout.
+                  </td>
                 </tr>
               )}
-              {data.payouts.map((p) => (
-                <tr key={p.id} className="hover:bg-surface-alt transition-colors">
+              {payouts.map((p) => (
+                <tr
+                  key={p.id}
+                  className="hover:bg-surface-alt transition-colors"
+                >
                   <td className="py-3 px-4">
                     <Link
                       href={`/payouts/${p.id}?shopId=${p.shopId}`}
@@ -80,7 +111,9 @@ export default async function PayoutsPage({
                     </Link>
                   </td>
                   <td className="py-3 px-4">{p.shopId}</td>
-                  <td className="py-3 px-4">{(p.amount ?? 0).toLocaleString('vi-VN')}đ</td>
+                  <td className="py-3 px-4">
+                    {(p.amount ?? 0).toLocaleString('vi-VN')}đ
+                  </td>
                   <td className="py-3 px-4">{p.status}</td>
                   <td className="py-3 px-4">
                     <PayoutStatusButtons shopId={p.shopId} payoutId={p.id} />

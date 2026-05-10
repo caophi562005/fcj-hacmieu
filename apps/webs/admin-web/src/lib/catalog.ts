@@ -135,7 +135,7 @@ export async function createSellerProduct(
 
 export type UpdateProductPayload = Omit<
   UpdateProductRequest,
-  'id' | 'shopId' | 'createdById' | 'updatedById' | 'processId'
+  'id' | 'createdById' | 'updatedById' | 'processId'
 >;
 
 export async function updateSellerProduct(
@@ -146,12 +146,11 @@ export async function updateSellerProduct(
   const body = {
     ...payload,
     id,
-    shopId: '',
     createdById: null,
     updatedById: null,
   };
   const { data } = await api.put<ApiResponse<GetProductResponse>>(
-    `/catalog/product/${id}`,
+    '/catalog/product',
     body,
   );
   if (!data?.data) throw new Error('Update product failed');

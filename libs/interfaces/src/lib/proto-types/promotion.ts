@@ -107,6 +107,7 @@ export interface PromotionListItem {
   scope: string;
   discountType: string;
   totalLimit?: number | undefined;
+  usedCount: number;
 }
 
 export interface GetManyPromotionsResponse {

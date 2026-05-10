@@ -38,6 +38,7 @@ type ProductCategoryRef = {
 
 export type ProductFormInitial = {
   id?: string;
+  shopId: string;
   name: string;
   description: string;
   basePrice: number;
@@ -71,6 +72,7 @@ const EMPTY_LOCATION = {
 };
 
 export const EMPTY_PRODUCT: ProductFormInitial = {
+  shopId: '',
   name: '',
   description: '',
   basePrice: 0,
@@ -115,6 +117,7 @@ export function ProductForm({
   const [error, setError] = useState<string>('');
 
   const [name, setName] = useState(initial.name);
+  const [shopId, setShopId] = useState(initial.shopId);
   const [description, setDescription] = useState(initial.description);
   const [basePrice, setBasePrice] = useState(initial.basePrice);
   const [virtualPrice, setVirtualPrice] = useState(initial.virtualPrice);
@@ -482,6 +485,9 @@ export function ProductForm({
 
     // Validate cơ bản
     if (!name.trim()) return setError('Vui lòng nhập tên sản phẩm.');
+    if (mode === 'edit' && !shopId.trim()) {
+      return setError('Vui lòng nhập shopId hợp lệ.');
+    }
     if (basePrice < 0) return setError('Giá gốc không hợp lệ.');
 
     // SKU values phải khớp generate (backend sẽ validate lần nữa)
@@ -537,6 +543,11 @@ export function ProductForm({
       wardName: ward.name,
     };
 
+    const updatePayload = {
+      ...payload,
+      shopId: shopId.trim(),
+    };
+
     startTransition(async () => {
       const skuImageUploadInput = Object.entries(newSkuImageBase64ByIndex)
         .map(([rawIndex, base64DataUrl]) => {
@@ -570,7 +581,7 @@ export function ProductForm({
             )
           : await updateProductAction(
               initial.id!,
-              payload,
+              updatePayload,
               {
                 base64DataUrls: newImageBase64DataUrls,
               },
@@ -586,6 +597,11 @@ export function ProductForm({
       if (mode === 'create' && result.id) {
         router.push(`/products/${result.id}`);
       } else {
+        if (mode === 'edit' && status !== initial.status) {
+          router.push(`/products?status=${status}`);
+          router.refresh();
+          return;
+        }
         router.refresh();
       }
     });
@@ -661,6 +677,15 @@ export function ProductForm({
           />
         </Field>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Field label="Shop ID" required={mode === 'edit'}>
+            <input
+              className="input"
+              value={shopId}
+              onChange={(e) => setShopId(e.target.value)}
+              placeholder="Nhập shopId..."
+              readOnly={mode !== 'edit'}
+            />
+          </Field>
           <Field label="Giá gốc (VND)" required>
             <input
               type="number"

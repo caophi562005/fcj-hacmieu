@@ -67,6 +67,7 @@ export class PromotionRepository {
           scope: true,
           discountType: true,
           totalLimit: true,
+          usedCount: true,
         },
       }),
     ]);

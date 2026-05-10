@@ -109,6 +109,7 @@ message PromotionListItem {
   string scope = 7;
   string discountType = 8;
   optional int32 totalLimit = 9;
+  int32 usedCount = 10;
 }
 
 message GetManyPromotionsResponse {

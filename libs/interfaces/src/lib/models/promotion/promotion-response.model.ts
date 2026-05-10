@@ -19,7 +19,8 @@ export const GetManyPromotionsResponseSchema =
         scope: true,
         discountType: true,
         totalLimit: true,
-      })
+        usedCount: true,
+      }),
     ),
   });
 

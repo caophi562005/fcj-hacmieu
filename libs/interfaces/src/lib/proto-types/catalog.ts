@@ -18,6 +18,7 @@ export interface GetManyProductsRequest {
   name?: string | undefined;
   shopId?: string | undefined;
   isApproved?: boolean | undefined;
+  status?: string | undefined;
 }
 
 /** ==================== GetManyProductsResponse ====================// */
