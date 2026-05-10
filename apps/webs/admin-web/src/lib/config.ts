@@ -14,7 +14,7 @@ export const AdminWebConfig = {
   bffUrl: () => required(AppConfiguration.ADMIN_BFF_URL, 'ADMIN_BFF_URL'),
   webUrl: () => required(AppConfiguration.ADMIN_WEB_URL, 'ADMIN_WEB_URL'),
   redirectUri: () =>
-    required(AuthConfiguration.SELLER_REDIRECT_URI, 'SELLER_REDIRECT_URI'),
+    required(AuthConfiguration.ADMIN_REDIRECT_URI, 'ADMIN_REDIRECT_URI'),
   logoutUri: () =>
-    required(AuthConfiguration.SELLER_LOGOUT_URI, 'SELLER_LOGOUT_URI'),
+    required(AuthConfiguration.ADMIN_LOGOUT_URI, 'ADMIN_LOGOUT_URI'),
 };

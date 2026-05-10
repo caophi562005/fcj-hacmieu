@@ -18,7 +18,8 @@
         "arn:aws:sqs:ap-southeast-1:491333778094:create_redemption_hacmieu",
         "arn:aws:sqs:ap-southeast-1:491333778094:create_order_hacmieu",
         "arn:aws:sqs:ap-southeast-1:491333778094:delete_cart_item_hacmieu",
-        "arn:aws:sqs:ap-southeast-1:491333778094:create_user_hacmieu"
+        "arn:aws:sqs:ap-southeast-1:491333778094:create_user_hacmieu",
+        "arn:aws:sqs:ap-southeast-1:491333778094:settel_order_revenue_hacmieu"
       ]
     },
     {

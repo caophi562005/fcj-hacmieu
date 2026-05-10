@@ -21,8 +21,8 @@ export async function logoutAction() {
   c.delete('oidc_state');
 
   const url = new URL(`https://${AuthConfiguration.COGNITO_DOMAIN}/logout`);
-  url.searchParams.set('client_id', AuthConfiguration.SELLER_CLIENT_ID);
-  url.searchParams.set('logout_uri', AuthConfiguration.SELLER_LOGOUT_URI);
+  url.searchParams.set('client_id', AuthConfiguration.ADMIN_CLIENT_ID);
+  url.searchParams.set('logout_uri', AuthConfiguration.ADMIN_LOGOUT_URI);
 
   redirect(url.toString());
 }

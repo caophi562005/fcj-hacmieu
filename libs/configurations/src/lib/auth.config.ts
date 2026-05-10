@@ -13,6 +13,11 @@ export const AuthConfigurationSchema = z.object({
   SELLER_REDIRECT_URI: z.string(),
   SELLER_LOGOUT_URI: z.string(),
 
+  ADMIN_CLIENT_ID: z.string(),
+  ADMIN_CLIENT_SECRET: z.string(),
+  ADMIN_REDIRECT_URI: z.string(),
+  ADMIN_LOGOUT_URI: z.string(),
+
   USER_POOL_ID: z.string(),
   PAYMENT_API_KEY: z.string(),
 });

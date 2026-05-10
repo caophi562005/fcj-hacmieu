@@ -35,16 +35,33 @@ export class AuthService {
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
+  private getCognitoClientConfig(type: GroupType) {
+    switch (type) {
+      case GroupValues.CUSTOMER:
+        return {
+          clientId: AuthConfiguration.CUSTOMER_CLIENT_ID,
+          clientSecret: AuthConfiguration.CUSTOMER_CLIENT_SECRET,
+        };
+      case GroupValues.ADMIN:
+        return {
+          clientId: AuthConfiguration.ADMIN_CLIENT_ID,
+          clientSecret: AuthConfiguration.ADMIN_CLIENT_SECRET,
+        };
+      case GroupValues.SELLER:
+      default:
+        return {
+          clientId: AuthConfiguration.SELLER_CLIENT_ID,
+          clientSecret: AuthConfiguration.SELLER_CLIENT_SECRET,
+        };
+    }
+  }
+
   async refreshSession(data: RefreshSessionRequest) {
+    const { clientId, clientSecret } = this.getCognitoClientConfig(data.type);
+
     const command = new GetTokensFromRefreshTokenCommand({
-      ClientId:
-        data.type === GroupValues.CUSTOMER
-          ? AuthConfiguration.CUSTOMER_CLIENT_ID
-          : AuthConfiguration.SELLER_CLIENT_ID,
-      ClientSecret:
-        data.type === GroupValues.CUSTOMER
-          ? AuthConfiguration.CUSTOMER_CLIENT_SECRET
-          : AuthConfiguration.SELLER_CLIENT_SECRET,
+      ClientId: clientId,
+      ClientSecret: clientSecret,
       RefreshToken: data.refreshToken,
     });
 
@@ -79,21 +96,17 @@ export class AuthService {
   }
 
   async validateToken(data: ValidateTokenRequest) {
+    const { clientId } = this.getCognitoClientConfig(data.type);
+
     const accessVerifier = CognitoJwtVerifier.create({
       userPoolId: AuthConfiguration.USER_POOL_ID,
       tokenUse: 'access',
-      clientId:
-        data.type === GroupValues.CUSTOMER
-          ? AuthConfiguration.CUSTOMER_CLIENT_ID
-          : AuthConfiguration.SELLER_CLIENT_ID,
+      clientId,
     });
     const idVerifier = CognitoJwtVerifier.create({
       userPoolId: AuthConfiguration.USER_POOL_ID,
       tokenUse: 'id',
-      clientId:
-        data.type === GroupValues.CUSTOMER
-          ? AuthConfiguration.CUSTOMER_CLIENT_ID
-          : AuthConfiguration.SELLER_CLIENT_ID,
+      clientId,
     });
 
     const invalidResponse = {
