@@ -13,6 +13,7 @@ export const GetManyProductsResponseSchema =
     products: z.array(
       ProductViewSchema.pick({
         id: true,
+        shopId: true,
         name: true,
         basePrice: true,
         virtualPrice: true,

@@ -1,3 +1,4 @@
+import { PaginationConfiguration } from '@common/configurations/pagination.config';
 import { OrderStatusValues } from '@common/constants/order.constant';
 import { PaymentStatusValues } from '@common/constants/payment.constant';
 import {
@@ -16,12 +17,19 @@ export class OrderRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
   async list(data: GetManyOrdersRequest) {
-    const page = Number(data?.page) > 0 ? Number(data.page) : 1;
-    const limit = Number(data?.limit) > 0 ? Number(data.limit) : 10;
+    const page = data.page || PaginationConfiguration.DEFAULT_PAGE_PAGINATION;
+    const limit =
+      data.limit || PaginationConfiguration.DEFAULT_LIMIT_PAGINATION;
     const skip = (page - 1) * limit;
 
     const where = {
       deletedAt: null,
+      code: data.code
+        ? {
+            contains: data.code,
+            mode: 'insensitive' as const,
+          }
+        : undefined,
       paymentId: data.paymentId || undefined,
       status: data.status || undefined,
       userId: data.userId || undefined,

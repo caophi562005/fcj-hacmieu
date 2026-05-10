@@ -55,6 +55,7 @@ export class UserController {
   ) {
     return this.userService.updateUser({
       ...body,
+      group: body.group ?? [],
       id: params.id,
       processId,
     });

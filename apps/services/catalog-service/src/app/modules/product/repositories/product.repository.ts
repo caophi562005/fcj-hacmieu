@@ -1,7 +1,9 @@
+import { PaginationConfiguration } from '@common/configurations/pagination.config';
 import { ProductStatusValues } from '@common/constants/product.constant';
 import {
   CreateProductRequest,
   DeleteProductRequest,
+  GetManyProductsRequest,
   UpdateProductRequest,
   ValidateItemResult,
   ValidateProductsRequest,
@@ -403,9 +405,10 @@ export class ProductRepository {
     };
   }
 
-  async list(data: any) {
-    const page = data.page || 1;
-    const limit = data.limit || 10;
+  async list(data: GetManyProductsRequest) {
+    const page = data.page || PaginationConfiguration.DEFAULT_PAGE_PAGINATION;
+    const limit =
+      data.limit || PaginationConfiguration.DEFAULT_LIMIT_PAGINATION;
     const skip = (page - 1) * limit;
 
     const [products, totalItems] = await Promise.all([

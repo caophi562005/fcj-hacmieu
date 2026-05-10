@@ -155,7 +155,7 @@ export interface GetShopPayoutByIdRequest {
 
 export interface GetShopPayoutsRequest {
   processId?: string | undefined;
-  shopId: string;
+  shopId?: string | undefined;
   page: number;
   limit: number;
   status?: string | undefined;

@@ -32,11 +32,13 @@ export class UserController {
     @Body() body: UpdateUserRequestDto,
     @ProcessId() processId: string,
     @UserData('userId') userId: string,
+    @UserData('groups') userGroup: string[],
   ) {
     return this.userService.updateUser({
       ...body,
       processId,
       id: userId,
+      group: userGroup,
     });
   }
 }

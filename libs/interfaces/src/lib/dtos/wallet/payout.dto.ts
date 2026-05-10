@@ -19,7 +19,7 @@ export class GetShopPayoutByIdRequestDto extends createZodDto(
 ) {}
 
 export class GetShopPayoutsRequestDto extends createZodDto(
-  GetShopPayoutsRequestSchema.omit({ processId: true, shopId: true }),
+  GetShopPayoutsRequestSchema.omit({ processId: true }),
 ) {}
 
 export class UpdateShopPayoutStatusRequestDto extends createZodDto(

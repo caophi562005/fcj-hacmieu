@@ -1,3 +1,4 @@
+import { PaginationConfiguration } from '@common/configurations/pagination.config';
 import {
   GetManyUsersRequest,
   GetUserRequest,
@@ -22,8 +23,10 @@ export class UserRepository {
   }
 
   async list(data: GetManyUsersRequest) {
-    const skip = (data.page - 1) * data.limit;
-    const take = data.limit;
+    const page = data.page || PaginationConfiguration.DEFAULT_PAGE_PAGINATION;
+    const limit =
+      data.limit || PaginationConfiguration.DEFAULT_LIMIT_PAGINATION;
+    const skip = (page - 1) * limit;
 
     const where: Prisma.UserWhereInput = {
       email: data?.email || undefined,
@@ -44,7 +47,7 @@ export class UserRepository {
       this.prismaService.user.findMany({
         where,
         skip,
-        take,
+        take: limit,
         orderBy: { createdAt: 'desc' },
       }),
     ]);

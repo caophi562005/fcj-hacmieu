@@ -24,6 +24,18 @@ import { PayoutService } from '../services/payout.service';
 export class PayoutController {
   constructor(private readonly payoutService: PayoutService) {}
 
+  @Get()
+  @ApiOkResponse({ type: GetShopPayoutsResponseDto })
+  async getManyPayouts(
+    @Query() queries: GetShopPayoutsRequestDto,
+    @ProcessId() processId: string,
+  ) {
+    return this.payoutService.getShopPayouts({
+      ...queries,
+      processId,
+    });
+  }
+
   @Post(':shopId/request')
   @ApiOkResponse({ type: ShopPayoutResponseDto })
   async createShopPayout(

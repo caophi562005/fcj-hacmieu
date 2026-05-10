@@ -1,0 +1,195 @@
+import type {
+  GetManyMerchantsResponse,
+  GetManyShopsResponse,
+  MerchantResponse,
+  ShopResponse,
+} from '@common/interfaces/models/shop';
+import type { GetShopPayoutsResponse, ShopPayoutResponse } from '@common/interfaces/models/wallet';
+import type { Response as ApiResponse } from '@common/interfaces/models/common/response.model';
+import { createServerApi } from './api';
+
+export async function getManyMerchants(query: {
+  page?: number;
+  limit?: number;
+  legalName?: string;
+  approvalStatus?: string;
+} = {}): Promise<GetManyMerchantsResponse> {
+  const api = await createServerApi();
+  const res = await api.get<ApiResponse<GetManyMerchantsResponse>>('/shop/merchant', {
+    params: {
+      page: query.page ?? 1,
+      limit: query.limit ?? 10,
+      ...(query.legalName ? { legalName: query.legalName } : {}),
+      ...(query.approvalStatus ? { approvalStatus: query.approvalStatus } : {}),
+    },
+    validateStatus: (s) => (s >= 200 && s < 300) || s === 404,
+  });
+
+  if (res.status === 404) {
+    return {
+      page: query.page ?? 1,
+      limit: query.limit ?? 10,
+      totalItems: 0,
+      totalPages: 0,
+      merchants: [],
+    };
+  }
+
+  return (
+    res.data?.data ?? {
+      page: query.page ?? 1,
+      limit: query.limit ?? 10,
+      totalItems: 0,
+      totalPages: 0,
+      merchants: [],
+    }
+  );
+}
+
+export async function getMerchantById(id: string): Promise<MerchantResponse | null> {
+  const api = await createServerApi();
+  const res = await api.get<ApiResponse<MerchantResponse>>(`/shop/merchant/${id}`, {
+    validateStatus: (s) => (s >= 200 && s < 300) || s === 404,
+  });
+  if (res.status === 404) return null;
+  return res.data?.data ?? null;
+}
+
+export async function updateMerchant(payload: {
+  id: string;
+  approvalStatus?: string;
+  canSell?: boolean;
+  legalName?: string;
+  taxCode?: string | null;
+  type?: 'INDIVIDUAL' | 'BUSINESS';
+}): Promise<MerchantResponse> {
+  const api = await createServerApi();
+  const { data } = await api.put<ApiResponse<MerchantResponse>>('/shop/merchant', payload);
+  if (!data?.data) throw new Error('Cập nhật merchant thất bại.');
+  return data.data;
+}
+
+export async function getManyShops(query: {
+  page?: number;
+  limit?: number;
+  name?: string;
+  status?: string;
+} = {}): Promise<GetManyShopsResponse> {
+  const api = await createServerApi();
+  const res = await api.get<ApiResponse<GetManyShopsResponse>>('/shop/shop', {
+    params: {
+      page: query.page ?? 1,
+      limit: query.limit ?? 10,
+      ...(query.name ? { name: query.name } : {}),
+      ...(query.status ? { status: query.status } : {}),
+    },
+    validateStatus: (s) => (s >= 200 && s < 300) || s === 404,
+  });
+
+  if (res.status === 404) {
+    return {
+      page: query.page ?? 1,
+      limit: query.limit ?? 10,
+      totalItems: 0,
+      totalPages: 0,
+      shops: [],
+    };
+  }
+
+  return (
+    res.data?.data ?? {
+      page: query.page ?? 1,
+      limit: query.limit ?? 10,
+      totalItems: 0,
+      totalPages: 0,
+      shops: [],
+    }
+  );
+}
+
+export async function getShopById(id: string): Promise<ShopResponse | null> {
+  const api = await createServerApi();
+  const res = await api.get<ApiResponse<ShopResponse>>(`/shop/shop/${id}`, {
+    validateStatus: (s) => (s >= 200 && s < 300) || s === 404,
+  });
+  if (res.status === 404) return null;
+  return res.data?.data ?? null;
+}
+
+export async function updateShop(payload: {
+  id: string;
+  name?: string;
+  description?: string;
+  status?: string;
+  logo?: string | null;
+  banner?: string | null;
+  phone?: string | null;
+  pickupAddress?: string | null;
+  returnAddress?: string | null;
+}): Promise<ShopResponse> {
+  const api = await createServerApi();
+  const { data } = await api.put<ApiResponse<ShopResponse>>('/shop/shop', payload);
+  if (!data?.data) throw new Error('Cập nhật shop thất bại.');
+  return data.data;
+}
+
+export async function getManyPayouts(query: {
+  page?: number;
+  limit?: number;
+  status?: string;
+  shopId?: string;
+} = {}): Promise<GetShopPayoutsResponse> {
+  const api = await createServerApi();
+  const res = await api.get<ApiResponse<GetShopPayoutsResponse>>('/wallet/payout', {
+    params: {
+      page: query.page ?? 1,
+      limit: query.limit ?? 10,
+      ...(query.status ? { status: query.status } : {}),
+      ...(query.shopId ? { shopId: query.shopId } : {}),
+    },
+    validateStatus: (s) => (s >= 200 && s < 300) || s === 404,
+  });
+
+  if (res.status === 404) {
+    return {
+      page: query.page ?? 1,
+      limit: query.limit ?? 10,
+      totalItems: 0,
+      totalPages: 0,
+      payouts: [],
+    };
+  }
+
+  return (
+    res.data?.data ?? {
+      page: query.page ?? 1,
+      limit: query.limit ?? 10,
+      totalItems: 0,
+      totalPages: 0,
+      payouts: [],
+    }
+  );
+}
+
+export async function getPayoutById(shopId: string, payoutId: string): Promise<ShopPayoutResponse | null> {
+  const api = await createServerApi();
+  const res = await api.get<ApiResponse<ShopPayoutResponse>>(`/wallet/payout/${shopId}/${payoutId}`, {
+    validateStatus: (s) => (s >= 200 && s < 300) || s === 404,
+  });
+  if (res.status === 404) return null;
+  return res.data?.data ?? null;
+}
+
+export async function updatePayoutStatus(payload: {
+  shopId: string;
+  payoutId: string;
+  status: 'PENDING' | 'TRANSFERRED' | 'REJECTED';
+}): Promise<ShopPayoutResponse> {
+  const api = await createServerApi();
+  const { data } = await api.patch<ApiResponse<ShopPayoutResponse>>(
+    `/wallet/payout/${payload.shopId}/${payload.payoutId}/status`,
+    { status: payload.status },
+  );
+  if (!data?.data) throw new Error('Cập nhật payout thất bại.');
+  return data.data;
+}

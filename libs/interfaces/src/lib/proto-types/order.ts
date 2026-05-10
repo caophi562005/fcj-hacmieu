@@ -18,6 +18,7 @@ export interface GetManyOrdersRequest {
   status?: string | undefined;
   userId?: string | undefined;
   shopId?: string | undefined;
+  code?: string | undefined;
 }
 
 export interface GetOrderRequest {

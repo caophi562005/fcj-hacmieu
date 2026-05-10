@@ -27,6 +27,7 @@ message GetManyOrdersRequest {
   optional string status = 5;
   optional string userId = 6;
   optional string shopId = 7;
+  optional string code = 8;
 }
 
 message GetOrderRequest {

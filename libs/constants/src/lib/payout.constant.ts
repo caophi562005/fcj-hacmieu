@@ -12,4 +12,4 @@ export const PayoutStatusEnums = z.enum([
   PayoutStatusValues.REJECTED,
 ]);
 
-export type PayoutStatus = z.infer<typeof PayoutStatusEnums>;
+export type PayoutStatusType = z.infer<typeof PayoutStatusEnums>;

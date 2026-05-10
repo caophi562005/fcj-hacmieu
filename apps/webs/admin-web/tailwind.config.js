@@ -14,10 +14,67 @@ module.exports = {
   content: [
     './{src,pages,components,app}/**/*.{ts,tsx,js,jsx,html}',
     '!./{src,pages,components,app}/**/*.{stories,spec}.{ts,tsx,js,jsx,html}',
+    // Shared chat UI (libs/convex/src) — xem comment ở customer-web.
+    '../../../libs/convex/src/**/*.{ts,tsx,js,jsx}',
     //     ...createGlobPatternsForDependencies(__dirname)
   ],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        sans: ['"Be Vietnam Pro"', 'system-ui', 'sans-serif'],
+      },
+      colors: {
+        primary: {
+          DEFAULT: '#FF6B35',
+          50: '#FFF4EE',
+          100: '#FFE3D2',
+          200: '#FFC2A1',
+          300: '#FFA070',
+          400: '#FF8552',
+          500: '#FF6B35',
+          600: '#E85420',
+          700: '#B83F18',
+          800: '#892D11',
+          900: '#5C1F0C',
+        },
+        sidebar: {
+          DEFAULT: '#0F172A',
+          hover: '#1E293B',
+          border: '#1E293B',
+        },
+        background: '#F8FAFC',
+        surface: {
+          DEFAULT: '#FFFFFF',
+          alt: '#F8FAFC',
+          muted: '#F1F5F9',
+        },
+        ink: {
+          DEFAULT: '#0B1C30',
+          muted: '#475569',
+          subtle: '#94A3B8',
+        },
+        success: '#2E7D32',
+        warning: '#E65100',
+        danger: '#BA1A1A',
+      },
+      borderRadius: {
+        sm: '0.25rem',
+        DEFAULT: '0.5rem',
+        md: '0.75rem',
+        lg: '1rem',
+      },
+      boxShadow: {
+        card: '0 4px 20px rgba(0,0,0,0.05)',
+        floating: '0 10px 30px rgba(0,0,0,0.08)',
+      },
+      spacing: {
+        sidebar: '260px',
+        topbar: '64px',
+      },
+      transitionDuration: {
+        DEFAULT: '200ms',
+      },
+    },
   },
   plugins: [],
 };

@@ -1,3 +1,4 @@
+import { PaginationConfiguration } from '@common/configurations/pagination.config';
 import {
   CreateRefundRequest,
   GetManyRefundsRequest,
@@ -13,10 +14,10 @@ export class RefundRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
   async list(data: GetManyRefundsRequest) {
-    const page = Number(data?.page) > 0 ? Number(data.page) : 1;
-    const limit = Number(data?.limit) > 0 ? Number(data.limit) : 10;
+    const page = data.page || PaginationConfiguration.DEFAULT_PAGE_PAGINATION;
+    const limit =
+      data.limit || PaginationConfiguration.DEFAULT_LIMIT_PAGINATION;
     const skip = (page - 1) * limit;
-    const take = limit;
 
     const whereClause: Prisma.RefundWhereInput = {
       userId: data.userId || undefined,
@@ -32,7 +33,7 @@ export class RefundRepository {
       this.prismaService.refund.findMany({
         where: whereClause,
         skip,
-        take,
+        take: limit,
         orderBy: {
           createdAt: 'desc',
         },

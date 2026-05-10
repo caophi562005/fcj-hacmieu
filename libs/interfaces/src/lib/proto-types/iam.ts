@@ -202,6 +202,7 @@ export interface UpdateUserRequest {
   avatar?: string | undefined;
   gender?: string | undefined;
   birthday?: string | undefined;
+  group: string[];
 }
 
 export interface CreateUserRequest {
@@ -260,6 +261,7 @@ export interface GetManyUsersResponse {
 export interface UserBasicInfo {
   id: string;
   email: string;
+  username: string;
   phoneNumber: string;
   gender: string;
   status: string;

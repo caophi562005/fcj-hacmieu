@@ -1,3 +1,4 @@
+import { PaginationConfiguration } from '@common/configurations/pagination.config';
 import {
   CreateShopRequest,
   GetManyShopsRequest,
@@ -13,8 +14,10 @@ export class ShopRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
   async list(data: GetManyShopsRequest) {
-    const skip = (data.page - 1) * data.limit;
-    const take = data.limit;
+    const page = data.page || PaginationConfiguration.DEFAULT_PAGE_PAGINATION;
+    const limit =
+      data.limit || PaginationConfiguration.DEFAULT_LIMIT_PAGINATION;
+    const skip = (page - 1) * limit;
 
     const where: Prisma.ShopWhereInput = {
       deletedAt: null,
@@ -37,7 +40,7 @@ export class ShopRepository {
       this.prismaService.shop.findMany({
         where,
         skip,
-        take,
+        take: limit,
         orderBy: { createdAt: 'desc' },
       }),
     ]);

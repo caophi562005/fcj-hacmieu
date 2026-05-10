@@ -23,11 +23,9 @@ export class MediaController {
     @UserData('userId') userId: string,
   ) {
     return this.mediaService.createPresignedUrl({
+      ...body,
       processId,
       userId,
-      fileName: (body as any).filename || '',
-      fileType: (body as any).fileType || 'application/octet-stream',
-      fileSize: (body as any).fileSize || 0,
-    } as any);
+    });
   }
 }

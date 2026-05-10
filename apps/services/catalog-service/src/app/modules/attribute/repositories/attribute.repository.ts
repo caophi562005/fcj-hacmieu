@@ -1,3 +1,5 @@
+import { PaginationConfiguration } from '@common/configurations/pagination.config';
+import { GetManyAttributesRequest } from '@common/interfaces/models/catalog';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma-client/catalog-service';
 import { PrismaService } from '../../../prisma/prisma.service';
@@ -40,9 +42,10 @@ export class AttributeRepository {
         });
   }
 
-  async list(data: any) {
-    const page = data.page || 1;
-    const limit = data.limit || 10;
+  async list(data: GetManyAttributesRequest) {
+    const page = data.page || PaginationConfiguration.DEFAULT_PAGE_PAGINATION;
+    const limit =
+      data.limit || PaginationConfiguration.DEFAULT_LIMIT_PAGINATION;
     const skip = (page - 1) * limit;
 
     const [attributes, totalItems] = await Promise.all([

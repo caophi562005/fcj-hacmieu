@@ -1,3 +1,4 @@
+import { PaginationConfiguration } from '@common/configurations/pagination.config';
 import { PaymentStatusValues } from '@common/constants/payment.constant';
 import {
   GetManyPaymentsRequest,
@@ -12,10 +13,10 @@ export class PaymentRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
   async list(data: GetManyPaymentsRequest) {
-    const page = Number(data?.page) > 0 ? Number(data.page) : 1;
-    const limit = Number(data?.limit) > 0 ? Number(data.limit) : 10;
+    const page = data.page || PaginationConfiguration.DEFAULT_PAGE_PAGINATION;
+    const limit =
+      data.limit || PaginationConfiguration.DEFAULT_LIMIT_PAGINATION;
     const skip = (page - 1) * limit;
-    const take = limit;
 
     const whereClause: Prisma.PaymentWhereInput = {
       userId: data?.userId || undefined,
@@ -35,7 +36,7 @@ export class PaymentRepository {
       this.prismaService.payment.findMany({
         where: whereClause,
         skip,
-        take,
+        take: limit,
         orderBy: { createdAt: 'desc' },
       }),
     ]);

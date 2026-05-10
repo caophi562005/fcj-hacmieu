@@ -47,6 +47,7 @@ export const CancelOrderRequestSchema = z
   .strict();
 
 export const GetManyOrdersRequestSchema = PaginationQueryRequestSchema.extend({
+  code: z.string().trim().min(1).optional(),
   paymentId: z.uuid().optional(),
   status: OrderSchema.shape.status.optional(),
   userId: z.uuid().optional(),

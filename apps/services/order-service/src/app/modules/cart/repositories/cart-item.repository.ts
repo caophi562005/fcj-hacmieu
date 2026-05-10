@@ -1,3 +1,4 @@
+import { PaginationConfiguration } from '@common/configurations/pagination.config';
 import {
   AddCartItemRequest,
   DeleteCartItemRequest,
@@ -15,8 +16,9 @@ export class CartItemRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
   async list(data: GetManyCartItemsRequest) {
-    const page = data.page ?? 1;
-    const limit = data.limit ?? 10;
+    const page = data.page || PaginationConfiguration.DEFAULT_PAGE_PAGINATION;
+    const limit =
+      data.limit || PaginationConfiguration.DEFAULT_LIMIT_PAGINATION;
     const skip = (page - 1) * limit;
     const take = limit;
 

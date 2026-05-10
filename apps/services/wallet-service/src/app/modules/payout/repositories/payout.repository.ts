@@ -1,8 +1,12 @@
+import { PaginationConfiguration } from '@common/configurations/pagination.config';
 import {
   CreditTransactionSourceValues,
   CreditTransactionTypeValues,
 } from '@common/constants/credit.constant';
-import { PayoutStatusValues } from '@common/constants/payout.constant';
+import {
+  PayoutStatusType,
+  PayoutStatusValues,
+} from '@common/constants/payout.constant';
 import type {
   CreateShopPayoutRequest,
   DeleteShopPayoutRequest,
@@ -17,7 +21,6 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import type { PayoutStatus } from '../../../../generated/prisma-client/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 
 @Injectable()
@@ -91,13 +94,16 @@ export class PayoutRepository {
   }
 
   async list(data: GetShopPayoutsRequest): Promise<GetShopPayoutsResponse> {
-    const page = data.page || 1;
-    const limit = data.limit || 10;
+    const page = data.page || PaginationConfiguration.DEFAULT_PAGE_PAGINATION;
+    const limit =
+      data.limit || PaginationConfiguration.DEFAULT_LIMIT_PAGINATION;
     const skip = (page - 1) * limit;
 
-    const where = { shopId: data.shopId } as {
-      shopId: string;
-      status?: PayoutStatus;
+    const where = {
+      shopId: data.shopId || undefined,
+    } as {
+      shopId?: string;
+      status?: PayoutStatusType;
     };
     if (data.status) {
       where.status = data.status;

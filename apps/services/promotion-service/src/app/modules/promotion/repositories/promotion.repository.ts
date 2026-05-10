@@ -1,3 +1,4 @@
+import { PaginationConfiguration } from '@common/configurations/pagination.config';
 import { PromotionStatusValues } from '@common/constants/promotion.constant';
 import {
   CheckPromotionRequest,
@@ -17,10 +18,10 @@ export class PromotionRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
   async list(data: GetManyPromotionsRequest) {
-    const page = Number(data?.page) > 0 ? Number(data.page) : 1;
-    const limit = Number(data?.limit) > 0 ? Number(data.limit) : 10;
+    const page = data.page || PaginationConfiguration.DEFAULT_PAGE_PAGINATION;
+    const limit =
+      data.limit || PaginationConfiguration.DEFAULT_LIMIT_PAGINATION;
     const skip = (page - 1) * limit;
-    const take = limit;
 
     const whereClause: Prisma.PromotionWhereInput = {
       deletedAt: null,
@@ -54,7 +55,7 @@ export class PromotionRepository {
       this.prismaService.promotion.findMany({
         where: whereClause,
         skip,
-        take,
+        take: limit,
         orderBy: { createdAt: 'desc' },
         select: {
           id: true,

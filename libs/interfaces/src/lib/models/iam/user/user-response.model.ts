@@ -9,6 +9,7 @@ export const GetManyUsersResponseSchema = PaginationQueryResponseSchema.extend({
     UserSchema.pick({
       id: true,
       email: true,
+      username: true,
       phoneNumber: true,
       gender: true,
       status: true,

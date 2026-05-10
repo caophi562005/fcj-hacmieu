@@ -14,7 +14,7 @@ import {
 import { createZodDto } from 'nestjs-zod';
 
 export class GetManyOrdersRequestDto extends createZodDto(
-  GetManyOrdersRequestSchema.omit({ processId: true, shopId: true }),
+  GetManyOrdersRequestSchema.omit({ processId: true }),
 ) {}
 
 export class GetOrderRequestDto extends createZodDto(

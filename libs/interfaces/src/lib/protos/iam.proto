@@ -224,6 +224,7 @@ message UpdateUserRequest {
   optional string avatar = 4;
   optional string gender = 5;
   optional string birthday = 6;
+  repeated string group = 7;
 }
 
 message CreateUserRequest {
@@ -276,8 +277,9 @@ message GetManyUsersResponse {
 message UserBasicInfo {
   string id = 1;
   string email = 2;
-  string phoneNumber = 3;
-  string gender = 4;
-  string status = 5;
-  repeated string group = 6;
+  string username = 3;
+  string phoneNumber = 4;
+  string gender = 5;
+  string status = 6;
+  repeated string group = 7;
 }

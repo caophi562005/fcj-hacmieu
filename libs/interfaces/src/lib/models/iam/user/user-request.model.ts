@@ -39,6 +39,7 @@ export const UpdateUserRequestSchema = UserSchema.pick({
   avatar: true,
   gender: true,
   birthday: true,
+  group: true,
 })
   .partial()
   .extend({

@@ -1,3 +1,4 @@
+import { PaginationConfiguration } from '@common/configurations/pagination.config';
 import { GetReviewByOrderItemIdRequest } from '@common/interfaces/models/utility';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma-client/utility-service';
@@ -14,8 +15,9 @@ export class ReviewRepository {
     sellerId?: string;
     userId?: string;
   }) {
-    const page = data.page || 1;
-    const limit = data.limit || 10;
+    const page = data.page || PaginationConfiguration.DEFAULT_PAGE_PAGINATION;
+    const limit =
+      data.limit || PaginationConfiguration.DEFAULT_LIMIT_PAGINATION;
     const skip = (page - 1) * limit;
 
     const [reviews, totalItems] = await Promise.all([

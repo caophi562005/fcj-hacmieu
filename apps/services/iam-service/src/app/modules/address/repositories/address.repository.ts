@@ -1,3 +1,4 @@
+import { PaginationConfiguration } from '@common/configurations/pagination.config';
 import {
   CreateAddressRequest,
   GetAddressRequest,
@@ -12,10 +13,10 @@ export class AddressRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
   async list(data: GetManyAddressesRequest) {
-    const page = data.page ?? 1;
-    const limit = data.limit ?? 10;
-    const skip = (data.page - 1) * data.limit;
-    const take = data.limit;
+    const page = data.page || PaginationConfiguration.DEFAULT_PAGE_PAGINATION;
+    const limit =
+      data.limit || PaginationConfiguration.DEFAULT_LIMIT_PAGINATION;
+    const skip = (page - 1) * limit;
 
     const [totalItems, addresses] = await Promise.all([
       this.prismaService.address.count({
@@ -28,7 +29,7 @@ export class AddressRepository {
           userId: data.userId,
         },
         skip,
-        take,
+        take: limit,
         orderBy: { name: 'asc' },
       }),
     ]);

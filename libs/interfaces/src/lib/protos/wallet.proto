@@ -164,7 +164,7 @@ message GetShopPayoutByIdRequest {
 
 message GetShopPayoutsRequest {
   optional string processId = 1;
-  string shopId = 2;
+  optional string shopId = 2;
   int32 page = 3;
   int32 limit = 4;
   optional string status = 5;

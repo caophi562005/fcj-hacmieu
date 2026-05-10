@@ -1,3 +1,4 @@
+import { PaginationConfiguration } from '@common/configurations/pagination.config';
 import {
   GetManyNotificationsRequest,
   GetNotificationRequest,
@@ -12,8 +13,9 @@ export class NotificationRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
   async list(data: GetManyNotificationsRequest) {
-    const page = data.page || 1;
-    const limit = data.limit || 10;
+    const page = data.page || PaginationConfiguration.DEFAULT_PAGE_PAGINATION;
+    const limit =
+      data.limit || PaginationConfiguration.DEFAULT_LIMIT_PAGINATION;
     const skip = (page - 1) * limit;
 
     const [notifications, totalItems, unreadCount] = await Promise.all([
