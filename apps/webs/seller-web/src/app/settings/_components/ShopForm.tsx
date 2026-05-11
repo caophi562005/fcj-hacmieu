@@ -22,7 +22,12 @@ const STATUS_LABEL: Record<ShopStatus, string> = {
   CLOSED: 'Đã đóng',
 };
 
-const ALLOWED_IMAGE_MIME = ['image/png', 'image/jpeg', 'image/jpg'];
+const ALLOWED_IMAGE_MIME = [
+  'image/png',
+  'image/jpeg',
+  'image/jpg',
+  'image/webp',
+];
 const MAX_IMAGE_SIZE_MB = 5;
 
 export type ShopFormInitial = {
@@ -117,7 +122,7 @@ export function ShopForm({ mode, initial, merchantId }: Props) {
     if (!file) return;
 
     if (!ALLOWED_IMAGE_MIME.includes(file.type)) {
-      toast.error('Chỉ chấp nhận ảnh PNG hoặc JPG hoặc JPEG.');
+      toast.error('Chỉ chấp nhận ảnh PNG, JPG, JPEG hoặc WEBP.');
       return;
     }
     if (file.size > MAX_IMAGE_SIZE_MB * 1024 * 1024) {
@@ -441,7 +446,7 @@ function BannerPicker({
       <input
         ref={inputRef}
         type="file"
-        accept="image/png,image/jpeg,image/jpg"
+        accept="image/png,image/jpeg,image/jpg,image/webp"
         onChange={onPick}
         className="hidden"
       />
@@ -509,7 +514,7 @@ function LogoPicker({
       <input
         ref={inputRef}
         type="file"
-        accept="image/png,image/jpeg,image/jpg"
+        accept="image/png,image/jpeg,image/jpg,image/webp"
         onChange={onPick}
         className="hidden"
       />

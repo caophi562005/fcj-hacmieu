@@ -27,7 +27,12 @@ type Attribute = { name: string; value: string };
 
 type Status = (typeof ProductStatusValues)[keyof typeof ProductStatusValues];
 
-const ALLOWED_IMAGE_MIME = ['image/png', 'image/jpeg', 'image/jpg'];
+const ALLOWED_IMAGE_MIME = [
+  'image/png',
+  'image/jpeg',
+  'image/jpg',
+  'image/webp',
+];
 
 // Category gắn vào product (từ ProductResponse) — đủ để suy ra parent/child.
 type ProductCategoryRef = {
@@ -368,7 +373,7 @@ export function ProductForm({
     );
 
     if (hasInvalidMime) {
-      setError('Chỉ chấp nhận ảnh PNG, JPG hoặc JPEG.');
+      setError('Chỉ chấp nhận ảnh PNG, JPG, JPEG hoặc WEBP.');
       e.target.value = '';
       return;
     }
@@ -426,7 +431,7 @@ export function ProductForm({
     if (!file) return;
 
     if (!ALLOWED_IMAGE_MIME.includes(file.type)) {
-      setError('Chỉ chấp nhận ảnh PNG, JPG hoặc JPEG.');
+      setError('Chỉ chấp nhận ảnh PNG, JPG, JPEG hoặc WEBP.');
       e.target.value = '';
       return;
     }
@@ -764,12 +769,12 @@ export function ProductForm({
       {/* Ảnh */}
       <Section
         title="Hình ảnh"
-        description="Tải ảnh PNG/JPG/JPEG. Ảnh mới sẽ được preview tạm thời trước khi lưu."
+        description="Tải ảnh PNG/JPG/JPEG/WEBP. Ảnh mới sẽ được preview tạm thời trước khi lưu."
       >
         <input
           ref={imageInputRef}
           type="file"
-          accept="image/png,image/jpeg,image/jpg"
+          accept="image/png,image/jpeg,image/jpg,image/webp"
           multiple
           className="hidden"
           onChange={onImageFilesChange}
@@ -1041,7 +1046,7 @@ export function ProductForm({
                         skuImageInputRefs.current[i] = el;
                       }}
                       type="file"
-                      accept="image/png,image/jpeg,image/jpg"
+                      accept="image/png,image/jpeg,image/jpg,image/webp"
                       className="hidden"
                       onChange={(e) => onSkuImageChange(i, e)}
                     />

@@ -175,9 +175,12 @@ export default async function MerchantPage({
                   key={m.id}
                   className="hover:bg-surface-alt transition-colors"
                 >
-                  <td className="py-3 px-4">
-                    <div className="inline-flex items-center gap-1.5">
-                      <span className="text-primary font-medium">
+                  <td className="py-3 px-4 align-middle">
+                    <div className="flex items-center gap-1">
+                      <span
+                        className="font-mono text-xs text-ink-subtle truncate max-w-[80px]"
+                        title={m.id}
+                      >
                         {m.id.slice(0, 8)}…
                       </span>
                       <CopyButton value={m.id} label="Copy merchant ID" />

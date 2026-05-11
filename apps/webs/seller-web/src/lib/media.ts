@@ -27,6 +27,7 @@ export function imageMimeTypeToExtension(mimeType: string): string {
     'image/jpeg': 'jpg',
     'image/jpg': 'jpg',
     'image/png': 'png',
+    'image/webp': 'webp',
   };
 
   return map[mimeType.toLowerCase()] ?? 'jpg';

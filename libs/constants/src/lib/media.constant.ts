@@ -3,6 +3,8 @@ import z from 'zod';
 export const ImageTypeValues = {
   AVATAR: 'AVATAR',
   PRODUCT: 'PRODUCT',
+  CATEGORY: 'CATEGORY',
+  BRAND: 'BRAND',
   BANNER: 'BANNER',
   REVIEW: 'REVIEW',
   OTHER: 'OTHER',
@@ -11,6 +13,8 @@ export const ImageTypeValues = {
 export const ImageTypeEnums = z.enum([
   ImageTypeValues.AVATAR,
   ImageTypeValues.PRODUCT,
+  ImageTypeValues.CATEGORY,
+  ImageTypeValues.BRAND,
   ImageTypeValues.BANNER,
   ImageTypeValues.REVIEW,
   ImageTypeValues.OTHER,

@@ -24,7 +24,7 @@ export default async function ShopDetailPage({
         </Link>
       </div>
 
-      <div className="max-w-5xl">
+      <div className="max-w-5xl mx-auto">
         <ShopDetailForm
           shop={{
             id: shop.id,

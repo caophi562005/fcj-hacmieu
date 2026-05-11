@@ -21,17 +21,15 @@ export class MediaService {
         : generateRandomFileName(fileName);
 
     const folder = type.toLowerCase();
-    let key = '';
-    if (type === ImageTypeValues.AVATAR) {
-      key = `${userId}/${folder}/${finalFileName}`;
-    } else if (
-      type === ImageTypeValues.PRODUCT &&
-      body.productId !== undefined
-    ) {
-      key = `${userId}/${folder}/${body.productId}/${finalFileName}`;
-    } else {
-      key = `${userId}/${folder}/${finalFileName}`;
-    }
+    const keyByType: Record<string, string> = {
+      [ImageTypeValues.AVATAR]: `${userId}/${folder}/${finalFileName}`,
+      [ImageTypeValues.PRODUCT]: body.productId
+        ? `${userId}/${folder}/${body.productId}/${finalFileName}`
+        : `${finalFileName}`,
+      [ImageTypeValues.BRAND]: `brands/${finalFileName}`,
+      [ImageTypeValues.CATEGORY]: `categories/${finalFileName}`,
+    };
+    const key = keyByType[type] ?? `${finalFileName}`;
 
     const presignedUrl = await this.s3Service.createPresignedUrlWithClient(key);
 

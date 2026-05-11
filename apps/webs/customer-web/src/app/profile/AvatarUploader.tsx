@@ -2,10 +2,7 @@
 
 import { Camera, Loader2 } from 'lucide-react';
 import { useActionState, useEffect, useRef } from 'react';
-import {
-  uploadAvatarAction,
-  type UploadAvatarState,
-} from './avatar-actions';
+import { uploadAvatarAction, type UploadAvatarState } from './avatar-actions';
 
 const INITIAL_STATE: UploadAvatarState = { ok: false, message: '' };
 
@@ -65,13 +62,13 @@ export function AvatarUploader({ src, alt }: Props) {
           ref={inputRef}
           type="file"
           name="avatar"
-          accept="image/png,image/jpeg,image/jpg"
+          accept="image/png,image/jpeg,image/jpg,image/webp"
           className="hidden"
           onChange={handleChange}
         />
       </form>
       <p className="text-xs text-ink-subtle mt-3">
-        Ảnh JPG/PNG, tối đa 2MB.
+        Ảnh JPG/JPEG/PNG/WEBP, tối đa 2MB.
       </p>
       {state.message && (
         <p

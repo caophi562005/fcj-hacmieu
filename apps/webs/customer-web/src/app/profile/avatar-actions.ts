@@ -10,7 +10,7 @@ export type UploadAvatarState = {
   message: string;
 };
 
-const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/jpg'];
+const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
 const MAX_SIZE = 2 * 1024 * 1024; // 2MB
 
 export async function uploadAvatarAction(
@@ -23,7 +23,10 @@ export async function uploadAvatarAction(
   }
 
   if (!ALLOWED_MIME.includes(file.type)) {
-    return { ok: false, message: 'Chỉ chấp nhận ảnh JPG, JPEG hoặc PNG.' };
+    return {
+      ok: false,
+      message: 'Chỉ chấp nhận ảnh JPG, JPEG, PNG hoặc WEBP.',
+    };
   }
 
   if (file.size > MAX_SIZE) {

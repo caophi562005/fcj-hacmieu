@@ -85,7 +85,7 @@ export function UserEditForm({ user }: Props) {
             <input
               ref={avatarInputRef}
               type="file"
-              accept="image/png,image/jpeg,image/jpg"
+              accept="image/png,image/jpeg,image/jpg,image/webp"
               className="hidden"
               onChange={async (event) => {
                 const file = event.currentTarget.files?.[0];
@@ -93,9 +93,14 @@ export function UserEditForm({ user }: Props) {
                 if (!file) return;
 
                 if (
-                  !['image/png', 'image/jpeg', 'image/jpg'].includes(file.type)
+                  ![
+                    'image/png',
+                    'image/jpeg',
+                    'image/jpg',
+                    'image/webp',
+                  ].includes(file.type)
                 ) {
-                  toast.error('Chỉ hỗ trợ ảnh PNG/JPG/JPEG.');
+                  toast.error('Chỉ hỗ trợ ảnh PNG/JPG/JPEG/WEBP.');
                   return;
                 }
 

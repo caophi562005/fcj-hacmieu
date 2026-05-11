@@ -18,6 +18,7 @@ const ACCESS_TOKEN_COOKIE = 'access_token';
 const ID_TOKEN_COOKIE = 'id_token';
 const REFRESH_TOKEN_COOKIE = 'refresh_token';
 const REFRESH_THRESHOLD_SECONDS = 5 * 60;
+const ADMIN_GROUP = 'ADMIN';
 
 const BFF_BASE_URL = AppConfiguration.ADMIN_BFF_URL;
 
@@ -30,16 +31,41 @@ type RefreshResponse = {
   };
 };
 
-function decodeJwtExp(token: string): number | null {
+type JwtPayload = {
+  exp?: number;
+  groups?: unknown;
+  group?: unknown;
+  'cognito:groups'?: unknown;
+};
+
+function decodeJwtPayload(token: string): JwtPayload | null {
   try {
     const [, payloadB64] = token.split('.');
     if (!payloadB64) return null;
     const json = atob(payloadB64.replace(/-/g, '+').replace(/_/g, '/'));
-    const payload = JSON.parse(json) as { exp?: number };
-    return typeof payload.exp === 'number' ? payload.exp : null;
+    const payload = JSON.parse(json);
+    return payload && typeof payload === 'object'
+      ? (payload as JwtPayload)
+      : null;
   } catch {
     return null;
   }
+}
+
+function extractGroups(payload: JwtPayload | null): string[] {
+  if (!payload) return [];
+
+  const raw = payload['cognito:groups'] ?? payload.groups ?? payload.group;
+  if (Array.isArray(raw)) {
+    return raw.filter((value): value is string => typeof value === 'string');
+  }
+  if (typeof raw === 'string' && raw.trim()) return [raw.trim()];
+  return [];
+}
+
+function decodeJwtExp(token: string): number | null {
+  const payload = decodeJwtPayload(token);
+  return typeof payload?.exp === 'number' ? payload.exp : null;
 }
 
 async function refreshTokens(refreshToken: string): Promise<{
@@ -77,10 +103,18 @@ async function refreshTokens(refreshToken: string): Promise<{
 }
 
 export async function proxy(req: NextRequest) {
+  const pathname = req.nextUrl.pathname;
   const accessToken = req.cookies.get(ACCESS_TOKEN_COOKIE)?.value;
   const refreshToken = req.cookies.get(REFRESH_TOKEN_COOKIE)?.value;
 
   if (!accessToken) return NextResponse.next();
+
+  if (pathname !== '/503' && pathname !== '/login') {
+    const groups = extractGroups(decodeJwtPayload(accessToken));
+    if (groups.length > 0 && !groups.includes(ADMIN_GROUP)) {
+      return NextResponse.redirect(new URL('/503', req.url));
+    }
+  }
 
   const exp = decodeJwtExp(accessToken);
   if (!exp) return NextResponse.next();

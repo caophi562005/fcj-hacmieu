@@ -28,7 +28,7 @@ async function uploadBrandLogo(logoBase64?: string): Promise<string | null> {
 
   const { presignedUrl, url } = await createPresignedUrl({
     fileName,
-    type: ImageTypeValues.OTHER,
+    type: ImageTypeValues.BRAND,
   });
 
   const putRes = await fetch(presignedUrl, {

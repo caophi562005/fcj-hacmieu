@@ -27,7 +27,7 @@ async function uploadCategoryLogo(logoBase64?: string): Promise<string | null> {
 
   const { presignedUrl, url } = await createPresignedUrl({
     fileName,
-    type: ImageTypeValues.OTHER,
+    type: ImageTypeValues.CATEGORY,
   });
 
   const putRes = await fetch(presignedUrl, {

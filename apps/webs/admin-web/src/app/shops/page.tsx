@@ -126,17 +126,23 @@ export default async function ShopsPage({
                   key={s.id}
                   className="hover:bg-surface-alt transition-colors"
                 >
-                  <td className="py-3 px-4">
-                    <div className="inline-flex items-center gap-1.5">
-                      <span className="text-primary font-medium">
+                  <td className="py-3 px-4 align-middle">
+                    <div className="flex items-center gap-1">
+                      <span
+                        className="font-mono text-xs text-ink-subtle truncate max-w-[80px]"
+                        title={s.id}
+                      >
                         {s.id.slice(0, 8)}…
                       </span>
                       <CopyButton value={s.id} label="Copy shop ID" />
                     </div>
                   </td>
-                  <td className="py-3 px-4">
-                    <div className="inline-flex items-center gap-1.5">
-                      <span className="text-primary font-medium">
+                  <td className="py-3 px-4 align-middle">
+                    <div className="flex items-center gap-1">
+                      <span
+                        className="font-mono text-xs text-ink-subtle truncate max-w-[80px]"
+                        title={s.merchantId}
+                      >
                         {s.merchantId.slice(0, 8)}…
                       </span>
                       <CopyButton

@@ -17,7 +17,12 @@ type BrandViewModel = {
   logo: string | null;
 };
 
-const ALLOWED_IMAGE_MIME = ['image/png', 'image/jpeg', 'image/jpg'];
+const ALLOWED_IMAGE_MIME = [
+  'image/png',
+  'image/jpeg',
+  'image/jpg',
+  'image/webp',
+];
 
 function BrandLogoPicker({
   logo,
@@ -38,7 +43,7 @@ function BrandLogoPicker({
         <input
           ref={inputRef}
           type="file"
-          accept="image/png,image/jpeg,image/jpg"
+          accept="image/png,image/jpeg,image/jpg,image/webp"
           className="hidden"
           onChange={async (event) => {
             const file = event.currentTarget.files?.[0];
@@ -46,7 +51,7 @@ function BrandLogoPicker({
             if (!file) return;
 
             if (!ALLOWED_IMAGE_MIME.includes(file.type)) {
-              toast.error('Chỉ hỗ trợ ảnh PNG/JPG/JPEG.');
+              toast.error('Chỉ hỗ trợ ảnh PNG/JPG/JPEG/WEBP.');
               return;
             }
 
