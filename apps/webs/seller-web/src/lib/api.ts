@@ -12,13 +12,33 @@ export type CreateApiOptions = {
   cookie?: string | null;
 };
 
+function redirectToLoginIfClient() {
+  if (typeof window === 'undefined') return;
+  if (window.location.pathname === '/login') return;
+  window.location.assign('/login');
+}
+
 // Server-only helper: tự đọc httpOnly cookie `access_token` rồi tạo axios kèm Bearer.
 // Dùng trong server components / server actions / route handlers.
 export async function createServerApi(): Promise<AxiosInstance> {
   const c = await cookies();
   const accessToken = c.get(ACCESS_TOKEN_COOKIE)?.value ?? null;
   const idToken = c.get(ID_TOKEN_COOKIE)?.value ?? null;
-  return createApi({ accessToken, idToken });
+  const instance = createApi({ accessToken, idToken });
+
+  instance.interceptors.response.use(
+    (res) => res,
+    async (err) => {
+      if (err?.response?.status === 401) {
+        const { redirect } = await import('next/navigation');
+        redirect('/login');
+      }
+
+      return Promise.reject(err);
+    },
+  );
+
+  return instance;
 }
 
 export function createApi(options: CreateApiOptions = {}): AxiosInstance {
@@ -50,6 +70,11 @@ export function createApi(options: CreateApiOptions = {}): AxiosInstance {
     (res) => res,
     (err) => {
       const status = err?.response?.status;
+      if (status === 401) {
+        redirectToLoginIfClient();
+        return Promise.reject(err);
+      }
+
       const method = err?.config?.method?.toUpperCase();
       const url = err?.config?.url;
       const data = err?.response?.data;

@@ -31,7 +31,13 @@ export class ReviewService implements OnModuleInit {
   async getManyReviews(
     data: GetManyReviewsRequest,
   ): Promise<GetManyReviewsResponse> {
-    return firstValueFrom(this.reviewModule.getManyReviews(data));
+    const response = await firstValueFrom(
+      this.reviewModule.getManyReviews(data),
+    );
+    return {
+      ...response,
+      reviews: response.reviews ?? [],
+    };
   }
 
   async getReview(data: GetReviewRequest): Promise<ReviewResponse> {

@@ -22,17 +22,40 @@ export async function getManyReviews(
   const page = query.page ?? 1;
   const limit = query.limit ?? 5;
   const api = await createServerApi();
-  const res = await api.get<ApiResponse<GetManyReviewsResponse>>(
-    '/utility/review',
-    {
-      params: {
-        page,
-        limit,
-        ...(query.productId ? { productId: query.productId } : {}),
+  try {
+    const res = await api.get<ApiResponse<GetManyReviewsResponse>>(
+      '/utility/review',
+      {
+        params: {
+          page,
+          limit,
+          ...(query.productId ? { productId: query.productId } : {}),
+        },
+        validateStatus: (s) => (s >= 200 && s < 300) || s === 404,
       },
-      validateStatus: (s) => (s >= 200 && s < 300) || s === 404,
-    },
-  );
-  if (res.status === 404) return { ...EMPTY_MANY, page, limit };
-  return res.data?.data ?? { ...EMPTY_MANY, page, limit };
+    );
+    if (res.status === 404) return { ...EMPTY_MANY, page, limit };
+    return res.data?.data ?? { ...EMPTY_MANY, page, limit };
+  } catch (err) {
+    const status = (err as { response?: { status?: number } })?.response
+      ?.status;
+    const message = (err as { response?: { data?: { message?: unknown } } })
+      ?.response?.data?.message;
+    const normalizedMessage = Array.isArray(message)
+      ? message.join(', ')
+      : typeof message === 'string'
+        ? message
+        : '';
+
+    if (
+      status === 500 &&
+      normalizedMessage.includes(
+        "Cannot read properties of undefined (reading 'map')",
+      )
+    ) {
+      return { ...EMPTY_MANY, page, limit };
+    }
+
+    throw err;
+  }
 }

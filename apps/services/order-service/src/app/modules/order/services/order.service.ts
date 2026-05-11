@@ -11,6 +11,10 @@ import {
 import { PrismaErrorValues } from '@common/constants/prisma.constant';
 import { DiscountTypeValues } from '@common/constants/promotion.constant';
 import {
+  WalletTransactionSourceValues,
+  WalletTransactionTypeValues,
+} from '@common/constants/wallet.constant';
+import {
   CancelOrderRequest,
   CreateOrderRequest,
   CreateOrderResponse,
@@ -21,7 +25,10 @@ import {
   UpdateStatusOrderRequest,
 } from '@common/interfaces/models/order';
 import { CreatePromotionRedemptionRequest } from '@common/interfaces/models/promotion';
-import { AdjustShopCreditRequest } from '@common/interfaces/models/wallet';
+import {
+  AdjustShopCreditRequest,
+  AdjustWalletRequest,
+} from '@common/interfaces/models/wallet';
 import {
   CATALOG_SERVICE_PACKAGE_NAME,
   PRODUCT_MODULE_SERVICE_NAME,
@@ -32,6 +39,11 @@ import {
   PROMOTION_SERVICE_PACKAGE_NAME,
   PromotionModuleClient,
 } from '@common/interfaces/proto-types/promotion';
+import {
+  WALLET_MODULE_SERVICE_NAME,
+  WALLET_SERVICE_PACKAGE_NAME,
+  WalletModuleClient,
+} from '@common/interfaces/proto-types/wallet';
 import {
   BadRequestException,
   Inject,
@@ -57,6 +69,7 @@ const generatePaymentCode = customAlphabet(
 export class OrderService implements OnModuleInit {
   private productModule!: ProductModuleClient;
   private promotionModule!: PromotionModuleClient;
+  private walletModule!: WalletModuleClient;
 
   constructor(
     @Inject(CATALOG_SERVICE_PACKAGE_NAME)
@@ -64,6 +77,9 @@ export class OrderService implements OnModuleInit {
 
     @Inject(PROMOTION_SERVICE_PACKAGE_NAME)
     private promotionClient: ClientGrpc,
+
+    @Inject(WALLET_SERVICE_PACKAGE_NAME)
+    private walletClient: ClientGrpc,
 
     private readonly orderRepository: OrderRepository,
     private readonly cartItemService: CartItemService,
@@ -79,6 +95,9 @@ export class OrderService implements OnModuleInit {
       this.promotionClient.getService<PromotionModuleClient>(
         PROMOTION_MODULE_SERVICE_NAME,
       );
+    this.walletModule = this.walletClient.getService<WalletModuleClient>(
+      WALLET_MODULE_SERVICE_NAME,
+    );
   }
 
   private async sendQueueMessage<T>(queueName: string, body: T) {
@@ -121,6 +140,20 @@ export class OrderService implements OnModuleInit {
     userId,
     ...data
   }: CreateOrderRequest): Promise<CreateOrderResponse> {
+    const requestedCoin = Math.max(0, Math.floor(data.coin ?? 0));
+    if (requestedCoin > 0) {
+      const wallet = await firstValueFrom(
+        this.walletModule.getMyWallet({
+          processId,
+          userId,
+        }),
+      );
+
+      if ((wallet.balance ?? 0) < requestedCoin) {
+        throw new BadRequestException('Error.WalletInsufficientBalance');
+      }
+    }
+
     const cartItemIds = Array.from(
       new Set(data.orders.flatMap((item) => item.cartItemIds)),
     );
@@ -257,8 +290,39 @@ export class OrderService implements OnModuleInit {
       };
     }
 
+    if (requestedCoin > 0) {
+      let remainingCoin = requestedCoin;
+      const sortedOrders = [...ordersWithTotal].sort(
+        (a, b) => a.itemTotal - b.itemTotal,
+      );
+
+      sortedOrders.forEach((order) => {
+        if (remainingCoin <= 0) return;
+
+        const orderPayableAfterDiscount = Math.max(
+          0,
+          order.itemTotal + data.shippingFee + order.discount,
+        );
+
+        if (orderPayableAfterDiscount <= 0) return;
+
+        const applied = Math.min(remainingCoin, orderPayableAfterDiscount);
+        order.discount -= applied;
+        remainingCoin -= applied;
+      });
+
+      ordersWithTotal.forEach((order) => {
+        const sortedOrder = sortedOrders.find(
+          (so) => so.shopId === order.shopId,
+        );
+        if (sortedOrder) {
+          order.discount = sortedOrder.discount;
+        }
+      });
+    }
+
     const isOnlinePayment = data.paymentMethod === PaymentMethodValues.ONLINE;
-    const paymentId = isOnlinePayment ? uuidv4() : null;
+    const paymentId = uuidv4();
     const paymentCode = isOnlinePayment ? `PAY${generatePaymentCode()}` : null;
 
     const mergedData = {
@@ -271,6 +335,35 @@ export class OrderService implements OnModuleInit {
     };
 
     const createdOrders = await this.orderRepository.create(mergedData);
+
+    if (requestedCoin > 0 && createdOrders.length > 0) {
+      const actuallyAppliedCoin = Math.max(
+        0,
+        Math.floor(
+          createdOrders.reduce(
+            (sum, order) => sum + Math.max(0, -(order.discount ?? 0)),
+            0,
+          ),
+        ),
+      );
+
+      if (actuallyAppliedCoin > 0) {
+        const debitPayload: AdjustWalletRequest = {
+          processId,
+          userId,
+          type: WalletTransactionTypeValues.DEBIT,
+          source: WalletTransactionSourceValues.ORDER_PAYMENT,
+          referenceId: createdOrders.map((order) => order.id).join(','),
+          amount: actuallyAppliedCoin,
+          description:
+            createdOrders.length === 1
+              ? `Thanh toán đơn hàng ${createdOrders[0].code} bằng V-Xu`
+              : `Thanh toán ${createdOrders.length} đơn hàng bằng V-Xu`,
+        };
+
+        await firstValueFrom(this.walletModule.adjustWallet(debitPayload));
+      }
+    }
 
     // Tạo PromotionRedemption nếu có promotion
     if (promotionData && createdOrders.length > 0) {

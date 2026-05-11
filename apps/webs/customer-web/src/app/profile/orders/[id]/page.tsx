@@ -1,5 +1,8 @@
 import { OrderStatusValues } from '@common/constants/order.constant';
-import { PaymentMethodValues } from '@common/constants/payment.constant';
+import {
+  PaymentMethodValues,
+  PaymentStatusValues,
+} from '@common/constants/payment.constant';
 import type { ReviewResponse } from '@common/interfaces/models/utility';
 import type { LucideIcon } from 'lucide-react';
 import {
@@ -33,6 +36,21 @@ function statusLabel(status: string): string {
       return 'Đã hủy';
     case OrderStatusValues.REFUNDED:
       return 'Đã hoàn tiền';
+    default:
+      return status;
+  }
+}
+
+function paymentStatusLabel(status: string): string {
+  switch (status) {
+    case PaymentStatusValues.PENDING:
+      return 'Chờ thanh toán';
+    case PaymentStatusValues.SUCCESS:
+      return 'Đã thanh toán';
+    case PaymentStatusValues.FAILED:
+      return 'Thanh toán thất bại';
+    case PaymentStatusValues.CANCELLED:
+      return 'Đã hủy thanh toán';
     default:
       return status;
   }
@@ -234,7 +252,7 @@ export default async function OrderDetailPage({
                 {paymentMethodLabel(order.paymentMethod)}
               </p>
               <p className="text-sm text-ink-muted">
-                Trạng thái: {order.paymentStatus}
+                Trạng thái: {paymentStatusLabel(order.paymentStatus)}
               </p>
               {order.paymentId && (
                 <p className="text-xs text-ink-subtle mt-1">

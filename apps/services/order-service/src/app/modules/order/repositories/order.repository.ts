@@ -152,6 +152,10 @@ export class OrderRepository {
               0,
             );
           const discount = shopOrder.discount || 0;
+          const grandTotal = Math.max(
+            0,
+            itemTotal + data.shippingFee + discount,
+          );
 
           return tx.order.create({
             data: {
@@ -166,7 +170,7 @@ export class OrderRepository {
 
               discount: discount,
 
-              grandTotal: itemTotal + data.shippingFee + discount,
+              grandTotal,
 
               receiver: data.receiver,
               paymentMethod: data.paymentMethod,

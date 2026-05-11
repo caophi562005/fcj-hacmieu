@@ -9,6 +9,7 @@ export const CreateOrderRequestSchema = z
     processId: z.uuid().optional(),
     shippingFee: z.number(),
     discountCode: z.string().optional(),
+    coin: z.number().int().nonnegative().optional(),
     paymentMethod: PaymentMethodEnums,
     userId: z.uuid(),
     receiver: ReceiverSchema,

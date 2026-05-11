@@ -3,6 +3,7 @@
 import { DiscountTypeValues } from '@common/constants/promotion.constant';
 import {
   CheckCircle2,
+  Coins,
   CreditCard,
   MapPin,
   Store,
@@ -19,6 +20,7 @@ import type { PaymentShopGroupView, PaymentVoucherView } from './payment.types';
 type Props = {
   groups: PaymentShopGroupView[];
   voucher: PaymentVoucherView | null;
+  availableCoin: number;
 };
 
 type ShippingMethod = 'fast' | 'std';
@@ -55,9 +57,10 @@ function calcDiscount(voucher: PaymentVoucherView, subtotal: number): number {
   return Math.min(voucher.discountValue, subtotal);
 }
 
-export function PaymentView({ groups, voucher }: Props) {
+export function PaymentView({ groups, voucher, availableCoin }: Props) {
   const [shippingMethod, setShippingMethod] = useState<ShippingMethod>('fast');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('COD');
+  const [coinInput, setCoinInput] = useState('0');
 
   const [receiverName, setReceiverName] = useState('');
   const [receiverPhone, setReceiverPhone] = useState('');
@@ -77,8 +80,23 @@ export function PaymentView({ groups, voucher }: Props) {
 
   const shippingFee =
     SHIPPING_OPTIONS.find((option) => option.id === shippingMethod)?.fee ?? 0;
-  const discount = voucher ? calcDiscount(voucher, subtotal) : 0;
-  const total = subtotal + shippingFee - discount;
+  const voucherDiscount = voucher ? calcDiscount(voucher, subtotal) : 0;
+  const payableBeforeCoin = Math.max(
+    0,
+    subtotal + shippingFee - voucherDiscount,
+  );
+
+  const requestedCoin = Number.parseInt(coinInput || '0', 10);
+  const normalizedRequestedCoin = Number.isFinite(requestedCoin)
+    ? Math.max(0, requestedCoin)
+    : 0;
+  const appliedCoin = Math.min(
+    Math.floor(availableCoin),
+    Math.floor(payableBeforeCoin),
+    normalizedRequestedCoin,
+  );
+
+  const total = payableBeforeCoin - appliedCoin;
   const totalItems = groups.reduce((sum, group) => sum + group.items.length, 0);
 
   const handleCreateOrder = async () => {
@@ -102,6 +120,7 @@ export function PaymentView({ groups, voucher }: Props) {
     const res = await createOrderAction({
       shippingFee,
       discountCode: voucher?.code,
+      coin: appliedCoin,
       paymentMethod,
       receiver: {
         name: receiverName.trim(),
@@ -290,6 +309,42 @@ export function PaymentView({ groups, voucher }: Props) {
         </div>
 
         <div className="card p-4">
+          <div className="flex items-center justify-between gap-3 mb-3">
+            <div className="flex items-center gap-2">
+              <Coins className="w-5 h-5 text-primary" />
+              <div className="font-semibold">Dùng V-Xu</div>
+            </div>
+            <span className="text-xs text-ink-subtle">
+              Khả dụng: {formatVnd(Math.floor(availableCoin))}
+            </span>
+          </div>
+
+          <label className="block">
+            <span className="text-sm text-ink-muted">
+              Nhập số xu muốn dùng (không vượt quá số xu hiện có)
+            </span>
+            <input
+              type="number"
+              min={0}
+              max={Math.min(
+                Math.floor(availableCoin),
+                Math.floor(payableBeforeCoin),
+              )}
+              step={1}
+              inputMode="numeric"
+              className="input mt-2"
+              value={coinInput}
+              onChange={(e) => setCoinInput(e.target.value)}
+            />
+          </label>
+
+          <p className="text-xs text-ink-subtle mt-2">
+            V-Xu áp dụng:{' '}
+            {appliedCoin > 0 ? `-${formatVnd(appliedCoin)}` : '0đ'}
+          </p>
+        </div>
+
+        <div className="card p-4">
           <div className="font-semibold mb-3">Phương thức thanh toán</div>
           <div className="grid sm:grid-cols-2 gap-2">
             {PAYMENT_OPTIONS.map((method) => (
@@ -338,10 +393,22 @@ export function PaymentView({ groups, voucher }: Props) {
             </div>
             <div className="flex justify-between">
               <dt className="text-ink-muted">Voucher giảm giá</dt>
-              <dd className={discount > 0 ? 'text-success' : 'text-ink-muted'}>
-                {discount > 0 ? `-${formatVnd(discount)}` : 'Không áp dụng'}
+              <dd
+                className={
+                  voucherDiscount > 0 ? 'text-success' : 'text-ink-muted'
+                }
+              >
+                {voucherDiscount > 0
+                  ? `-${formatVnd(voucherDiscount)}`
+                  : 'Không áp dụng'}
               </dd>
             </div>
+            {appliedCoin > 0 && (
+              <div className="flex justify-between">
+                <dt className="text-ink-muted">V-XU</dt>
+                <dd className="text-success">-{formatVnd(appliedCoin)}</dd>
+              </div>
+            )}
             <div className="border-t border-border-subtle pt-2 flex justify-between">
               <dt className="font-semibold">Tổng thanh toán</dt>
               <dd className="font-bold text-primary text-lg">

@@ -36,6 +36,7 @@ export interface CreateOrderRequest {
   paymentMethod: string;
   receiver: Receiver | undefined;
   orders: OrderGroup[];
+  coin?: number | undefined;
 }
 
 export interface Receiver {

@@ -16,6 +16,7 @@ import { OrderService } from './services/order.service';
     ClientsModule.register([
       GrpcClientProvider(GrpcService.CATALOG_SERVICE),
       GrpcClientProvider(GrpcService.PROMOTION_SERVICE),
+      GrpcClientProvider(GrpcService.WALLET_SERVICE),
     ]),
     SqsModule.register({
       producers: [

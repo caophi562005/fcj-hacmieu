@@ -45,6 +45,7 @@ message CreateOrderRequest {
   string paymentMethod = 5;
   Receiver receiver = 6;
   repeated OrderGroup orders = 7;
+  optional int32 coin = 8;
 }
 
 message Receiver {

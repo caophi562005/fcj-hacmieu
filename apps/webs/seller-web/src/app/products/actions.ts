@@ -138,24 +138,52 @@ export async function createProductAction(
   imageUploadInput?: ProductImageUploadInput,
   skuImageUploadInput?: SkuImageUploadInput[],
 ): Promise<ProductMutationResult> {
-  try {
-    const uploadedImages = await uploadProductImages(imageUploadInput);
-    const uploadedSkus = await uploadSkuImages(
-      payload.skus,
-      skuImageUploadInput,
-    );
+  let createdProductId: string | null = null;
 
-    const product = await createSellerProduct({
-      ...payload,
-      images: uploadedImages
-        ? [...payload.images, ...uploadedImages]
-        : payload.images,
-      skus: uploadedSkus,
-    });
+  try {
+    const product = await createSellerProduct(payload);
+    createdProductId = product.id;
+
+    const hasNewProductImages =
+      (imageUploadInput?.base64DataUrls.length ?? 0) > 0;
+    const hasNewSkuImages = (skuImageUploadInput?.length ?? 0) > 0;
+
+    if (hasNewProductImages || hasNewSkuImages) {
+      const uploadedImages = await uploadProductImages(
+        imageUploadInput,
+        product.id,
+      );
+      const uploadedSkus = await uploadSkuImages(
+        payload.skus,
+        skuImageUploadInput,
+        product.id,
+      );
+
+      await updateSellerProduct(product.id, {
+        ...payload,
+        images: uploadedImages
+          ? [...payload.images, ...uploadedImages]
+          : payload.images,
+        skus: uploadedSkus,
+      });
+    }
+
     revalidatePath('/products');
     return { ok: true, id: product.id };
   } catch (err) {
     console.error('[createProductAction]', err);
+
+    if (createdProductId) {
+      try {
+        await deleteSellerProduct(createdProductId);
+      } catch (cleanupErr) {
+        console.error(
+          '[createProductAction] rollback delete failed:',
+          cleanupErr,
+        );
+      }
+    }
+
     return { ok: false, message: extractErrorMessage(err) };
   }
 }

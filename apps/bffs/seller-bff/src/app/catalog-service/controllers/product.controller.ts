@@ -36,6 +36,7 @@ export class ProductController {
   ) {
     return this.productService.getManyProducts({
       ...queries,
+      categories: queries.categories ?? [],
       processId,
       shopId,
     });

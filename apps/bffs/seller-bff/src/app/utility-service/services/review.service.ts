@@ -32,9 +32,11 @@ export class ReviewService implements OnModuleInit {
     const response = await firstValueFrom(
       this.reviewModule.getManyReviews(data),
     );
+    const reviews = response.reviews ?? [];
+
     return {
       ...response,
-      reviews: response.reviews.map((review) => ({
+      reviews: reviews.map((review) => ({
         id: review.id,
         userId: review.userId,
         productId: review.productId,

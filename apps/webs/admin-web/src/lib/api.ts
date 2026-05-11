@@ -12,6 +12,12 @@ export type CreateApiOptions = {
   cookie?: string | null;
 };
 
+function redirectToLoginIfClient() {
+  if (typeof window === 'undefined') return;
+  if (window.location.pathname === '/login') return;
+  window.location.assign('/login');
+}
+
 export function isUnauthorizedError(err: unknown): boolean {
   const status = (err as { response?: { status?: number } })?.response?.status;
   return status === 401;
@@ -23,7 +29,21 @@ export async function createServerApi(): Promise<AxiosInstance> {
   const c = await cookies();
   const accessToken = c.get(ACCESS_TOKEN_COOKIE)?.value ?? null;
   const idToken = c.get(ID_TOKEN_COOKIE)?.value ?? null;
-  return createApi({ accessToken, idToken });
+  const instance = createApi({ accessToken, idToken });
+
+  instance.interceptors.response.use(
+    (res) => res,
+    async (err) => {
+      if (err?.response?.status === 401) {
+        const { redirect } = await import('next/navigation');
+        redirect('/login');
+      }
+
+      return Promise.reject(err);
+    },
+  );
+
+  return instance;
 }
 
 export function createApi(options: CreateApiOptions = {}): AxiosInstance {
@@ -56,6 +76,7 @@ export function createApi(options: CreateApiOptions = {}): AxiosInstance {
     (err) => {
       const status = err?.response?.status;
       if (status === 401) {
+        redirectToLoginIfClient();
         return Promise.reject(err);
       }
 
