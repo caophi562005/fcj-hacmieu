@@ -1,3 +1,4 @@
+import { IsPublic } from '@common/decorators/auth.decorator';
 import { ProcessId } from '@common/decorators/process-id.decorator';
 import {
   GetAttributeRequestDto,
@@ -11,6 +12,7 @@ import { AttributeService } from '../services/attribute.service';
 
 @Controller('catalog/attribute')
 @ApiTags('Catalog/Attribute')
+@IsPublic()
 export class AttributeController {
   constructor(private readonly attributeService: AttributeService) {}
 

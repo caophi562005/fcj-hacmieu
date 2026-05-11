@@ -20,6 +20,7 @@ message GetManyProductsRequest {
   optional string shopId = 5;
   optional bool isApproved = 6;
   optional string status = 7;
+  repeated string categories = 8;
 }
 
 //==================== GetManyProductsResponse ====================//

@@ -6,9 +6,11 @@ import {
   Truck,
 } from 'lucide-react';
 import Link from 'next/link';
+import { FeaturedCategoriesCarousel } from '../components/FeaturedCategoriesCarousel';
 import { MainShell } from '../components/MainShell';
 import { ProductCard } from '../components/ProductCard';
-import { CATEGORIES, PRODUCTS } from '../components/mockData';
+import { PRODUCTS } from '../components/mockData';
+import { getRootCategories } from '../lib/catalog';
 
 const BANNERS = [
   {
@@ -27,7 +29,8 @@ const PERKS = [
   { icon: Headphones, label: 'Hỗ trợ 24/7' },
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  const rootCategories = await getRootCategories();
   const featured = PRODUCTS;
   return (
     <MainShell>
@@ -84,22 +87,7 @@ export default function HomePage() {
       <section className="container-page mt-6">
         <div className="card p-4">
           <h2 className="text-base font-semibold mb-3">Danh mục nổi bật</h2>
-          <div className="grid grid-cols-5 md:grid-cols-10 gap-2">
-            {CATEGORIES.map((c) => (
-              <Link
-                key={c.slug}
-                href={`/search?cat=${c.slug}`}
-                className="flex flex-col items-center gap-1.5 p-2 rounded hover:bg-surface-muted transition-colors text-center"
-              >
-                <span className="w-12 h-12 rounded-full bg-primary-50 flex items-center justify-center text-2xl">
-                  {c.icon}
-                </span>
-                <span className="text-xs text-ink leading-tight line-clamp-2">
-                  {c.name}
-                </span>
-              </Link>
-            ))}
-          </div>
+          <FeaturedCategoriesCarousel categories={rootCategories} />
         </div>
       </section>
 

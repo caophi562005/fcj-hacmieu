@@ -87,6 +87,9 @@ export async function getManyProducts(
     '/catalog/product',
     {
       params,
+      paramsSerializer: {
+        indexes: null,
+      },
       validateStatus: (s) => (s >= 200 && s < 300) || s === 404,
     },
   );

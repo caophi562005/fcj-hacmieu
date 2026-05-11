@@ -1,3 +1,4 @@
+import { IsPublic } from '@common/decorators/auth.decorator';
 import { ProcessId } from '@common/decorators/process-id.decorator';
 import {
   GetBrandRequestDto,
@@ -11,6 +12,7 @@ import { BrandService } from '../services/brand.service';
 
 @Controller('catalog/brand')
 @ApiTags('Catalog/Brand')
+@IsPublic()
 export class BrandController {
   constructor(private readonly brandService: BrandService) {}
 

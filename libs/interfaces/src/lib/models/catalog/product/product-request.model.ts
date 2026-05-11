@@ -17,14 +17,36 @@ export const GetManyProductsRequestSchema = z
     status: ProductStatusEnums,
 
     brandIds: z.preprocess((value) => {
+      if (Array.isArray(value)) {
+        return value
+          .flatMap((item) =>
+            typeof item === 'string' ? item.split(',') : [String(item)],
+          )
+          .map((item) => item.trim())
+          .filter(Boolean);
+      }
       if (typeof value === 'string') {
-        return value;
+        return value
+          .split(',')
+          .map((item) => item.trim())
+          .filter(Boolean);
       }
       return value;
     }, z.array(z.uuid())),
     categories: z.preprocess((value) => {
+      if (Array.isArray(value)) {
+        return value
+          .flatMap((item) =>
+            typeof item === 'string' ? item.split(',') : [String(item)],
+          )
+          .map((item) => item.trim())
+          .filter(Boolean);
+      }
       if (typeof value === 'string') {
-        return value;
+        return value
+          .split(',')
+          .map((item) => item.trim())
+          .filter(Boolean);
       }
       return value;
     }, z.array(z.uuid())),

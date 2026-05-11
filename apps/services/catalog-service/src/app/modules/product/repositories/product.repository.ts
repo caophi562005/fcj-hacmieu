@@ -410,6 +410,9 @@ export class ProductRepository {
     const limit =
       data.limit || PaginationConfiguration.DEFAULT_LIMIT_PAGINATION;
     const skip = (page - 1) * limit;
+    const categories = Array.isArray(data.categories)
+      ? data.categories.filter((value) => typeof value === 'string' && value)
+      : [];
     const where = {
       deletedAt: null,
       name: data.name
@@ -418,6 +421,17 @@ export class ProductRepository {
       shopId: data.shopId || undefined,
       isApproved: data.isApproved,
       status: data.status || undefined,
+      categories:
+        categories.length > 0
+          ? {
+              some: {
+                id: {
+                  in: categories,
+                },
+                deletedAt: null,
+              },
+            }
+          : undefined,
     };
 
     const [products, totalItems] = await Promise.all([

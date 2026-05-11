@@ -1,3 +1,4 @@
+import { IsPublic } from '@common/decorators/auth.decorator';
 import { ProcessId } from '@common/decorators/process-id.decorator';
 import {
   GetCategoryRequestDto,
@@ -11,6 +12,7 @@ import { CategoryService } from '../services/category.service';
 
 @Controller('catalog/category')
 @ApiTags('Catalog/Category')
+@IsPublic()
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
