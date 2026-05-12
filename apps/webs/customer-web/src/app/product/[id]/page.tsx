@@ -5,8 +5,11 @@ import { MainShell } from '../../../components/MainShell';
 import { Pagination } from '../../../components/Pagination';
 import { ProductCard } from '../../../components/ProductCard';
 import { ProductInteractive } from '../../../components/ProductInteractive';
-import { PRODUCTS } from '../../../components/mockData';
-import { getProductById } from '../../../lib/catalog';
+import {
+  getManyProducts,
+  getProductById,
+  toCardProduct,
+} from '../../../lib/catalog';
 import { getManyReviews } from '../../../lib/review';
 import { getShopById } from '../../../lib/shop';
 
@@ -58,7 +61,14 @@ export default async function ProductDetail({
   });
 
   const shop = await getShopById(product.shopId);
-  const related = PRODUCTS.slice(0, 6);
+  const relatedRes = await getManyProducts({
+    shopId: product.shopId,
+    limit: 6,
+  });
+  const related = relatedRes.products
+    .filter((p) => p.id !== product.id)
+    .slice(0, 6)
+    .map(toCardProduct);
   const reviewTotalPages = Math.max(reviewsData.totalPages || 1, 1);
 
   return (

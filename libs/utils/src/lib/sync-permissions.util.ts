@@ -16,7 +16,7 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const executeSyncWithRetry = async (
   app: INestApplication,
   group: GroupType,
-  maxRetries = 5,
+  maxRetries = 10,
   initialDelayMs = 1000,
 ): Promise<void> => {
   let lastError: Error | undefined;

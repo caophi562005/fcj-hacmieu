@@ -36,6 +36,16 @@ export class OrderGrpcController {
     return this.orderService.cancelOrder(data);
   }
 
+  @GrpcMethod(GrpcModuleName.ORDER.ORDER, 'PaidOrderByPayment')
+  paidOrderByPayment(data: { processId?: string; paymentId: string }) {
+    return this.orderService.paid(data);
+  }
+
+  @GrpcMethod(GrpcModuleName.ORDER.ORDER, 'CancelOrdersByPayment')
+  cancelOrdersByPayment(data: { processId?: string; paymentId: string }) {
+    return this.orderService.cancelOrdersByPayment(data);
+  }
+
   @GrpcMethod(GrpcModuleName.ORDER.ORDER, 'UpdateStatusOrder')
   updateStatusOrder(data: UpdateStatusOrderRequest) {
     return this.orderService.updateStatus(data);

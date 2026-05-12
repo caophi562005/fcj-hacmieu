@@ -9,6 +9,8 @@ service OrderModule {
   rpc CreateOrder(CreateOrderRequest) returns (CreateOrderResponse);
   rpc UpdateStatusOrder(UpdateStatusOrderRequest) returns (Order);
   rpc CancelOrder(CancelOrderRequest) returns (CancelOrderResponse);
+  rpc PaidOrderByPayment(PaymentOrderActionRequest) returns (CreateOrderResponse);
+  rpc CancelOrdersByPayment(PaymentOrderActionRequest) returns (CancelOrderResponse);
 }
 
 service CartModule {
@@ -64,6 +66,11 @@ message CreateOrderResponse {
   repeated Order orders = 1;
 }
 
+message PaymentOrderActionRequest {
+  optional string processId = 1;
+  string paymentId = 2;
+}
+
 message GetManyOrdersResponse {
   int32 page = 1;
   int32 limit = 2;
@@ -83,6 +90,8 @@ message OrderSummary {
   string firstProductImage = 8;
   string firstProductName = 9;
   string createdAt = 10;
+  string paymentMethod = 11;
+  string paymentStatus = 12;
 }
 
 message OrderItem {

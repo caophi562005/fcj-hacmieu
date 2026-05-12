@@ -10,7 +10,7 @@ import { createServerApi } from './api';
 export type CreateOrderInput = Omit<CreateOrderRequest, 'processId' | 'userId'>;
 
 export type CreateOrderResult =
-  | { ok: true; orderIds: string[] }
+  | { ok: true; orderIds: string[]; paymentId: string | null }
   | { ok: false; message: string };
 
 export async function createOrderAction(
@@ -23,8 +23,10 @@ export async function createOrderAction(
       payload,
     );
 
-    const orderIds = data?.data?.orders?.map((order) => order.id) ?? [];
-    return { ok: true, orderIds };
+    const orders = data?.data?.orders ?? [];
+    const orderIds = orders.map((order) => order.id);
+    const paymentId = orders[0]?.paymentId ?? null;
+    return { ok: true, orderIds, paymentId };
   } catch (error: unknown) {
     const err = error as {
       response?: { status?: number; data?: { message?: string } };
@@ -38,7 +40,9 @@ export async function createOrderAction(
     return {
       ok: false,
       message:
-        err?.response?.data?.message ?? err?.message ?? 'Không thể tạo đơn hàng.',
+        err?.response?.data?.message ??
+        err?.message ??
+        'Không thể tạo đơn hàng.',
     };
   }
 }

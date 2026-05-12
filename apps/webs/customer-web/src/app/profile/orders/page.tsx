@@ -2,6 +2,10 @@ import {
   OrderStatus,
   OrderStatusValues,
 } from '@common/constants/order.constant';
+import {
+  PaymentMethodValues,
+  PaymentStatusValues,
+} from '@common/constants/payment.constant';
 import { Search } from 'lucide-react';
 import Link from 'next/link';
 import { Pagination } from '../../../components/Pagination';
@@ -24,7 +28,7 @@ type SearchParams = {
 
 const TABS: Array<{ key: TabKey; label: string }> = [
   { key: 'all', label: 'Tất cả' },
-  { key: 'pending', label: 'Chờ thanh toán' },
+  { key: 'pending', label: 'Chờ xác nhận' },
   { key: 'shipping', label: 'Vận chuyển' },
   { key: 'confirmed', label: 'Chờ giao hàng' },
   { key: 'completed', label: 'Hoàn thành' },
@@ -67,12 +71,22 @@ function statusFromTab(tab: TabKey): OrderStatus | null {
   }
 }
 
-function statusLabel(status: string): string {
+function statusLabel(
+  status: string,
+  paymentMethod?: string,
+  paymentStatus?: string,
+): string {
   switch (status) {
     case OrderStatusValues.CREATING:
       return 'Đang tạo';
     case OrderStatusValues.PENDING:
-      return 'Chờ thanh toán';
+      if (
+        paymentMethod === PaymentMethodValues.WALLET &&
+        paymentStatus === PaymentStatusValues.PENDING
+      ) {
+        return 'Chờ thanh toán';
+      }
+      return 'Chờ xác nhận';
     case OrderStatusValues.CONFIRMED:
       return 'Chờ giao hàng';
     case OrderStatusValues.SHIPPING:
@@ -165,7 +179,7 @@ export default async function OrdersPage({
                     STATUS_BADGE[o.status] ?? 'bg-surface-muted text-ink-muted'
                   }`}
                 >
-                  {statusLabel(o.status)}
+                  {statusLabel(o.status, o.paymentMethod, o.paymentStatus)}
                 </span>
               </div>
               <div className="p-4 space-y-3">
@@ -210,11 +224,13 @@ export default async function OrdersPage({
                     Mua lại
                   </button>
                 )}
-                {o.status === OrderStatusValues.PENDING && (
-                  <button className="btn-primary btn-sm cursor-pointer">
-                    Thanh toán
-                  </button>
-                )}
+                {o.status === OrderStatusValues.PENDING &&
+                  o.paymentMethod === PaymentMethodValues.WALLET &&
+                  o.paymentStatus === PaymentStatusValues.PENDING && (
+                    <button className="btn-primary btn-sm cursor-pointer">
+                      Thanh toán
+                    </button>
+                  )}
               </div>
             </div>
           );

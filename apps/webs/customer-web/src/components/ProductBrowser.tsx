@@ -1,9 +1,21 @@
+import { ChevronDown, SlidersHorizontal } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { SlidersHorizontal, ChevronDown } from 'lucide-react';
 import { ProductCard, type Product } from './ProductCard';
-import { CATEGORIES } from './mockData';
 
 const SORTS = ['Phổ biến', 'Mới nhất', 'Bán chạy', 'Giá tăng', 'Giá giảm'];
+
+type CategoryItem = { name: string; slug: string };
+
+const DEFAULT_CATEGORIES: CategoryItem[] = [
+  { name: 'Thời trang', slug: 'thoi-trang' },
+  { name: 'Điện tử', slug: 'dien-tu' },
+  { name: 'Gia dụng', slug: 'gia-dung' },
+  { name: 'Mẹ & Bé', slug: 'me-be' },
+  { name: 'Sức khỏe', slug: 'suc-khoe' },
+  { name: 'Sách', slug: 'sach' },
+  { name: 'Thể thao', slug: 'the-thao' },
+  { name: 'Mỹ phẩm', slug: 'my-pham' },
+];
 
 export function ProductBrowser({
   products,
@@ -11,18 +23,20 @@ export function ProductBrowser({
   resultLabel,
   emptyState,
   showPagination = true,
+  categories = DEFAULT_CATEGORIES,
 }: {
   products: Product[];
   topSlot?: ReactNode;
   resultLabel?: ReactNode;
   emptyState?: ReactNode;
   showPagination?: boolean;
+  categories?: CategoryItem[];
 }) {
   const isEmpty = products.length === 0;
 
   return (
     <div className="grid md:grid-cols-[240px_1fr] gap-4">
-      <FilterSidebar />
+      <FilterSidebar categories={categories} />
 
       <div className="min-w-0">
         {topSlot}
@@ -109,7 +123,7 @@ export function ProductBrowser({
   );
 }
 
-function FilterSidebar() {
+function FilterSidebar({ categories }: { categories: CategoryItem[] }) {
   return (
     <aside className="hidden md:block card p-4 self-start sticky top-20">
       <div className="flex items-center gap-2 mb-3">
@@ -119,7 +133,7 @@ function FilterSidebar() {
       <div className="border-t border-border-subtle pt-3 mb-3">
         <h4 className="font-medium text-sm mb-2">Danh mục</h4>
         <ul className="space-y-1.5 text-sm text-ink-muted">
-          {CATEGORIES.slice(0, 8).map((c) => (
+          {categories.slice(0, 8).map((c) => (
             <li key={c.slug}>
               <label className="flex items-center gap-2 cursor-pointer hover:text-primary">
                 <input type="checkbox" className="accent-primary" />
@@ -146,11 +160,7 @@ function FilterSidebar() {
           {[5, 4, 3].map((r) => (
             <li key={r}>
               <label className="flex items-center gap-2 cursor-pointer hover:text-primary">
-                <input
-                  type="radio"
-                  name="rating"
-                  className="accent-primary"
-                />
+                <input type="radio" name="rating" className="accent-primary" />
                 <span>{r} sao trở lên</span>
               </label>
             </li>

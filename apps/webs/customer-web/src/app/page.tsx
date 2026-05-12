@@ -9,8 +9,11 @@ import Link from 'next/link';
 import { FeaturedCategoriesCarousel } from '../components/FeaturedCategoriesCarousel';
 import { MainShell } from '../components/MainShell';
 import { ProductCard } from '../components/ProductCard';
-import { PRODUCTS } from '../components/mockData';
-import { getRootCategories } from '../lib/catalog';
+import {
+  getManyProducts,
+  getRootCategories,
+  toCardProduct,
+} from '../lib/catalog';
 
 const BANNERS = [
   {
@@ -29,9 +32,21 @@ const PERKS = [
   { icon: Headphones, label: 'Hỗ trợ 24/7' },
 ];
 
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
 export default async function HomePage() {
-  const rootCategories = await getRootCategories();
-  const featured = PRODUCTS;
+  const [rootCategories, productsRes] = await Promise.all([
+    getRootCategories(),
+    getManyProducts({ limit: 20 }),
+  ]);
+  const featured = shuffle(productsRes.products.map(toCardProduct));
   return (
     <MainShell>
       {/* Hero banner */}

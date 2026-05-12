@@ -12,6 +12,15 @@ const nextConfig = {
   nx: {},
   output: 'standalone',
   outputFileTracingRoot: require('path').join(__dirname, '../../../'),
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'api.vietqr.io',
+        pathname: '/**',
+      },
+    ],
+  },
 };
 
 const plugins = [

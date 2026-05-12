@@ -38,10 +38,6 @@ export const RefundStatusEnums = z.enum([
   RefundStatusValues.REJECTED,
 ]);
 
-export const PAYMENT_QUEUE_NAME = 'payment';
-
-export const CANCEL_PAYMENT_JOB_NAME = 'cancel-payment';
-
 export type PaymentMethod = z.infer<typeof PaymentMethodEnums>;
 export type PaymentStatus = z.infer<typeof PaymentStatusEnums>;
 export type RefundStatus = z.infer<typeof RefundStatusEnums>;

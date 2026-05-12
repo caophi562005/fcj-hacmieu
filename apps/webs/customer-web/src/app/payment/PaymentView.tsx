@@ -11,6 +11,7 @@ import {
   Wallet,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { formatVnd } from '../../components/ProductCard';
@@ -58,6 +59,7 @@ function calcDiscount(voucher: PaymentVoucherView, subtotal: number): number {
 }
 
 export function PaymentView({ groups, voucher, availableCoin }: Props) {
+  const router = useRouter();
   const [shippingMethod, setShippingMethod] = useState<ShippingMethod>('fast');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('COD');
   const [coinInput, setCoinInput] = useState('0');
@@ -69,6 +71,7 @@ export function PaymentView({ groups, voucher, availableCoin }: Props) {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isOrderSuccess, setIsOrderSuccess] = useState(false);
+  const [successOrderId, setSuccessOrderId] = useState<string | null>(null);
 
   const subtotal = useMemo(
     () =>
@@ -140,6 +143,16 @@ export function PaymentView({ groups, voucher, availableCoin }: Props) {
       return;
     }
 
+    if (paymentMethod === 'ONLINE' || paymentMethod === 'WALLET') {
+      if (!res.paymentId) {
+        toast.error('Không tạo được mã thanh toán.');
+        return;
+      }
+      router.push(`/payment/qr/${res.paymentId}`);
+      return;
+    }
+
+    setSuccessOrderId(res.orderIds?.[0] ?? null);
     setIsOrderSuccess(true);
   };
 
@@ -161,7 +174,11 @@ export function PaymentView({ groups, voucher, availableCoin }: Props) {
             Trang chủ
           </Link>
           <Link
-            href="/profile/orders"
+            href={
+              successOrderId
+                ? `/profile/orders/${successOrderId}`
+                : '/profile/orders'
+            }
             className="btn-primary btn-lg w-full cursor-pointer"
           >
             Đơn mua

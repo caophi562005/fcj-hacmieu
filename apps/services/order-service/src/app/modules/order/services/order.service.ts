@@ -4,10 +4,7 @@ import {
   CreditTransactionTypeValues,
 } from '@common/constants/credit.constant';
 import { OrderStatusValues } from '@common/constants/order.constant';
-import {
-  PaymentMethodValues,
-  PaymentStatusValues,
-} from '@common/constants/payment.constant';
+import { PaymentStatusValues } from '@common/constants/payment.constant';
 import { PrismaErrorValues } from '@common/constants/prisma.constant';
 import { DiscountTypeValues } from '@common/constants/promotion.constant';
 import {
@@ -44,6 +41,7 @@ import {
   WALLET_SERVICE_PACKAGE_NAME,
   WalletModuleClient,
 } from '@common/interfaces/proto-types/wallet';
+import { generatePaymentCode } from '@common/utils/payment-code.util';
 import {
   BadRequestException,
   Inject,
@@ -54,16 +52,10 @@ import {
 } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
 import { SqsService } from '@ssut/nestjs-sqs';
-import { customAlphabet } from 'nanoid';
 import { firstValueFrom } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 import { CartItemService } from '../../cart/services/cart-item.service';
 import { OrderRepository } from '../repositories/order.repository';
-
-const generatePaymentCode = customAlphabet(
-  '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz',
-  14,
-);
 
 @Injectable()
 export class OrderService implements OnModuleInit {
@@ -321,9 +313,8 @@ export class OrderService implements OnModuleInit {
       });
     }
 
-    const isOnlinePayment = data.paymentMethod === PaymentMethodValues.ONLINE;
     const paymentId = uuidv4();
-    const paymentCode = isOnlinePayment ? `PAY${generatePaymentCode()}` : null;
+    const paymentCode = generatePaymentCode();
 
     const mergedData = {
       userId,
@@ -389,7 +380,7 @@ export class OrderService implements OnModuleInit {
       id: paymentId,
       processId,
       userId,
-      code: isOnlinePayment ? paymentCode : null,
+      code: paymentCode,
       orderId: createdOrders.map((order) => order.id),
       method: data.paymentMethod,
       status: PaymentStatusValues.PENDING,
@@ -436,7 +427,7 @@ export class OrderService implements OnModuleInit {
     //   ),
     // );
 
-    return cancelledOrders;
+    return { orders: cancelledOrders };
   }
 
   async cancelOrder({ processId, ...data }: CancelOrderRequest) {
@@ -473,7 +464,7 @@ export class OrderService implements OnModuleInit {
       //     this.kafkaService.emit(QueueTopics.ORDER.UPDATE_ORDER, order),
       //   ),
       // );
-      return orders;
+      return { orders };
     } catch (error) {
       throw error;
     }

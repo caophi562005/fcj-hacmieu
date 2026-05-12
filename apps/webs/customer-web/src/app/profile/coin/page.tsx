@@ -14,6 +14,7 @@ import {
   UserPlus,
   Wallet,
 } from 'lucide-react';
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getAuth } from '../../../lib/auth';
 import { getMyTransactions, getMyWallet } from '../../../lib/wallet';
@@ -70,15 +71,12 @@ export default async function XuPage() {
             ≈ {balance.toLocaleString('vi-VN')}₫
           </div>
           <div className="flex gap-2 mt-4">
-            <button
-              type="button"
-              disabled
-              aria-disabled="true"
-              title="Tính năng đang phát triển"
-              className="bg-white text-primary font-semibold rounded h-10 px-5 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            <Link
+              href="/profile/coin/topup"
+              className="bg-white text-primary font-semibold rounded h-10 px-5 transition-colors hover:bg-white/90 flex items-center cursor-pointer"
             >
-              Đổi quà
-            </button>
+              Nạp xu
+            </Link>
             <button
               type="button"
               disabled
@@ -86,7 +84,7 @@ export default async function XuPage() {
               title="Tính năng đang phát triển"
               className="bg-white/15 text-white border border-white/30 rounded h-10 px-5 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              Hướng dẫn
+              Đổi quà
             </button>
           </div>
         </div>

@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Build Check After Changes",
+  "description": "Reminds the agent to run pnpm nx build to verify the project builds successfully after making code changes",
+  "version": "1",
+  "when": {
+    "type": "postTaskExecution"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "After completing this task, run `pnpm nx build` to verify the project builds successfully. If there are build errors, fix them before marking the task as complete."
+  }
+}

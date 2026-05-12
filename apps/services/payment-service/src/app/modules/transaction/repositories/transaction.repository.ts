@@ -7,14 +7,10 @@ import {
 } from '@nestjs/common';
 import { parse } from 'date-fns';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { PaymentProducer } from '../../payment/producers/payment.producer';
 
 @Injectable()
 export class TransactionRepository {
-  constructor(
-    private readonly prismaService: PrismaService,
-    private readonly paymentProducer: PaymentProducer
-  ) {}
+  constructor(private readonly prismaService: PrismaService) {}
   async receiver(data: WebhookTransactionRequest) {
     let amountIn = 0;
     let amountOut = 0;
@@ -42,7 +38,7 @@ export class TransactionRepository {
           transactionDate: parse(
             data.transactionDate,
             'yyyy-MM-dd HH:mm:ss',
-            new Date()
+            new Date(),
           ),
           accountNumber: data.accountNumber,
           subAccount: data.subAccount,
@@ -71,17 +67,14 @@ export class TransactionRepository {
         throw new BadRequestException('Error.AmountPriceMismatch');
       }
 
-      await Promise.all([
-        tx.payment.update({
-          where: {
-            id: payment.id,
-          },
-          data: {
-            status: PaymentStatusValues.SUCCESS,
-          },
-        }),
-        this.paymentProducer.removeJob(payment.id),
-      ]);
+      await tx.payment.update({
+        where: {
+          id: payment.id,
+        },
+        data: {
+          status: PaymentStatusValues.SUCCESS,
+        },
+      });
 
       return {
         paymentCode,

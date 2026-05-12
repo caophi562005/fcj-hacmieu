@@ -1,25 +1,18 @@
 import { BaseConfiguration } from '@common/configurations/base.config';
-import { RedisConfiguration } from '@common/configurations/redis.config';
+import { GrpcClientProvider } from '@common/configurations/grpc.config';
 import { SqsConfiguration } from '@common/configurations/sqs.config';
-import { PAYMENT_QUEUE_NAME } from '@common/constants/payment.constant';
-import { BullModule } from '@nestjs/bullmq';
+import { GrpcService } from '@common/constants/grpc.constant';
 import { Module } from '@nestjs/common';
+import { ClientsModule } from '@nestjs/microservices';
 import { SqsModule } from '@ssut/nestjs-sqs';
 import { PaymentGrpcController } from './controllers/payment-grpc.controller';
-import { PaymentProducer } from './producers/payment.producer';
-import { PaymentQueue } from './queues/payment.queue';
 import { PaymentRepository } from './repositories/payment.repository';
 import { PaymentConsumerService } from './services/payment-consumer.service';
 import { PaymentService } from './services/payment.service';
 
 @Module({
   imports: [
-    BullModule.registerQueue({
-      name: PAYMENT_QUEUE_NAME,
-      connection: {
-        url: RedisConfiguration.REDIS_URL,
-      },
-    }),
+    ClientsModule.register([GrpcClientProvider(GrpcService.ORDER_SERVICE)]),
     SqsModule.register({
       consumers: [
         {
@@ -31,13 +24,6 @@ import { PaymentService } from './services/payment.service';
     }),
   ],
   controllers: [PaymentGrpcController],
-  providers: [
-    PaymentRepository,
-    PaymentService,
-    PaymentProducer,
-    PaymentQueue,
-    PaymentConsumerService,
-  ],
-  exports: [PaymentProducer],
+  providers: [PaymentRepository, PaymentService, PaymentConsumerService],
 })
 export class PaymentModule {}

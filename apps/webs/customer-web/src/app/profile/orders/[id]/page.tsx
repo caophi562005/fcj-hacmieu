@@ -20,12 +20,22 @@ import { getMyOrderById } from '../../../../lib/order';
 import { getMyReviewByOrderItemId } from '../../../../lib/review';
 import { OrderReviews } from './OrderReviews';
 
-function statusLabel(status: string): string {
+function statusLabel(
+  status: string,
+  paymentMethod?: string,
+  paymentStatus?: string,
+): string {
   switch (status) {
     case OrderStatusValues.CREATING:
       return 'Đang tạo';
     case OrderStatusValues.PENDING:
-      return 'Chờ thanh toán';
+      if (
+        paymentMethod === PaymentMethodValues.WALLET &&
+        paymentStatus === PaymentStatusValues.PENDING
+      ) {
+        return 'Chờ thanh toán';
+      }
+      return 'Chờ xác nhận';
     case OrderStatusValues.CONFIRMED:
       return 'Chờ giao hàng';
     case OrderStatusValues.SHIPPING:
@@ -192,7 +202,7 @@ export default async function OrderDetailPage({
             order.status,
           )}`}
         >
-          {statusLabel(order.status)}
+          {statusLabel(order.status, order.paymentMethod, order.paymentStatus)}
         </span>
       </div>
 
@@ -214,7 +224,11 @@ export default async function OrderDetailPage({
                   <div className="absolute top-5 left-1/2 w-full h-0.5 bg-primary" />
                 )}
                 <div className="text-xs mt-2 font-medium text-center">
-                  {statusLabel(step.status)}
+                  {statusLabel(
+                    step.status,
+                    order.paymentMethod,
+                    order.paymentStatus,
+                  )}
                 </div>
                 <div className="text-[10px] text-ink-subtle">
                   {formatDateTime(step.at)}

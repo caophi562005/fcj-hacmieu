@@ -1,26 +1,12 @@
-import {
-  MapPin,
-  MessageCircle,
-  Package,
-  Phone,
-  Plus,
-  Search,
-  Store,
-} from 'lucide-react';
+import { MessageCircle, Package, Phone, Plus, Store } from 'lucide-react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { MainShell } from '../../../components/MainShell';
+import { Pagination } from '../../../components/Pagination';
 import { ProductCard } from '../../../components/ProductCard';
 import { getManyProducts, toCardProduct } from '../../../lib/catalog';
 import { getShopById } from '../../../lib/shop';
 
-const TABS = [
-  { id: 'all', label: 'Tất cả sản phẩm' },
-  { id: 'sale', label: 'Đang giảm giá' },
-  { id: 'new', label: 'Mới nhất' },
-];
-
-// Format "Tham gia" từ createdAt: < 30 ngày → "X ngày", < 12 tháng → "X tháng", còn lại "X năm".
 function formatJoined(createdAt: string | Date): string {
   const d = new Date(createdAt);
   if (Number.isNaN(d.getTime())) return '';
@@ -33,20 +19,32 @@ function formatJoined(createdAt: string | Date): string {
   return `${years} năm trước`;
 }
 
+function parsePage(raw?: string): number {
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n < 1) return 1;
+  return Math.floor(n);
+}
+
 export default async function ShopDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ page?: string }>;
 }) {
   const { id } = await params;
+  const sp = (await searchParams) ?? {};
+  const page = parsePage(sp.page);
+
   const [shop, productsRes] = await Promise.all([
     getShopById(id),
-    getManyProducts({ shopId: id, limit: 20 }),
+    getManyProducts({ shopId: id, limit: 20, page }),
   ]);
   if (!shop) notFound();
 
   const products = productsRes.products ?? [];
   const productCount = productsRes.totalItems ?? products.length;
+  const totalPages = productsRes.totalPages ?? 1;
 
   return (
     <MainShell>
@@ -138,81 +136,18 @@ export default async function ShopDetailPage({
           </div>
         </section>
 
-        {/* Description + addresses */}
+        {/* Description */}
         {shop.description && (
-          <p className="text-sm text-ink-muted mb-3 max-w-3xl whitespace-pre-line">
+          <p className="text-sm text-ink-muted mb-4 max-w-3xl whitespace-pre-line">
             {shop.description}
           </p>
         )}
-        {(shop.pickupAddress || shop.returnAddress) && (
-          <dl className="grid sm:grid-cols-2 gap-3 mb-4 text-sm">
-            {shop.pickupAddress && (
-              <div className="bg-white rounded-md shadow-card px-4 py-3 flex items-start gap-2">
-                <MapPin
-                  className="w-4 h-4 mt-0.5 text-primary shrink-0"
-                  aria-hidden
-                />
-                <div className="min-w-0">
-                  <dt className="text-ink-subtle text-xs uppercase tracking-wide">
-                    Địa chỉ lấy hàng
-                  </dt>
-                  <dd className="text-ink mt-0.5 break-words">
-                    {shop.pickupAddress}
-                  </dd>
-                </div>
-              </div>
-            )}
-            {shop.returnAddress && (
-              <div className="bg-white rounded-md shadow-card px-4 py-3 flex items-start gap-2">
-                <MapPin
-                  className="w-4 h-4 mt-0.5 text-primary shrink-0"
-                  aria-hidden
-                />
-                <div className="min-w-0">
-                  <dt className="text-ink-subtle text-xs uppercase tracking-wide">
-                    Địa chỉ trả hàng
-                  </dt>
-                  <dd className="text-ink mt-0.5 break-words">
-                    {shop.returnAddress}
-                  </dd>
-                </div>
-              </div>
-            )}
-          </dl>
-        )}
-
-        {/* Tabs + search */}
-        <div className="bg-white rounded-md shadow-card border-b border-border-subtle sticky top-16 z-20 mb-4">
-          <div className="flex items-center gap-2 px-2 md:px-4 overflow-x-auto scrollbar-none">
-            {TABS.map((t, i) => {
-              const active = i === 0;
-              return (
-                <button
-                  key={t.id}
-                  type="button"
-                  className={`relative py-3.5 px-3 text-sm font-semibold whitespace-nowrap transition-colors cursor-pointer ${
-                    active ? 'text-primary' : 'text-ink-muted hover:text-ink'
-                  }`}
-                >
-                  {t.label}
-                  {active && (
-                    <span className="absolute left-3 right-3 -bottom-px h-0.5 bg-primary rounded-full" />
-                  )}
-                </button>
-              );
-            })}
-            <div className="ml-auto hidden sm:flex items-center h-9 rounded bg-surface-muted focus-within:bg-white focus-within:ring-2 focus-within:ring-primary/20 border border-transparent focus-within:border-primary transition-colors my-2">
-              <Search className="w-4 h-4 text-ink-subtle ml-2.5" />
-              <input
-                placeholder="Tìm trong shop…"
-                className="flex-1 w-44 lg:w-56 bg-transparent border-0 outline-none text-sm px-2"
-                aria-label="Tìm trong shop"
-              />
-            </div>
-          </div>
-        </div>
 
         {/* Product grid */}
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-base font-semibold">Sản phẩm ({productCount})</h2>
+        </div>
+
         {products.length === 0 ? (
           <div className="card p-10 text-center">
             <div className="text-lg font-semibold mb-1">
@@ -230,16 +165,14 @@ export default async function ShopDetailPage({
               ))}
             </div>
 
-            {productsRes.totalPages > 1 && (
-              <div className="mt-6 flex justify-center">
-                <Link
-                  href={`/search?shopId=${shop.id}`}
-                  className="btn-outline btn-md rounded-full px-8 cursor-pointer"
-                >
-                  Xem thêm sản phẩm
-                </Link>
-              </div>
-            )}
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              buildHref={(n) =>
+                n === 1 ? `/shop/${id}` : `/shop/${id}?page=${n}`
+              }
+              ariaLabel="Phân trang sản phẩm"
+            />
           </>
         )}
       </div>

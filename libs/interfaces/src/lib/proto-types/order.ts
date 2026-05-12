@@ -5,10 +5,10 @@
 // source: order.proto
 
 /* eslint-disable */
-import { GrpcMethod, GrpcStreamMethod } from "@nestjs/microservices";
-import { Observable } from "rxjs";
+import { GrpcMethod, GrpcStreamMethod } from '@nestjs/microservices';
+import { Observable } from 'rxjs';
 
-export const protobufPackage = "ORDER_SERVICE";
+export const protobufPackage = 'ORDER_SERVICE';
 
 export interface GetManyOrdersRequest {
   processId?: string | undefined;
@@ -55,6 +55,11 @@ export interface CreateOrderResponse {
   orders: Order[];
 }
 
+export interface PaymentOrderActionRequest {
+  processId?: string | undefined;
+  paymentId: string;
+}
+
 export interface GetManyOrdersResponse {
   page: number;
   limit: number;
@@ -74,6 +79,8 @@ export interface OrderSummary {
   firstProductImage: string;
   firstProductName: string;
   createdAt: string;
+  paymentMethod: string;
+  paymentStatus: string;
 }
 
 export interface OrderItem {
@@ -258,10 +265,12 @@ export interface GetManyCartItemsResponse {
   totalPages: number;
 }
 
-export const ORDER_SERVICE_PACKAGE_NAME = "ORDER_SERVICE";
+export const ORDER_SERVICE_PACKAGE_NAME = 'ORDER_SERVICE';
 
 export interface OrderModuleClient {
-  getManyOrders(request: GetManyOrdersRequest): Observable<GetManyOrdersResponse>;
+  getManyOrders(
+    request: GetManyOrdersRequest,
+  ): Observable<GetManyOrdersResponse>;
 
   getOrder(request: GetOrderRequest): Observable<GetOrderResponse>;
 
@@ -270,42 +279,102 @@ export interface OrderModuleClient {
   updateStatusOrder(request: UpdateStatusOrderRequest): Observable<Order>;
 
   cancelOrder(request: CancelOrderRequest): Observable<CancelOrderResponse>;
+
+  paidOrderByPayment(
+    request: PaymentOrderActionRequest,
+  ): Observable<CreateOrderResponse>;
+
+  cancelOrdersByPayment(
+    request: PaymentOrderActionRequest,
+  ): Observable<CancelOrderResponse>;
 }
 
 export interface OrderModuleController {
   getManyOrders(
     request: GetManyOrdersRequest,
-  ): Promise<GetManyOrdersResponse> | Observable<GetManyOrdersResponse> | GetManyOrdersResponse;
+  ):
+    | Promise<GetManyOrdersResponse>
+    | Observable<GetManyOrdersResponse>
+    | GetManyOrdersResponse;
 
-  getOrder(request: GetOrderRequest): Promise<GetOrderResponse> | Observable<GetOrderResponse> | GetOrderResponse;
+  getOrder(
+    request: GetOrderRequest,
+  ):
+    | Promise<GetOrderResponse>
+    | Observable<GetOrderResponse>
+    | GetOrderResponse;
 
   createOrder(
     request: CreateOrderRequest,
-  ): Promise<CreateOrderResponse> | Observable<CreateOrderResponse> | CreateOrderResponse;
+  ):
+    | Promise<CreateOrderResponse>
+    | Observable<CreateOrderResponse>
+    | CreateOrderResponse;
 
-  updateStatusOrder(request: UpdateStatusOrderRequest): Promise<Order> | Observable<Order> | Order;
+  updateStatusOrder(
+    request: UpdateStatusOrderRequest,
+  ): Promise<Order> | Observable<Order> | Order;
 
   cancelOrder(
     request: CancelOrderRequest,
-  ): Promise<CancelOrderResponse> | Observable<CancelOrderResponse> | CancelOrderResponse;
+  ):
+    | Promise<CancelOrderResponse>
+    | Observable<CancelOrderResponse>
+    | CancelOrderResponse;
+
+  paidOrderByPayment(
+    request: PaymentOrderActionRequest,
+  ):
+    | Promise<CreateOrderResponse>
+    | Observable<CreateOrderResponse>
+    | CreateOrderResponse;
+
+  cancelOrdersByPayment(
+    request: PaymentOrderActionRequest,
+  ):
+    | Promise<CancelOrderResponse>
+    | Observable<CancelOrderResponse>
+    | CancelOrderResponse;
 }
 
 export function OrderModuleControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = ["getManyOrders", "getOrder", "createOrder", "updateStatusOrder", "cancelOrder"];
+    const grpcMethods: string[] = [
+      'getManyOrders',
+      'getOrder',
+      'createOrder',
+      'updateStatusOrder',
+      'cancelOrder',
+      'paidOrderByPayment',
+      'cancelOrdersByPayment',
+    ];
     for (const method of grpcMethods) {
-      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
-      GrpcMethod("OrderModule", method)(constructor.prototype[method], method, descriptor);
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(
+        constructor.prototype,
+        method,
+      );
+      GrpcMethod('OrderModule', method)(
+        constructor.prototype[method],
+        method,
+        descriptor,
+      );
     }
     const grpcStreamMethods: string[] = [];
     for (const method of grpcStreamMethods) {
-      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
-      GrpcStreamMethod("OrderModule", method)(constructor.prototype[method], method, descriptor);
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(
+        constructor.prototype,
+        method,
+      );
+      GrpcStreamMethod('OrderModule', method)(
+        constructor.prototype[method],
+        method,
+        descriptor,
+      );
     }
   };
 }
 
-export const ORDER_MODULE_SERVICE_NAME = "OrderModule";
+export const ORDER_MODULE_SERVICE_NAME = 'OrderModule';
 
 export interface CartModuleClient {
   addCartItem(request: AddCartItemRequest): Observable<CartResponse>;
@@ -314,46 +383,76 @@ export interface CartModuleClient {
 
   deleteCartItem(request: DeleteCartItemRequest): Observable<CartResponse>;
 
-  validateCartItems(request: ValidateCartItemsRequest): Observable<ValidateCartItemsResponse>;
-
-  getManyCartItems(request: GetManyCartItemsRequest): Observable<GetManyCartItemsResponse>;
-}
-
-export interface CartModuleController {
-  addCartItem(request: AddCartItemRequest): Promise<CartResponse> | Observable<CartResponse> | CartResponse;
-
-  updateCartItem(request: UpdateCartItemRequest): Promise<CartResponse> | Observable<CartResponse> | CartResponse;
-
-  deleteCartItem(request: DeleteCartItemRequest): Promise<CartResponse> | Observable<CartResponse> | CartResponse;
-
   validateCartItems(
     request: ValidateCartItemsRequest,
-  ): Promise<ValidateCartItemsResponse> | Observable<ValidateCartItemsResponse> | ValidateCartItemsResponse;
+  ): Observable<ValidateCartItemsResponse>;
 
   getManyCartItems(
     request: GetManyCartItemsRequest,
-  ): Promise<GetManyCartItemsResponse> | Observable<GetManyCartItemsResponse> | GetManyCartItemsResponse;
+  ): Observable<GetManyCartItemsResponse>;
+}
+
+export interface CartModuleController {
+  addCartItem(
+    request: AddCartItemRequest,
+  ): Promise<CartResponse> | Observable<CartResponse> | CartResponse;
+
+  updateCartItem(
+    request: UpdateCartItemRequest,
+  ): Promise<CartResponse> | Observable<CartResponse> | CartResponse;
+
+  deleteCartItem(
+    request: DeleteCartItemRequest,
+  ): Promise<CartResponse> | Observable<CartResponse> | CartResponse;
+
+  validateCartItems(
+    request: ValidateCartItemsRequest,
+  ):
+    | Promise<ValidateCartItemsResponse>
+    | Observable<ValidateCartItemsResponse>
+    | ValidateCartItemsResponse;
+
+  getManyCartItems(
+    request: GetManyCartItemsRequest,
+  ):
+    | Promise<GetManyCartItemsResponse>
+    | Observable<GetManyCartItemsResponse>
+    | GetManyCartItemsResponse;
 }
 
 export function CartModuleControllerMethods() {
   return function (constructor: Function) {
     const grpcMethods: string[] = [
-      "addCartItem",
-      "updateCartItem",
-      "deleteCartItem",
-      "validateCartItems",
-      "getManyCartItems",
+      'addCartItem',
+      'updateCartItem',
+      'deleteCartItem',
+      'validateCartItems',
+      'getManyCartItems',
     ];
     for (const method of grpcMethods) {
-      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
-      GrpcMethod("CartModule", method)(constructor.prototype[method], method, descriptor);
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(
+        constructor.prototype,
+        method,
+      );
+      GrpcMethod('CartModule', method)(
+        constructor.prototype[method],
+        method,
+        descriptor,
+      );
     }
     const grpcStreamMethods: string[] = [];
     for (const method of grpcStreamMethods) {
-      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
-      GrpcStreamMethod("CartModule", method)(constructor.prototype[method], method, descriptor);
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(
+        constructor.prototype,
+        method,
+      );
+      GrpcStreamMethod('CartModule', method)(
+        constructor.prototype[method],
+        method,
+        descriptor,
+      );
     }
   };
 }
 
-export const CART_MODULE_SERVICE_NAME = "CartModule";
+export const CART_MODULE_SERVICE_NAME = 'CartModule';

@@ -1,5 +1,10 @@
 import {
+  CreatePaymentRequest,
+  GetPaymentRequest,
+  PAYMENT_MODULE_SERVICE_NAME,
   PAYMENT_SERVICE_PACKAGE_NAME,
+  PaymentModuleClient,
+  PaymentResponse,
   TRANSACTION_MODULE_SERVICE_NAME,
   TransactionModuleClient,
   WebhookTransactionRequest,
@@ -11,6 +16,7 @@ import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class PaymentService implements OnModuleInit {
+  private paymentModule!: PaymentModuleClient;
   private transactionModule!: TransactionModuleClient;
 
   constructor(
@@ -19,10 +25,21 @@ export class PaymentService implements OnModuleInit {
   ) {}
 
   onModuleInit() {
+    this.paymentModule = this.paymentClient.getService<PaymentModuleClient>(
+      PAYMENT_MODULE_SERVICE_NAME,
+    );
     this.transactionModule =
       this.paymentClient.getService<TransactionModuleClient>(
         TRANSACTION_MODULE_SERVICE_NAME,
       );
+  }
+
+  async getPayment(data: GetPaymentRequest): Promise<PaymentResponse> {
+    return firstValueFrom(this.paymentModule.getPayment(data));
+  }
+
+  async createPayment(data: CreatePaymentRequest): Promise<PaymentResponse> {
+    return firstValueFrom(this.paymentModule.createPayment(data));
   }
 
   async receiver(

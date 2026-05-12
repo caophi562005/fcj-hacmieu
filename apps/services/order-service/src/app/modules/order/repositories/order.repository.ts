@@ -67,6 +67,8 @@ export class OrderRepository {
         code: order.code,
         shopId: order.shopId,
         status: order.status,
+        paymentMethod: order.paymentMethod,
+        paymentStatus: order.paymentStatus,
         itemTotal: order.itemTotal,
         discount: order.discount,
         grandTotal: order.grandTotal,
@@ -270,9 +272,10 @@ export class OrderRepository {
         this.prismaService.order.update({
           where: { id: order.id },
           data: {
+            status: OrderStatusValues.CONFIRMED,
             timeline: [
               ...(Array.isArray(order.timeline) ? order.timeline : []),
-              { status: OrderStatusValues.PENDING, at: new Date() },
+              { status: OrderStatusValues.CONFIRMED, at: new Date() },
             ],
             paymentStatus: PaymentStatusValues.SUCCESS,
           },

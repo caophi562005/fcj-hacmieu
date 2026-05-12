@@ -12,15 +12,11 @@ import {
   UpdatePaymentStatusRequest,
 } from '@common/interfaces/models/payment';
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PaymentProducer } from '../producers/payment.producer';
 import { PaymentRepository } from '../repositories/payment.repository';
 
 @Injectable()
 export class PaymentService {
-  constructor(
-    private readonly paymentRepository: PaymentRepository,
-    private readonly paymentProducer: PaymentProducer,
-  ) {}
+  constructor(private readonly paymentRepository: PaymentRepository) {}
 
   async list(data: GetManyPaymentsRequest): Promise<GetManyPaymentsResponse> {
     const payments = await this.paymentRepository.list(data);
@@ -36,7 +32,10 @@ export class PaymentService {
       throw new NotFoundException('Error.PaymentNotFound');
     }
     let qrCode = undefined;
-    if (payment.method === PaymentMethodValues.ONLINE) {
+    if (
+      payment.method === PaymentMethodValues.ONLINE ||
+      payment.method === PaymentMethodValues.WALLET
+    ) {
       qrCode = `https://api.vietqr.io/${BankConfiguration.BANK_CODE}/${BankConfiguration.BANK_NUMBER}/${payment.amount}/${payment.code}.png`;
     }
     return { ...payment, qrCode };
@@ -47,9 +46,6 @@ export class PaymentService {
     ...data
   }: CreatePaymentRequest): Promise<PaymentResponse> {
     const createdPayment = await this.paymentRepository.create(data);
-    if (data.method === PaymentMethodValues.ONLINE) {
-      await this.paymentProducer.cancelPaymentJob(createdPayment.id);
-    }
     return createdPayment;
   }
 
