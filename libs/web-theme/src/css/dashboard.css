@@ -1,0 +1,10 @@
+@layer components {
+  .label-field {
+    @apply block text-sm font-semibold text-ink-muted mb-2;
+  }
+}
+
+/* Body override for dashboard apps */
+body {
+  @apply bg-background text-ink antialiased;
+}

@@ -4,92 +4,140 @@
 @tailwind components;
 @tailwind utilities;
 
+/* === FROM: libs/web-theme/src/css/base.css === */
 @layer base {
   :root {
     color-scheme: light;
   }
   html {
-    font-family: 'Be Vietnam Pro', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    -webkit-text-size-adjust: 100%;
-    text-rendering: optimizeLegibility;
+    font-family:
+      'Be Vietnam Pro',
+      ui-sans-serif,
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      'Segoe UI',
+      Roboto,
+      sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
   }
   body {
-    @apply bg-surface-alt text-ink antialiased;
     font-family: inherit;
     margin: 0;
     line-height: 1.5;
   }
-  h1, h2, h3, h4, h5, h6 { @apply font-semibold tracking-tight; }
-  a { color: inherit; text-decoration: none; }
-  button { cursor: pointer; }
-  *, ::before, ::after { box-sizing: border-box; }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-semibold tracking-tight;
+  }
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+  button {
+    cursor: pointer;
+  }
+  *,
+  ::before,
+  ::after {
+    box-sizing: border-box;
+  }
 }
 
+/* === FROM: libs/web-theme/src/css/components.css === */
+@layer components {
+  /* Buttons */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-50 disabled:pointer-events-none;
+  }
+  .btn-primary {
+    @apply btn bg-primary text-white hover:bg-primary-600 active:bg-primary-700;
+  }
+  .btn-outline {
+    @apply btn bg-white border border-slate-200 text-ink hover:border-primary hover:text-primary;
+  }
+  .btn-ghost {
+    @apply btn text-ink-muted hover:bg-surface-muted hover:text-ink;
+  }
+  .btn-md {
+    @apply h-10 px-5 text-sm;
+  }
+  .btn-sm {
+    @apply h-9 px-3 text-sm;
+  }
+  .btn-lg {
+    @apply h-12 px-6 text-base;
+  }
+
+  /* Card */
+  .card {
+    @apply bg-white rounded-md shadow-card border border-slate-100;
+  }
+
+  /* Input */
+  .input {
+    @apply w-full h-10 rounded border border-slate-200 bg-white px-3 text-sm text-ink placeholder:text-ink-subtle outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary;
+  }
+
+  /* Chip */
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold;
+  }
+
+  /* Scrollbar hidden */
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* === FROM: libs/web-theme/src/css/storefront.css === */
 @layer components {
   .container-page {
     @apply mx-auto w-full max-w-container px-4 md:px-6;
   }
 
-  /* Buttons */
-  .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded font-medium transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-50 disabled:pointer-events-none;
-  }
-  .btn-primary {
-    @apply btn bg-primary text-white hover:bg-primary-600 active:bg-primary-700;
-  }
   .btn-secondary {
     @apply btn bg-accent text-primary hover:bg-accent/70;
   }
-  .btn-outline {
-    @apply btn bg-white border border-border text-ink hover:border-primary hover:text-primary;
-  }
-  .btn-ghost {
-    @apply btn text-ink hover:bg-surface-muted;
-  }
-  .btn-md { @apply h-11 px-5 text-sm; }
-  .btn-sm { @apply h-9 px-3 text-sm; }
-  .btn-lg { @apply h-12 px-6 text-base; }
 
-  /* Inputs */
-  .input {
-    @apply w-full h-11 rounded border border-border bg-white px-3 text-sm text-ink placeholder:text-ink-subtle outline-none transition-colors duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20;
-  }
-
-  /* Card */
-  .card {
-    @apply bg-white rounded-md shadow-card border border-transparent;
-  }
-
-  /* Chips/Tags */
-  .chip {
-    @apply inline-flex items-center gap-1 rounded-sm bg-accent text-accent-foreground text-xs font-medium px-2 py-0.5;
-  }
   .chip-primary {
     @apply inline-flex items-center gap-1 rounded-sm bg-primary-50 text-primary text-xs font-semibold px-2 py-0.5;
   }
+
   .chip-flash {
     @apply inline-flex items-center gap-1 rounded-sm bg-primary text-white text-xs font-semibold px-2 py-0.5;
   }
 
-  /* Badge with red dot for notifications */
-  .nav-link {
-    @apply text-ink-muted hover:text-primary transition-colors duration-200;
-  }
-
-  /* Scrollbar hidden */
-  .scrollbar-none::-webkit-scrollbar { display: none; }
-  .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
-
-  /* Aspect ratios fallback */
   .product-img {
     @apply w-full aspect-square object-cover;
   }
+
+  .nav-link {
+    @apply text-ink-muted hover:text-primary transition-colors duration-200;
+  }
 }
 
+/* Body override for storefront apps */
+body {
+  @apply bg-surface-alt text-ink antialiased;
+}
+
+/* === Reduced motion === */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.001ms !important;
     transition-duration: 0.001ms !important;
   }

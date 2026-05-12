@@ -1,0 +1,30 @@
+@layer components {
+  .container-page {
+    @apply mx-auto w-full max-w-container px-4 md:px-6;
+  }
+
+  .btn-secondary {
+    @apply btn bg-accent text-primary hover:bg-accent/70;
+  }
+
+  .chip-primary {
+    @apply inline-flex items-center gap-1 rounded-sm bg-primary-50 text-primary text-xs font-semibold px-2 py-0.5;
+  }
+
+  .chip-flash {
+    @apply inline-flex items-center gap-1 rounded-sm bg-primary text-white text-xs font-semibold px-2 py-0.5;
+  }
+
+  .product-img {
+    @apply w-full aspect-square object-cover;
+  }
+
+  .nav-link {
+    @apply text-ink-muted hover:text-primary transition-colors duration-200;
+  }
+}
+
+/* Body override for storefront apps */
+body {
+  @apply bg-surface-alt text-ink antialiased;
+}
