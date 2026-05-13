@@ -1,3 +1,4 @@
+import { GroupValues } from '@common/constants/user.constant';
 import { IsPublic } from '@common/decorators/auth.decorator';
 import { ProcessId } from '@common/decorators/process-id.decorator';
 import {
@@ -6,7 +7,6 @@ import {
   RefreshSessionResponseDto,
 } from '@common/interfaces/dtos/iam';
 import { getAccessToken } from '@common/utils/get-access.util';
-import { GroupValues } from '@common/constants/user.constant';
 import { Body, Controller, Headers, Post, Req } from '@nestjs/common';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { AuthService } from '../services/auth.service';
@@ -42,6 +42,7 @@ export class AuthController {
   }
 
   @Post('logout')
+  @IsPublic()
   @ApiOkResponse({ type: MessageResponseDto })
   logout(@Req() req: any, @ProcessId() processId: string) {
     const accessToken = getAccessToken(req);

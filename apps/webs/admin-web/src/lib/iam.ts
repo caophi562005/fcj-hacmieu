@@ -1,28 +1,31 @@
-import type { Response as ApiResponse } from '@common/interfaces/models/common/response.model';
-import type {
-  ChangePasswordRequest,
-  UserResponse,
-} from '@common/interfaces/models/iam';
-import { createServerApi } from './api';
+import {
+  ACCESS_TOKEN_COOKIE,
+  ID_TOKEN_COOKIE,
+} from '@common/web-core/lib/constants';
+import {
+  changePassword as _changePassword,
+  getCurrentUser as _getCurrentUser,
+  logout as _logout,
+} from '@common/web-core/lib/iam';
+import { cookies } from 'next/headers';
+import { createApi, createServerApi } from './api';
 
-export async function getCurrentUser(): Promise<UserResponse | null> {
-  try {
-    const api = await createServerApi();
-    const { data } = await api.get<ApiResponse<UserResponse>>('/iam/user');
-    return data?.data ?? null;
-  } catch {
-    return null;
-  }
+export async function getCurrentUser() {
+  const api = await createServerApi();
+  return _getCurrentUser(api);
 }
 
 export async function changePassword(
-  payload: Omit<ChangePasswordRequest, 'accessToken'>,
-): Promise<void> {
+  payload: Parameters<typeof _changePassword>[1],
+) {
   const api = await createServerApi();
-  await api.post('/iam/auth/change-password', payload);
+  return _changePassword(api, payload);
 }
 
-export async function logout(): Promise<void> {
-  const api = await createServerApi();
-  await api.post('/iam/auth/logout');
+export async function logout() {
+  const c = await cookies();
+  const accessToken = c.get(ACCESS_TOKEN_COOKIE)?.value ?? null;
+  const idToken = c.get(ID_TOKEN_COOKIE)?.value ?? null;
+  const api = createApi({ accessToken, idToken });
+  return _logout(api);
 }

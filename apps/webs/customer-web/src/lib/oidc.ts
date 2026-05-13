@@ -1,23 +1,11 @@
 import { AuthConfiguration } from '@common/configurations/auth.config';
 import { BaseConfiguration } from '@common/configurations/base.config';
-import { Issuer, type Client } from 'openid-client';
+import { createOidcClientFactory } from '@common/web-core/lib/oidc-factory';
 
-// Client được cache vào module scope để chỉ discover OIDC config 1 lần
-let cachedClient: Client | null = null;
-
-export async function getOidcClient(): Promise<Client> {
-  if (cachedClient) return cachedClient;
-
-  const region = BaseConfiguration.AWS_REGION;
-  const issuerUrl = `https://cognito-idp.${region}.amazonaws.com/${AuthConfiguration.USER_POOL_ID}`;
-
-  const issuer = await Issuer.discover(issuerUrl);
-  cachedClient = new issuer.Client({
-    client_id: AuthConfiguration.CUSTOMER_CLIENT_ID,
-    client_secret: AuthConfiguration.CUSTOMER_CLIENT_SECRET,
-    redirect_uris: [AuthConfiguration.CUSTOMER_REDIRECT_URI],
-    response_types: ['code'],
-  });
-
-  return cachedClient;
-}
+export const getOidcClient = createOidcClientFactory({
+  region: BaseConfiguration.AWS_REGION,
+  userPoolId: AuthConfiguration.USER_POOL_ID,
+  clientId: AuthConfiguration.CUSTOMER_CLIENT_ID,
+  clientSecret: AuthConfiguration.CUSTOMER_CLIENT_SECRET,
+  redirectUri: AuthConfiguration.CUSTOMER_REDIRECT_URI,
+});

@@ -1,3 +1,9 @@
-// Use this file to export React client components (e.g. those with 'use client' directive) or other non-server utilities
-
-export * from './lib/web-core';
+// index.ts — client-safe exports
+export type { ApiFactoryConfig, CreateApiOptions } from './lib/api-factory';
+export { decodeJwtPayload, withCacheBust } from './lib/auth-helpers';
+export {
+  ACCESS_TOKEN_COOKIE,
+  ID_TOKEN_COOKIE,
+  REFRESH_TOKEN_COOKIE,
+} from './lib/constants';
+export type { OidcConfig } from './lib/oidc-factory';

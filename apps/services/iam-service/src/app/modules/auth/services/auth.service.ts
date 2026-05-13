@@ -93,6 +93,9 @@ export class AuthService {
 
   async logout(data: LogoutRequest) {
     await this.cacheManager.del(generateTokenCacheKey(data.accessToken));
+    return {
+      message: 'Message.LogoutSuccessfully',
+    };
   }
 
   async validateToken(data: ValidateTokenRequest) {

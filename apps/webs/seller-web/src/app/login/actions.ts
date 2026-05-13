@@ -3,18 +3,18 @@
 import { AuthConfiguration } from '@common/configurations/auth.config';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { ACCESS_TOKEN_COOKIE } from '../../lib/auth';
 import { logout } from '../../lib/iam';
 
 export async function logoutAction() {
+  // Best-effort: xoá token cache ở backend (không block flow nếu fail)
   try {
     await logout();
-  } catch (error) {
-    console.error('[seller-web logoutAction] BFF logout failed:', error);
+  } catch {
+    // ignore — token cache sẽ tự expire
   }
 
   const c = await cookies();
-  c.delete(ACCESS_TOKEN_COOKIE);
+  c.delete('access_token');
   c.delete('id_token');
   c.delete('refresh_token');
   c.delete('oidc_nonce');
