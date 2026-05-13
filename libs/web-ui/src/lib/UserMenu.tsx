@@ -11,19 +11,21 @@ import {
 } from 'lucide-react';
 import { useActionState, useEffect, useRef, useState } from 'react';
 import { createPortal, useFormStatus } from 'react-dom';
-import {
-  changePasswordAction,
-  type ChangePasswordState,
-} from '../app/account/password/actions';
-import { logoutAction } from '../app/login/actions';
+
+export type ChangePasswordState = { ok: boolean; message: string };
 
 const INITIAL_STATE: ChangePasswordState = { ok: false, message: '' };
 
 type Props = {
   user: { name: string; email: string; avatar: string };
+  logoutAction: () => Promise<void>;
+  changePasswordAction: (
+    state: ChangePasswordState,
+    formData: FormData,
+  ) => Promise<ChangePasswordState>;
 };
 
-export function UserMenu({ user }: Props) {
+export function UserMenu({ user, logoutAction, changePasswordAction }: Props) {
   const [open, setOpen] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -122,7 +124,10 @@ export function UserMenu({ user }: Props) {
       </div>
 
       {showPasswordModal && (
-        <ChangePasswordModal onClose={() => setShowPasswordModal(false)} />
+        <ChangePasswordModal
+          changePasswordAction={changePasswordAction}
+          onClose={() => setShowPasswordModal(false)}
+        />
       )}
     </>
   );
@@ -143,7 +148,16 @@ function LogoutButton() {
   );
 }
 
-function ChangePasswordModal({ onClose }: { onClose: () => void }) {
+function ChangePasswordModal({
+  changePasswordAction,
+  onClose,
+}: {
+  changePasswordAction: (
+    state: ChangePasswordState,
+    formData: FormData,
+  ) => Promise<ChangePasswordState>;
+  onClose: () => void;
+}) {
   const [state, formAction] = useActionState(
     changePasswordAction,
     INITIAL_STATE,
