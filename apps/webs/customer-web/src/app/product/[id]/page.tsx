@@ -1,8 +1,8 @@
+import { Pagination } from '@common/web-ui/index';
 import { MessageCircle, Star, Store } from 'lucide-react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { MainShell } from '../../../components/MainShell';
-import { Pagination } from '../../../components/Pagination';
 import { ProductCard } from '../../../components/ProductCard';
 import { ProductInteractive } from '../../../components/ProductInteractive';
 import {

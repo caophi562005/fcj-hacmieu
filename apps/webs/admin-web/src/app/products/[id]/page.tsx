@@ -1,6 +1,6 @@
+import { Pagination } from '@common/web-ui/index';
 import { Star } from 'lucide-react';
 import { notFound } from 'next/navigation';
-import { Pagination } from '../../../components/Pagination';
 import {
   getCategoriesByParent,
   getManyBrands,

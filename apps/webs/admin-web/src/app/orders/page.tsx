@@ -3,10 +3,9 @@ import {
   OrderStatusValues,
   type OrderStatus,
 } from '@common/constants/order.constant';
+import { CopyButton, Pagination } from '@common/web-ui/index';
 import { Eye, ImageIcon, Search } from 'lucide-react';
 import Link from 'next/link';
-import { CopyButton } from '../../components/CopyButton';
-import { Pagination } from '../../components/Pagination';
 import { getSellerOrders } from '../../lib/order';
 
 export const metadata = { title: 'Quản lý đơn hàng — V-Shop Admin' };

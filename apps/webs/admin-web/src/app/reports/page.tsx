@@ -1,6 +1,5 @@
+import { CopyButton, Pagination } from '@common/web-ui/index';
 import Link from 'next/link';
-import { CopyButton } from '../../components/CopyButton';
-import { Pagination } from '../../components/Pagination';
 import { getManyReports } from '../../lib/admin-utility';
 
 type SearchParams = {
@@ -8,7 +7,12 @@ type SearchParams = {
   status?: string;
 };
 
-const REPORT_STATUS_OPTIONS = ['PENDING', 'REVIEWING', 'RESOLVED', 'REJECTED'] as const;
+const REPORT_STATUS_OPTIONS = [
+  'PENDING',
+  'REVIEWING',
+  'RESOLVED',
+  'REJECTED',
+] as const;
 
 const REPORT_STATUS_LABEL: Record<string, string> = {
   PENDING: 'Chờ xử lý',
@@ -56,7 +60,9 @@ export default async function ReportsPage({
   const data = await getManyReports({
     page,
     limit: 10,
-    status: status ? (status as 'PENDING' | 'REVIEWING' | 'RESOLVED' | 'REJECTED') : undefined,
+    status: status
+      ? (status as 'PENDING' | 'REVIEWING' | 'RESOLVED' | 'REJECTED')
+      : undefined,
   });
   const totalPages = Math.max(data.totalPages || 1, 1);
 
@@ -64,11 +70,21 @@ export default async function ReportsPage({
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-ink">Báo cáo vi phạm</h1>
-        <p className="text-ink-muted text-sm mt-1">Tổng cộng {data.totalItems} báo cáo.</p>
+        <p className="text-ink-muted text-sm mt-1">
+          Tổng cộng {data.totalItems} báo cáo.
+        </p>
       </div>
 
-      <form action="/reports" method="GET" className="card p-4 grid grid-cols-1 md:grid-cols-3 gap-3">
-        <select name="status" defaultValue={status} className="input cursor-pointer">
+      <form
+        action="/reports"
+        method="GET"
+        className="card p-4 grid grid-cols-1 md:grid-cols-3 gap-3"
+      >
+        <select
+          name="status"
+          defaultValue={status}
+          className="input cursor-pointer"
+        >
           <option value="">Tất cả trạng thái</option>
           {REPORT_STATUS_OPTIONS.map((value) => (
             <option key={value} value={value}>
@@ -88,10 +104,14 @@ export default async function ReportsPage({
             <thead>
               <tr className="bg-surface-alt border-b border-slate-100 text-ink-muted">
                 <th className="py-3 px-4 text-left font-semibold">ID</th>
-                <th className="py-3 px-4 text-left font-semibold">Reporter ID</th>
+                <th className="py-3 px-4 text-left font-semibold">
+                  Reporter ID
+                </th>
                 <th className="py-3 px-4 text-left font-semibold">Tiêu đề</th>
                 <th className="py-3 px-4 text-left font-semibold">Danh mục</th>
-                <th className="py-3 px-4 text-left font-semibold">Trạng thái</th>
+                <th className="py-3 px-4 text-left font-semibold">
+                  Trạng thái
+                </th>
                 <th className="py-3 px-4 text-left font-semibold">Ngày tạo</th>
               </tr>
             </thead>
@@ -104,21 +124,34 @@ export default async function ReportsPage({
                 </tr>
               )}
               {data.reports.map((report) => (
-                <tr key={report.id} className="hover:bg-surface-alt transition-colors">
+                <tr
+                  key={report.id}
+                  className="hover:bg-surface-alt transition-colors"
+                >
                   <td className="py-3 px-4">
                     <div className="inline-flex items-center gap-1.5">
-                      <span className="text-primary font-medium">{report.id.slice(0, 8)}…</span>
+                      <span className="text-primary font-medium">
+                        {report.id.slice(0, 8)}…
+                      </span>
                       <CopyButton value={report.id} label="Copy report ID" />
                     </div>
                   </td>
                   <td className="py-3 px-4">
                     <div className="inline-flex items-center gap-1.5">
-                      <span className="text-primary font-medium">{report.reporterId.slice(0, 8)}…</span>
-                      <CopyButton value={report.reporterId} label="Copy reporter ID" />
+                      <span className="text-primary font-medium">
+                        {report.reporterId.slice(0, 8)}…
+                      </span>
+                      <CopyButton
+                        value={report.reporterId}
+                        label="Copy reporter ID"
+                      />
                     </div>
                   </td>
                   <td className="py-3 px-4">
-                    <Link href={`/reports/${report.id}`} className="text-primary hover:underline cursor-pointer">
+                    <Link
+                      href={`/reports/${report.id}`}
+                      className="text-primary hover:underline cursor-pointer"
+                    >
                       {report.title}
                     </Link>
                   </td>

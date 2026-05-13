@@ -1,5 +1,5 @@
+import { Pagination } from '@common/web-ui/index';
 import Link from 'next/link';
-import { Pagination } from '../../components/Pagination';
 import { getManyPayouts } from '../../lib/admin-shop-wallet';
 import { PayoutStatusButtons } from './ui';
 

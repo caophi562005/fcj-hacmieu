@@ -2,9 +2,9 @@ import {
   OrderStatusValues,
   type OrderStatus,
 } from '@common/constants/order.constant';
+import { CopyButton } from '@common/web-ui/index';
 import { Boxes, Clock3, Truck, Wallet } from 'lucide-react';
 import Link from 'next/link';
-import { CopyButton } from '../components/CopyButton';
 import { getSellerProducts } from '../lib/catalog';
 import { getShopCredit, getShopRevenueSummary } from '../lib/credit';
 import { formatCurrency } from '../lib/mockData';

@@ -6,9 +6,9 @@ import {
   PaymentMethodValues,
   PaymentStatusValues,
 } from '@common/constants/payment.constant';
+import { Pagination } from '@common/web-ui/index';
 import { Search } from 'lucide-react';
 import Link from 'next/link';
-import { Pagination } from '../../../components/Pagination';
 import { formatVnd } from '../../../components/ProductCard';
 import { getMyOrders } from '../../../lib/order';
 

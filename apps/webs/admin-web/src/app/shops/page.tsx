@@ -1,6 +1,5 @@
+import { CopyButton, Pagination } from '@common/web-ui/index';
 import Link from 'next/link';
-import { CopyButton } from '../../components/CopyButton';
-import { Pagination } from '../../components/Pagination';
 import { getManyShops } from '../../lib/admin-shop-wallet';
 
 type SearchParams = { page?: string; name?: string; status?: string };

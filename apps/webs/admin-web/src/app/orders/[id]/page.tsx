@@ -3,6 +3,7 @@ import {
   type OrderStatus,
 } from '@common/constants/order.constant';
 import { PaymentMethodValues } from '@common/constants/payment.constant';
+import { CopyButton } from '@common/web-ui/index';
 import type { LucideIcon } from 'lucide-react';
 import {
   CircleCheck,
@@ -16,7 +17,6 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
-import { CopyButton } from '../../../components/CopyButton';
 import { getSellerOrderById } from '../../../lib/order';
 import { OrderStatusActions } from './OrderStatusActions';
 

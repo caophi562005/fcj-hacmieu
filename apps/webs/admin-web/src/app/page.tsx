@@ -1,6 +1,7 @@
 import { OrderStatusValues } from '@common/constants/order.constant';
 import { PayoutStatusValues } from '@common/constants/payout.constant';
 import { ReportStatusValues } from '@common/constants/report.constant';
+import { CopyButton } from '@common/web-ui/index';
 import {
   AlertOctagon,
   ClipboardCheck,
@@ -10,7 +11,6 @@ import {
   UserRound,
 } from 'lucide-react';
 import Link from 'next/link';
-import { CopyButton } from '../components/CopyButton';
 import { getManyUsers } from '../lib/admin-iam';
 import {
   getManyMerchants,

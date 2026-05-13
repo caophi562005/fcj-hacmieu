@@ -1,5 +1,5 @@
 import { PromotionStatusValues } from '@common/constants/promotion.constant';
-import { Pagination } from '../../components/Pagination';
+import { Pagination } from '@common/web-ui/index';
 import { getManyPromotions } from '../../lib/admin-promotion';
 import { PromotionCardGrid, PromotionToolbar } from './ui';
 

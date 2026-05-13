@@ -1,5 +1,4 @@
-import { CopyButton } from '../../components/CopyButton';
-import { Pagination } from '../../components/Pagination';
+import { CopyButton, Pagination } from '@common/web-ui/index';
 import { getManyMerchants } from '../../lib/admin-shop-wallet';
 import { MerchantApproveButtons } from './ui';
 

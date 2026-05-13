@@ -1,8 +1,7 @@
+import { AppConvexProvider, ToastProvider } from '@common/web-ui/index';
 import type { Metadata } from 'next';
 import { BottomNav } from '../components/BottomNav';
-import { CustomerConvexProvider } from '../components/ConvexProvider';
 import { Header } from '../components/Header';
-import { ToastProvider } from '../components/ToastProvider';
 import './global.css';
 
 export const metadata: Metadata = {
@@ -25,14 +24,14 @@ export default function RootLayout({
   return (
     <html lang="vi" suppressHydrationWarning>
       <body className="min-h-screen bg-surface-alt text-ink">
-        <CustomerConvexProvider>
+        <AppConvexProvider>
           <div className="min-h-screen flex flex-col">
             <Header />
             <main className="flex-1 pb-16 md:pb-0">{children}</main>
             <BottomNav />
           </div>
           <ToastProvider />
-        </CustomerConvexProvider>
+        </AppConvexProvider>
       </body>
     </html>
   );

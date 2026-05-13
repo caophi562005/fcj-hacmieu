@@ -1,8 +1,7 @@
 import { UserStatusValues } from '@common/constants/user.constant';
+import { CopyButton, Pagination } from '@common/web-ui/index';
 import { Search } from 'lucide-react';
 import Link from 'next/link';
-import { CopyButton } from '../../components/CopyButton';
-import { Pagination } from '../../components/Pagination';
 import { getManyUsers } from '../../lib/admin-iam';
 
 type SearchParams = {

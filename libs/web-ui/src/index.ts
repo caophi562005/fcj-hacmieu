@@ -1,3 +1,4 @@
-// Use this file to export React client components (e.g. those with 'use client' directive) or other non-server utilities
-
-export * from './lib/web-ui';
+export { AppConvexProvider } from './lib/ConvexProvider';
+export { CopyButton } from './lib/CopyButton';
+export { Pagination } from './lib/Pagination';
+export { ToastProvider } from './lib/ToastProvider';

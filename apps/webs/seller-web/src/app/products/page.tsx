@@ -3,10 +3,9 @@ import {
   ProductStatusValues,
   type ProductStatus,
 } from '@common/constants/product.constant';
+import { CopyButton, Pagination } from '@common/web-ui/index';
 import { Eye, Plus, Search } from 'lucide-react';
 import Link from 'next/link';
-import { CopyButton } from '../../components/CopyButton';
-import { Pagination } from '../../components/Pagination';
 import { getSellerProducts } from '../../lib/catalog';
 
 export const metadata = { title: 'Quản lý Sản phẩm — V-Shop Seller' };
