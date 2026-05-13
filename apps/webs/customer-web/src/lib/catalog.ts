@@ -5,20 +5,13 @@ import type {
   GetProductResponse,
 } from '@common/interfaces/models/catalog';
 import type { Response as ApiResponse } from '@common/interfaces/models/common/response.model';
+import { formatCount } from '@common/web-core/lib/format';
 import { cache } from 'react';
 import type { Product } from '../components/ProductCard';
 import { createServerApi } from './api';
 
 export type ProductListItem = GetManyProductsResponse['products'][number];
 export type CategoryItem = GetManyCategoriesResponse['categories'][number];
-
-// Format số lượng gọn: 1.2k / 3.4M
-export function formatCount(n: number): string {
-  if (n >= 1_000_000)
-    return (n / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
-  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
-  return String(n);
-}
 
 // Map sản phẩm từ API sang shape của ProductCard.
 export function toCardProduct(p: ProductListItem): Product {

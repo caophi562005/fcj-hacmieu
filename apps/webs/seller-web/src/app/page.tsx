@@ -2,12 +2,12 @@ import {
   OrderStatusValues,
   type OrderStatus,
 } from '@common/constants/order.constant';
+import { formatCurrency } from '@common/web-core/lib/format';
 import { CopyButton } from '@common/web-ui/index';
 import { Boxes, Clock3, Truck, Wallet } from 'lucide-react';
 import Link from 'next/link';
 import { getSellerProducts } from '../lib/catalog';
 import { getShopCredit, getShopRevenueSummary } from '../lib/credit';
-import { formatCurrency } from '../lib/mockData';
 import { getSellerOrders } from '../lib/order';
 
 export default async function DashboardPage() {

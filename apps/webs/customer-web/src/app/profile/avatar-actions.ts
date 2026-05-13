@@ -1,6 +1,7 @@
 'use server';
 
 import { ImageTypeValues } from '@common/constants/media.constant';
+import { ALLOWED_IMAGE_MIME } from '@common/web-core/lib/image-constants';
 import { revalidatePath } from 'next/cache';
 import { getAuth } from '../../lib/auth';
 import { createPresignedUrl, updateCurrentUser } from '../../lib/iam';
@@ -10,7 +11,6 @@ export type UploadAvatarState = {
   message: string;
 };
 
-const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
 const MAX_SIZE = 2 * 1024 * 1024; // 2MB
 
 export async function uploadAvatarAction(
@@ -22,7 +22,11 @@ export async function uploadAvatarAction(
     return { ok: false, message: 'Vui lòng chọn ảnh.' };
   }
 
-  if (!ALLOWED_MIME.includes(file.type)) {
+  if (
+    !ALLOWED_IMAGE_MIME.includes(
+      file.type as (typeof ALLOWED_IMAGE_MIME)[number],
+    )
+  ) {
     return {
       ok: false,
       message: 'Chỉ chấp nhận ảnh JPG, JPEG, PNG hoặc WEBP.',

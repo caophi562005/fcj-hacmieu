@@ -1,9 +1,9 @@
 'use server';
 
 import { ImageTypeValues } from '@common/constants/media.constant';
+import { base64DataUrlToBuffer } from '@common/web-core/lib/image-base64';
 import { revalidatePath } from 'next/cache';
 import { updateUserById } from '../../lib/admin-iam';
-import { base64DataUrlToBuffer } from '../../lib/image-base64';
 import { buildShopLogoFileName, createPresignedUrl } from '../../lib/media';
 
 const GROUP_OPTIONS = ['CUSTOMER', 'SELLER', 'ADMIN'] as const;

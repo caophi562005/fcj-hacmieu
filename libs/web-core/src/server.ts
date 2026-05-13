@@ -8,3 +8,11 @@ export {
 } from './lib/constants';
 export { changePassword, getCurrentUser, logout } from './lib/iam';
 export { createOidcClientFactory } from './lib/oidc-factory';
+
+export { fetchDistricts, fetchProvinces, fetchWards } from './lib/location';
+export type {
+  DistrictResponse,
+  ProvinceResponse,
+  WardResponse,
+} from './lib/location';
+export { createPresignedUrl } from './lib/media';

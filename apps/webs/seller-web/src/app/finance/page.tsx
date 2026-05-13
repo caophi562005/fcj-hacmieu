@@ -3,6 +3,7 @@ import {
   CreditTransactionTypeValues,
 } from '@common/constants/credit.constant';
 import type { CreditTransactionResponse } from '@common/interfaces/models/wallet';
+import { formatCurrency, formatDateTime } from '@common/web-core/lib/format';
 import {
   ArrowDown,
   ArrowUp,
@@ -17,7 +18,6 @@ import {
   getShopCreditTransactions,
   getShopRevenueSummary,
 } from '../../lib/credit';
-import { formatCurrency, formatDateTime } from '../../lib/mockData';
 import { getMerchant, getShop } from '../../lib/shop';
 import { BankAccountCard } from './BankAccountCard';
 

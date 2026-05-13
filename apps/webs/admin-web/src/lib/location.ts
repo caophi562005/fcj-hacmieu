@@ -1,67 +1,30 @@
-import type { Response as ApiResponse } from '@common/interfaces/models/common/response.model';
-import type {
-  DistrictResponse,
-  GetDistrictsResponse,
-  GetProvincesResponse,
-  GetWardsResponse,
-  ProvinceResponse,
-  WardResponse,
-} from '@common/interfaces/models/utility';
+import {
+  fetchDistricts,
+  fetchProvinces,
+  fetchWards,
+} from '@common/web-core/lib/location';
 import { cache } from 'react';
 import { createServerApi } from './api';
 
-export type { DistrictResponse, ProvinceResponse, WardResponse };
+export type {
+  DistrictResponse,
+  ProvinceResponse,
+  WardResponse,
+} from '@common/web-core/lib/location';
 
-const _getProvincesCached = cache(async (): Promise<ProvinceResponse[]> => {
+export const getProvinces = cache(async () => {
   const api = await createServerApi();
-  const res = await api.get<ApiResponse<GetProvincesResponse>>(
-    '/utility/location/provinces',
-    { validateStatus: (s) => (s >= 200 && s < 300) || s === 404 },
-  );
-  if (res.status === 404) return [];
-  return res.data?.data?.provinces ?? [];
+  return fetchProvinces(api);
 });
 
-const _getDistrictsCached = cache(
-  async (provinceId: number): Promise<DistrictResponse[]> => {
-    const api = await createServerApi();
-    const res = await api.get<ApiResponse<GetDistrictsResponse>>(
-      '/utility/location/districts',
-      {
-        params: { provinceId },
-        validateStatus: (s) => (s >= 200 && s < 300) || s === 404,
-      },
-    );
-    if (res.status === 404) return [];
-    return res.data?.data?.districts ?? [];
-  },
-);
+export const getDistricts = cache(async (provinceId: number) => {
+  if (!provinceId) return [];
+  const api = await createServerApi();
+  return fetchDistricts(api, provinceId);
+});
 
-const _getWardsCached = cache(
-  async (districtId: number): Promise<WardResponse[]> => {
-    const api = await createServerApi();
-    const res = await api.get<ApiResponse<GetWardsResponse>>(
-      '/utility/location/wards',
-      {
-        params: { districtId },
-        validateStatus: (s) => (s >= 200 && s < 300) || s === 404,
-      },
-    );
-    if (res.status === 404) return [];
-    return res.data?.data?.wards ?? [];
-  },
-);
-
-export function getProvinces(): Promise<ProvinceResponse[]> {
-  return _getProvincesCached();
-}
-
-export function getDistricts(provinceId: number): Promise<DistrictResponse[]> {
-  if (!provinceId) return Promise.resolve([]);
-  return _getDistrictsCached(provinceId);
-}
-
-export function getWards(districtId: number): Promise<WardResponse[]> {
-  if (!districtId) return Promise.resolve([]);
-  return _getWardsCached(districtId);
-}
+export const getWards = cache(async (districtId: number) => {
+  if (!districtId) return [];
+  const api = await createServerApi();
+  return fetchWards(api, districtId);
+});

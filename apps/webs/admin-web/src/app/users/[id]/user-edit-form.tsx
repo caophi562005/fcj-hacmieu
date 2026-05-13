@@ -1,9 +1,10 @@
 'use client';
 
+import { fileToBase64DataUrl } from '@common/web-core/lib/image-base64';
+import { IMAGE_ACCEPT } from '@common/web-core/lib/image-constants';
 import { ImagePlus, Undo2, UserRound } from 'lucide-react';
 import { useRef, useState, useTransition } from 'react';
 import { toast } from 'react-toastify';
-import { fileToBase64DataUrl } from '../../../lib/image-base64';
 import { updateUserAction } from '../actions';
 
 type Props = {
@@ -85,7 +86,7 @@ export function UserEditForm({ user }: Props) {
             <input
               ref={avatarInputRef}
               type="file"
-              accept="image/png,image/jpeg,image/jpg,image/webp"
+              accept={IMAGE_ACCEPT}
               className="hidden"
               onChange={async (event) => {
                 const file = event.currentTarget.files?.[0];

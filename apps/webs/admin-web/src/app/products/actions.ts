@@ -1,6 +1,7 @@
 'use server';
 
 import { ImageTypeValues } from '@common/constants/media.constant';
+import { base64DataUrlToBuffer } from '@common/web-core/lib/image-base64';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import {
@@ -10,7 +11,6 @@ import {
   type CreateProductPayload,
   type UpdateProductPayload,
 } from '../../lib/catalog';
-import { base64DataUrlToBuffer } from '../../lib/image-base64';
 import {
   buildProductImageFileName,
   buildSkuImageFileName,

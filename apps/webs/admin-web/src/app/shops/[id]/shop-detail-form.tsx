@@ -1,9 +1,13 @@
 'use client';
 
+import { fileToBase64DataUrl } from '@common/web-core/lib/image-base64';
+import {
+  ALLOWED_IMAGE_MIME,
+  IMAGE_ACCEPT,
+} from '@common/web-core/lib/image-constants';
 import { Building2, ImagePlus, Store, Undo2, Wallet } from 'lucide-react';
 import { useRef, useState, useTransition } from 'react';
 import { toast } from 'react-toastify';
-import { fileToBase64DataUrl } from '../../../lib/image-base64';
 import { updateShopAction } from '../actions';
 
 const SHOP_STATUS_OPTIONS = ['DRAFT', 'ACTIVE', 'INACTIVE', 'CLOSED'] as const;
@@ -13,12 +17,6 @@ const SHOP_STATUS_LABEL: Record<string, string> = {
   INACTIVE: 'Tạm ngưng',
   CLOSED: 'Đã đóng',
 };
-const ALLOWED_IMAGE_MIME = [
-  'image/png',
-  'image/jpeg',
-  'image/jpg',
-  'image/webp',
-] as const;
 
 export function ShopDetailForm({
   shop,
@@ -116,14 +114,14 @@ export function ShopDetailForm({
           <input
             ref={logoInputRef}
             type="file"
-            accept="image/png,image/jpeg,image/jpg,image/webp"
+            accept={IMAGE_ACCEPT}
             className="hidden"
             onChange={(event) => onPickImage(event, setLogoNewBase64)}
           />
           <input
             ref={bannerInputRef}
             type="file"
-            accept="image/png,image/jpeg,image/jpg,image/webp"
+            accept={IMAGE_ACCEPT}
             className="hidden"
             onChange={(event) => onPickImage(event, setBannerNewBase64)}
           />

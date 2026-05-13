@@ -1,11 +1,15 @@
 'use client';
 
+import { fileToBase64DataUrl } from '@common/web-core/lib/image-base64';
+import {
+  ALLOWED_IMAGE_MIME,
+  IMAGE_ACCEPT,
+} from '@common/web-core/lib/image-constants';
 import { ImageIcon, X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useRef, useState, useTransition } from 'react';
 import { toast } from 'react-toastify';
-import { fileToBase64DataUrl } from '../../lib/image-base64';
 import {
   createCategoryAction,
   deleteCategoryAction,
@@ -18,13 +22,6 @@ type CategoryViewModel = {
   logo: string | null;
   parentCategoryId: string | null;
 };
-
-const ALLOWED_IMAGE_MIME = [
-  'image/png',
-  'image/jpeg',
-  'image/jpg',
-  'image/webp',
-];
 
 function CategoryLogoPicker({
   logo,
@@ -45,14 +42,18 @@ function CategoryLogoPicker({
         <input
           ref={inputRef}
           type="file"
-          accept="image/png,image/jpeg,image/jpg,image/webp"
+          accept={IMAGE_ACCEPT}
           className="hidden"
           onChange={async (event) => {
             const file = event.currentTarget.files?.[0];
             event.currentTarget.value = '';
             if (!file) return;
 
-            if (!ALLOWED_IMAGE_MIME.includes(file.type)) {
+            if (
+              !ALLOWED_IMAGE_MIME.includes(
+                file.type as (typeof ALLOWED_IMAGE_MIME)[number],
+              )
+            ) {
               toast.error('Chỉ hỗ trợ ảnh PNG/JPG/JPEG/WEBP.');
               return;
             }

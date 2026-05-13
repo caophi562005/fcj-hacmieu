@@ -1,8 +1,8 @@
 'use server';
 
 import { ImageTypeValues } from '@common/constants/media.constant';
+import { base64DataUrlToBuffer } from '@common/web-core/lib/image-base64';
 import { revalidatePath } from 'next/cache';
-import { base64DataUrlToBuffer } from '../../lib/image-base64';
 import {
   buildShopBannerFileName,
   buildShopLogoFileName,

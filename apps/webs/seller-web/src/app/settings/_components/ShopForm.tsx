@@ -1,6 +1,12 @@
 'use client';
 
 import { ShopStatusEnums } from '@common/schemas/shop';
+import { fileToBase64DataUrl } from '@common/web-core/lib/image-base64';
+import {
+  ALLOWED_IMAGE_MIME,
+  IMAGE_ACCEPT,
+  MAX_IMAGE_SIZE_BYTES,
+} from '@common/web-core/lib/image-constants';
 import { ImagePlus, Save, Store, Undo2, X } from 'lucide-react';
 import {
   useEffect,
@@ -10,7 +16,6 @@ import {
   type ChangeEvent,
 } from 'react';
 import { toast } from 'react-toastify';
-import { fileToBase64DataUrl } from '../../../lib/image-base64';
 import { createShopAction, updateShopAction } from '../actions';
 
 type ShopStatus = (typeof ShopStatusEnums)['options'][number];
@@ -21,14 +26,6 @@ const STATUS_LABEL: Record<ShopStatus, string> = {
   INACTIVE: 'Tạm ngừng',
   CLOSED: 'Đã đóng',
 };
-
-const ALLOWED_IMAGE_MIME = [
-  'image/png',
-  'image/jpeg',
-  'image/jpg',
-  'image/webp',
-];
-const MAX_IMAGE_SIZE_MB = 5;
 
 export type ShopFormInitial = {
   name: string;
@@ -121,12 +118,16 @@ export function ShopForm({ mode, initial, merchantId }: Props) {
     e.target.value = ''; // cho phép pick lại cùng file
     if (!file) return;
 
-    if (!ALLOWED_IMAGE_MIME.includes(file.type)) {
+    if (
+      !ALLOWED_IMAGE_MIME.includes(
+        file.type as (typeof ALLOWED_IMAGE_MIME)[number],
+      )
+    ) {
       toast.error('Chỉ chấp nhận ảnh PNG, JPG, JPEG hoặc WEBP.');
       return;
     }
-    if (file.size > MAX_IMAGE_SIZE_MB * 1024 * 1024) {
-      toast.error(`Ảnh tối đa ${MAX_IMAGE_SIZE_MB}MB.`);
+    if (file.size > MAX_IMAGE_SIZE_BYTES) {
+      toast.error('Ảnh tối đa 5MB.');
       return;
     }
 
@@ -446,7 +447,7 @@ function BannerPicker({
       <input
         ref={inputRef}
         type="file"
-        accept="image/png,image/jpeg,image/jpg,image/webp"
+        accept={IMAGE_ACCEPT}
         onChange={onPick}
         className="hidden"
       />
@@ -514,7 +515,7 @@ function LogoPicker({
       <input
         ref={inputRef}
         type="file"
-        accept="image/png,image/jpeg,image/jpg,image/webp"
+        accept={IMAGE_ACCEPT}
         onChange={onPick}
         className="hidden"
       />

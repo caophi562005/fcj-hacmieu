@@ -2,13 +2,17 @@
 
 import { ProductStatusValues } from '@common/constants/product.constant';
 import { generateSKUs } from '@common/utils/generate-skus.util';
+import { fileToBase64DataUrl } from '@common/web-core/lib/image-base64';
+import {
+  ALLOWED_IMAGE_MIME,
+  IMAGE_ACCEPT,
+} from '@common/web-core/lib/image-constants';
 import { ArrowLeft, ImageIcon, Plus, Save, Trash2, X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { toast } from 'react-toastify';
 import type { BrandOption, CategoryOption } from '../../../lib/catalog';
-import { fileToBase64DataUrl } from '../../../lib/image-base64';
 import type {
   DistrictResponse,
   ProvinceResponse,
@@ -26,13 +30,6 @@ type Sku = { value: string; price: number; stock: number; image?: string };
 type Attribute = { name: string; value: string };
 
 type Status = (typeof ProductStatusValues)[keyof typeof ProductStatusValues];
-
-const ALLOWED_IMAGE_MIME = [
-  'image/png',
-  'image/jpeg',
-  'image/jpg',
-  'image/webp',
-];
 
 // Category gắn vào product (từ ProductResponse) — đủ để suy ra parent/child.
 type ProductCategoryRef = {
@@ -372,7 +369,10 @@ export function ProductForm({
 
     const fileList = Array.from(files);
     const hasInvalidMime = fileList.some(
-      (file) => !ALLOWED_IMAGE_MIME.includes(file.type),
+      (file) =>
+        !ALLOWED_IMAGE_MIME.includes(
+          file.type as (typeof ALLOWED_IMAGE_MIME)[number],
+        ),
     );
 
     if (hasInvalidMime) {
@@ -433,7 +433,11 @@ export function ProductForm({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!ALLOWED_IMAGE_MIME.includes(file.type)) {
+    if (
+      !ALLOWED_IMAGE_MIME.includes(
+        file.type as (typeof ALLOWED_IMAGE_MIME)[number],
+      )
+    ) {
       setError('Chỉ chấp nhận ảnh PNG, JPG, JPEG hoặc WEBP.');
       e.target.value = '';
       return;
@@ -799,7 +803,7 @@ export function ProductForm({
         <input
           ref={imageInputRef}
           type="file"
-          accept="image/png,image/jpeg,image/jpg,image/webp"
+          accept={IMAGE_ACCEPT}
           multiple
           className="hidden"
           onChange={onImageFilesChange}
@@ -1071,7 +1075,7 @@ export function ProductForm({
                         skuImageInputRefs.current[i] = el;
                       }}
                       type="file"
-                      accept="image/png,image/jpeg,image/jpg,image/webp"
+                      accept={IMAGE_ACCEPT}
                       className="hidden"
                       onChange={(e) => onSkuImageChange(i, e)}
                     />

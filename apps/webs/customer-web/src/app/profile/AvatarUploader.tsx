@@ -1,5 +1,6 @@
 'use client';
 
+import { IMAGE_ACCEPT } from '@common/web-core/lib/image-constants';
 import { Camera, Loader2 } from 'lucide-react';
 import { useActionState, useEffect, useRef } from 'react';
 import { uploadAvatarAction, type UploadAvatarState } from './avatar-actions';
@@ -62,7 +63,7 @@ export function AvatarUploader({ src, alt }: Props) {
           ref={inputRef}
           type="file"
           name="avatar"
-          accept="image/png,image/jpeg,image/jpg,image/webp"
+          accept={IMAGE_ACCEPT}
           className="hidden"
           onChange={handleChange}
         />

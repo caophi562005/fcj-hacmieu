@@ -1,9 +1,13 @@
 'use client';
 
+import { fileToBase64DataUrl } from '@common/web-core/lib/image-base64';
+import {
+  ALLOWED_IMAGE_MIME,
+  IMAGE_ACCEPT,
+} from '@common/web-core/lib/image-constants';
 import { ImageIcon, X } from 'lucide-react';
 import { useRef, useState, useTransition } from 'react';
 import { toast } from 'react-toastify';
-import { fileToBase64DataUrl } from '../../lib/image-base64';
 import {
   createBrandAction,
   deleteBrandAction,
@@ -16,13 +20,6 @@ type BrandViewModel = {
   name: string;
   logo: string | null;
 };
-
-const ALLOWED_IMAGE_MIME = [
-  'image/png',
-  'image/jpeg',
-  'image/jpg',
-  'image/webp',
-];
 
 function BrandLogoPicker({
   logo,
@@ -43,14 +40,18 @@ function BrandLogoPicker({
         <input
           ref={inputRef}
           type="file"
-          accept="image/png,image/jpeg,image/jpg,image/webp"
+          accept={IMAGE_ACCEPT}
           className="hidden"
           onChange={async (event) => {
             const file = event.currentTarget.files?.[0];
             event.currentTarget.value = '';
             if (!file) return;
 
-            if (!ALLOWED_IMAGE_MIME.includes(file.type)) {
+            if (
+              !ALLOWED_IMAGE_MIME.includes(
+                file.type as (typeof ALLOWED_IMAGE_MIME)[number],
+              )
+            ) {
               toast.error('Chỉ hỗ trợ ảnh PNG/JPG/JPEG/WEBP.');
               return;
             }
