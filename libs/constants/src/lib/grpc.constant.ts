@@ -46,7 +46,6 @@ export const GrpcModuleName = {
   IAM: {
     USER: 'UserModule',
     PERMISSION: 'PermissionModule',
-    ADDRESS: 'AddressModule',
     AUTH: 'AuthModule',
   },
 

@@ -128,66 +128,6 @@ export interface CountResponse {
   count: number;
 }
 
-export interface GetManyAddressesRequest {
-  processId?: string | undefined;
-  userId: string;
-  page: number;
-  limit: number;
-}
-
-export interface GetManyAddressesResponse {
-  addresses: AddressResponse[];
-  page: number;
-  limit: number;
-  totalItems: number;
-  totalPages: number;
-}
-
-export interface GetAddressRequest {
-  processId?: string | undefined;
-  id: string;
-  userId: string;
-}
-
-export interface CreateAddressRequest {
-  processId?: string | undefined;
-  userId: string;
-  name: string;
-  address: string;
-  ward?: string | undefined;
-  district?: string | undefined;
-  province?: string | undefined;
-}
-
-export interface UpdateAddressRequest {
-  processId?: string | undefined;
-  id: string;
-  userId?: string | undefined;
-  name?: string | undefined;
-  address?: string | undefined;
-  ward?: string | undefined;
-  district?: string | undefined;
-  province?: string | undefined;
-}
-
-export interface DeleteAddressRequest {
-  processId?: string | undefined;
-  id: string;
-  userId: string;
-}
-
-export interface AddressResponse {
-  id: string;
-  userId: string;
-  name: string;
-  address: string;
-  ward: string;
-  district: string;
-  province: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export interface GetUserRequest {
   processId?: string | undefined;
   id?: string | undefined;
@@ -203,6 +143,13 @@ export interface UpdateUserRequest {
   gender?: string | undefined;
   birthday?: string | undefined;
   group: string[];
+  provinceId?: number | undefined;
+  provinceName?: string | undefined;
+  districtId?: number | undefined;
+  districtName?: string | undefined;
+  wardId?: number | undefined;
+  wardName?: string | undefined;
+  address?: string | undefined;
 }
 
 export interface CreateUserRequest {
@@ -230,6 +177,13 @@ export interface UserResponse {
   deletedAt: string;
   createdAt: string;
   updatedAt: string;
+  provinceId?: number | undefined;
+  provinceName?: string | undefined;
+  districtId?: number | undefined;
+  districtName?: string | undefined;
+  wardId?: number | undefined;
+  wardName?: string | undefined;
+  address?: string | undefined;
 }
 
 export interface GetManyUsersRequest {
@@ -367,55 +321,6 @@ export function PermissionModuleControllerMethods() {
 }
 
 export const PERMISSION_MODULE_SERVICE_NAME = "PermissionModule";
-
-export interface AddressModuleClient {
-  getManyAddresses(request: GetManyAddressesRequest): Observable<GetManyAddressesResponse>;
-
-  getAddress(request: GetAddressRequest): Observable<AddressResponse>;
-
-  createAddress(request: CreateAddressRequest): Observable<AddressResponse>;
-
-  updateAddress(request: UpdateAddressRequest): Observable<AddressResponse>;
-
-  deleteAddress(request: DeleteAddressRequest): Observable<AddressResponse>;
-}
-
-export interface AddressModuleController {
-  getManyAddresses(
-    request: GetManyAddressesRequest,
-  ): Promise<GetManyAddressesResponse> | Observable<GetManyAddressesResponse> | GetManyAddressesResponse;
-
-  getAddress(request: GetAddressRequest): Promise<AddressResponse> | Observable<AddressResponse> | AddressResponse;
-
-  createAddress(
-    request: CreateAddressRequest,
-  ): Promise<AddressResponse> | Observable<AddressResponse> | AddressResponse;
-
-  updateAddress(
-    request: UpdateAddressRequest,
-  ): Promise<AddressResponse> | Observable<AddressResponse> | AddressResponse;
-
-  deleteAddress(
-    request: DeleteAddressRequest,
-  ): Promise<AddressResponse> | Observable<AddressResponse> | AddressResponse;
-}
-
-export function AddressModuleControllerMethods() {
-  return function (constructor: Function) {
-    const grpcMethods: string[] = ["getManyAddresses", "getAddress", "createAddress", "updateAddress", "deleteAddress"];
-    for (const method of grpcMethods) {
-      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
-      GrpcMethod("AddressModule", method)(constructor.prototype[method], method, descriptor);
-    }
-    const grpcStreamMethods: string[] = [];
-    for (const method of grpcStreamMethods) {
-      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
-      GrpcStreamMethod("AddressModule", method)(constructor.prototype[method], method, descriptor);
-    }
-  };
-}
-
-export const ADDRESS_MODULE_SERVICE_NAME = "AddressModule";
 
 export interface UserModuleClient {
   getUser(request: GetUserRequest): Observable<UserResponse>;

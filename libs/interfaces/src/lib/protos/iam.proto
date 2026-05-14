@@ -135,74 +135,6 @@ message CountResponse {
   int32 count = 1;
 }
 
-service AddressModule {
-  rpc GetManyAddresses(GetManyAddressesRequest) returns (GetManyAddressesResponse);
-  rpc GetAddress(GetAddressRequest) returns (AddressResponse);
-  rpc CreateAddress(CreateAddressRequest) returns (AddressResponse);
-  rpc UpdateAddress(UpdateAddressRequest) returns (AddressResponse);
-  rpc DeleteAddress(DeleteAddressRequest) returns (AddressResponse);
-}
-
-message GetManyAddressesRequest {
-  optional string processId = 1;
-  string userId = 2;
-  int32 page = 3;
-  int32 limit = 4;
-}
-
-message GetManyAddressesResponse {
-  repeated AddressResponse addresses = 1;
-  int32 page = 2;
-  int32 limit = 3;
-  int32 totalItems = 4;
-  int32 totalPages = 5;
-}
-
-message GetAddressRequest {
-  optional string processId = 1;
-  string id = 2;
-  string userId = 3;
-}
-
-message CreateAddressRequest {
-  optional string processId = 1;
-  string userId = 2;
-  string name = 3;
-  string address = 4;
-  optional string ward = 5;
-  optional string district = 6;
-  optional string province = 7;
-}
-
-message UpdateAddressRequest {
-  optional string processId = 1;
-  string id = 2;
-  optional string userId = 3;
-  optional string name = 4;
-  optional string address = 5;
-  optional string ward = 6;
-  optional string district = 7;
-  optional string province = 8;
-}
-
-message DeleteAddressRequest {
-  optional string processId = 1;
-  string id = 2;
-  string userId = 3;
-}
-
-message AddressResponse {
-  string id = 1;
-  string userId = 2;
-  string name = 3;
-  string address = 4;
-  string ward = 5;
-  string district = 6;
-  string province = 7;
-  string createdAt = 8;
-  string updatedAt = 9;
-}
-
 service UserModule {
   rpc GetUser(GetUserRequest) returns (UserResponse);
   rpc GetManyUsers(GetManyUsersRequest) returns (GetManyUsersResponse);
@@ -225,6 +157,13 @@ message UpdateUserRequest {
   optional string gender = 5;
   optional string birthday = 6;
   repeated string group = 7;
+  optional int32 provinceId = 8;
+  optional string provinceName = 9;
+  optional int32 districtId = 10;
+  optional string districtName = 11;
+  optional int32 wardId = 12;
+  optional string wardName = 13;
+  optional string address = 14;
 }
 
 message CreateUserRequest {
@@ -252,6 +191,13 @@ message UserResponse {
   string deletedAt = 13;
   string createdAt = 14;
   string updatedAt = 15;
+  optional int32 provinceId = 16;
+  optional string provinceName = 17;
+  optional int32 districtId = 18;
+  optional string districtName = 19;
+  optional int32 wardId = 20;
+  optional string wardName = 21;
+  optional string address = 22;
 }
 
 message GetManyUsersRequest {

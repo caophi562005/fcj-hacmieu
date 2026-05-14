@@ -40,6 +40,13 @@ export const UpdateUserRequestSchema = UserSchema.pick({
   gender: true,
   birthday: true,
   group: true,
+  provinceId: true,
+  provinceName: true,
+  districtId: true,
+  districtName: true,
+  wardId: true,
+  wardName: true,
+  address: true,
 })
   .partial()
   .extend({

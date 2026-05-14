@@ -3,6 +3,8 @@ import { GrpcLoggingInterceptor } from '@common/interceptors/grpcLogging.interce
 import {
   CreateAttributeRequest,
   DeleteAttributeRequest,
+  GetAttributeRequest,
+  GetManyAttributesRequest,
   UpdateAttributeRequest,
 } from '@common/interfaces/models/catalog';
 import { Controller, UseInterceptors } from '@nestjs/common';
@@ -15,12 +17,12 @@ export class AttributeGrpcController {
   constructor(private readonly attributeService: AttributeService) {}
 
   @GrpcMethod(GrpcModuleName.CATALOG.ATTRIBUTE, 'GetManyAttributes')
-  getManyAttributes(data: any) {
+  getManyAttributes(data: GetManyAttributesRequest) {
     return this.attributeService.list(data);
   }
 
   @GrpcMethod(GrpcModuleName.CATALOG.ATTRIBUTE, 'GetAttribute')
-  getAttribute(data: any) {
+  getAttribute(data: GetAttributeRequest) {
     return this.attributeService.findById(data);
   }
 

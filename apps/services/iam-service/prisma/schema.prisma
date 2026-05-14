@@ -33,13 +33,20 @@ model User {
 
     group GROUP[]
 
+    provinceId   Int?
+    provinceName String?
+    districtId   Int?
+    districtName String?
+    wardId       Int?
+    wardName     String?
+    address      String?
+
     updatedById String?
     deletedById String?
 
     deletedAt DateTime?
     createdAt DateTime  @default(now())
     updatedAt DateTime  @updatedAt
-    addresses Address[]
 
     @@unique([email, deletedAt])
     @@unique([username, deletedAt])
@@ -47,23 +54,6 @@ model User {
     @@index([email])
     @@index([username])
     @@index([status])
-}
-
-model Address {
-    id       String  @id @default(uuid())
-    userId   String
-    user     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-    name     String
-    address  String
-    ward     String?
-    district String?
-    province String?
-
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-
-    @@unique([name])
-    @@index([userId])
 }
 
 enum HTTP_METHOD {
