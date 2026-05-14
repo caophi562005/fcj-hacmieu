@@ -10,6 +10,7 @@
   },
   "private": true,
   "dependencies": {
+    "@ai-sdk/groq": "^2.0.34",
     "@aws-sdk/client-cognito-identity-provider": "^3.1026.0",
     "@aws-sdk/client-s3": "^3.1030.0",
     "@aws-sdk/client-sqs": "^3.1030.0",
@@ -23,6 +24,7 @@
     "@nestjs/microservices": "^11.1.18",
     "@nestjs/platform-express": "^11.0.0",
     "@nestjs/swagger": "^11.2.7",
+    "ai": "^5.0.129",
     "@prisma/adapter-pg": "^7.6.0",
     "@prisma/client": "^7.6.0",
     "@ssut/nestjs-sqs": "^3.0.1",

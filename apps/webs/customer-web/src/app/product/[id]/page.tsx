@@ -1,4 +1,4 @@
-import { Pagination } from '@common/web-ui/index';
+import { Pagination, ReviewSummaryCard } from '@common/web-ui/index';
 import { MessageCircle, Star, Store } from 'lucide-react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -11,6 +11,7 @@ import {
   toCardProduct,
 } from '../../../lib/catalog';
 import { getManyReviews } from '../../../lib/review';
+import { getReviewSummary } from '../../../lib/review-summary';
 import { getShopById } from '../../../lib/shop';
 
 // Format "Tham gia" từ createdAt (giống shop page).
@@ -54,11 +55,14 @@ export default async function ProductDetail({
   const product = await getProductById(id);
   if (!product) notFound();
 
-  const reviewsData = await getManyReviews({
-    productId: product.id,
-    page: reviewPage,
-    limit: reviewLimit,
-  });
+  const [reviewsData, reviewSummary] = await Promise.all([
+    getManyReviews({
+      productId: product.id,
+      page: reviewPage,
+      limit: reviewLimit,
+    }),
+    getReviewSummary(product.id),
+  ]);
 
   const shop = await getShopById(product.shopId);
   const relatedRes = await getManyProducts({
@@ -174,6 +178,9 @@ export default async function ProductDetail({
             </div>
           ) : null}
         </div>
+
+        {/* AI Review Summary */}
+        {reviewSummary && <ReviewSummaryCard summary={reviewSummary} />}
 
         {/* Reviews */}
         <div className="card p-5 mt-4">

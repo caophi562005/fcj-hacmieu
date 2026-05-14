@@ -7,6 +7,7 @@ export enum GrpcService {
   PAYMENT_SERVICE = 'PAYMENT_SERVICE',
   UTILITY_SERVICE = 'UTILITY_SERVICE',
   WALLET_SERVICE = 'WALLET_SERVICE',
+  AI_SERVICE = 'AI_SERVICE',
 }
 
 export const GrpcModuleName = {
@@ -58,5 +59,9 @@ export const GrpcModuleName = {
     WALLET: 'WalletModule',
     CREDIT: 'CreditModule',
     PAYOUT: 'PayoutModule',
+  },
+
+  AI: {
+    REVIEW_SUMMARY: 'ReviewSummaryModule',
   },
 } as const;

@@ -3,30 +3,49 @@ import {
   CreateReviewRequest,
   DeleteReviewRequest,
   GetManyReviewsRequest,
-  GetManyReviewsResponse,
   GetReviewByOrderItemIdRequest,
   GetReviewRequest,
-  ReviewResponse,
   UpdateReviewRequest,
 } from '@common/interfaces/models/utility';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  AI_SERVICE_PACKAGE_NAME,
+  REVIEW_SUMMARY_MODULE_SERVICE_NAME,
+  ReviewSummaryModuleClient,
+} from '@common/interfaces/proto-types/ai';
+import {
+  Inject,
+  Injectable,
+  Logger,
+  NotFoundException,
+  OnModuleInit,
+} from '@nestjs/common';
+import { ClientGrpc } from '@nestjs/microservices';
+import { firstValueFrom } from 'rxjs';
 import { ReviewRepository } from '../repositories/review.repository';
 
 @Injectable()
-export class ReviewService {
-  constructor(private readonly reviewRepository: ReviewRepository) {}
+export class ReviewService implements OnModuleInit {
+  private readonly logger = new Logger(ReviewService.name);
+  private reviewSummaryModule!: ReviewSummaryModuleClient;
 
-  async list({
-    processId,
-    ...data
-  }: GetManyReviewsRequest): Promise<GetManyReviewsResponse> {
+  constructor(
+    private readonly reviewRepository: ReviewRepository,
+    @Inject(AI_SERVICE_PACKAGE_NAME)
+    private readonly aiClient: ClientGrpc,
+  ) {}
+
+  onModuleInit() {
+    this.reviewSummaryModule =
+      this.aiClient.getService<ReviewSummaryModuleClient>(
+        REVIEW_SUMMARY_MODULE_SERVICE_NAME,
+      );
+  }
+
+  async list({ processId, ...data }: GetManyReviewsRequest) {
     return this.reviewRepository.list(data);
   }
 
-  async findById({
-    processId,
-    ...data
-  }: GetReviewRequest): Promise<ReviewResponse> {
+  async findById({ processId, ...data }: GetReviewRequest) {
     const review = await this.reviewRepository.findById(data);
 
     if (!review) {
@@ -39,7 +58,7 @@ export class ReviewService {
   async findByOrderItemId({
     processId,
     ...data
-  }: GetReviewByOrderItemIdRequest): Promise<ReviewResponse> {
+  }: GetReviewByOrderItemIdRequest) {
     const review = await this.reviewRepository.findByOrderItemId(data);
 
     if (!review) {
@@ -49,19 +68,26 @@ export class ReviewService {
     return review;
   }
 
-  async create({
-    processId,
-    ...data
-  }: CreateReviewRequest): Promise<ReviewResponse> {
+  async create({ processId, ...data }: CreateReviewRequest) {
     const review = await this.reviewRepository.create(data);
     await this.reviewRepository.recalculateRatingAggregate(review.productId);
+
+    // Fire-and-forget: trigger AI summary regeneration
+    firstValueFrom(
+      this.reviewSummaryModule.generateReviewSummary({
+        productId: review.productId,
+      }),
+    ).catch((error) => {
+      this.logger.warn(
+        `Failed to trigger AI summary for product ${review.productId}:`,
+        error?.message,
+      );
+    });
+
     return review;
   }
 
-  async update({
-    processId,
-    ...data
-  }: UpdateReviewRequest): Promise<ReviewResponse> {
+  async update({ processId, ...data }: UpdateReviewRequest) {
     try {
       const review = await this.reviewRepository.update(data);
       await this.reviewRepository.recalculateRatingAggregate(review.productId);
@@ -74,10 +100,7 @@ export class ReviewService {
     }
   }
 
-  async delete({
-    processId,
-    ...data
-  }: DeleteReviewRequest): Promise<ReviewResponse> {
+  async delete({ processId, ...data }: DeleteReviewRequest) {
     try {
       const review = await this.reviewRepository.delete(data, false);
       await this.reviewRepository.recalculateRatingAggregate(review.productId);

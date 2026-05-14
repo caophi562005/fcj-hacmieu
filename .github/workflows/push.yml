@@ -62,6 +62,7 @@ jobs:
             {"name":"shop-service","dockerfile":"apps/services/shop-service/Dockerfile","path":"apps/services/shop-service"},
             {"name":"utility-service","dockerfile":"apps/services/utility-service/Dockerfile","path":"apps/services/utility-service"},
             {"name":"wallet-service","dockerfile":"apps/services/wallet-service/Dockerfile","path":"apps/services/wallet-service"}
+            {"name":"ai-service","dockerfile":"apps/services/ai-service/Dockerfile","path":"apps/services/ai-service"}
           ]'
 
           # Nếu có file thay đổi dưới libs/ hoặc root config quan trọng → affect tất cả services

@@ -32,6 +32,9 @@ resources:
   # Wallet Service
   - wallet-service/service.yaml
   - wallet-service/deployment.yaml
+  # AI Service
+  - ai-service/service.yaml
+  - ai-service/deployment.yaml
   # Admin BFF
   - admin-bff/service.yaml
   - admin-bff/deployment.yaml

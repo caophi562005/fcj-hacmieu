@@ -1,4 +1,4 @@
-import { Pagination } from '@common/web-ui/index';
+import { Pagination, ReviewSummaryCard } from '@common/web-ui/index';
 import { Star } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import {
@@ -8,6 +8,7 @@ import {
 } from '../../../lib/catalog';
 import { getDistricts, getProvinces, getWards } from '../../../lib/location';
 import { getManyReviews } from '../../../lib/review';
+import { getReviewSummary } from '../../../lib/review-summary';
 import {
   ProductForm,
   type ProductFormInitial,
@@ -58,6 +59,7 @@ export default async function ProductDetailPage({
 
   const [
     reviewsData,
+    reviewSummary,
     brands,
     rootCategories,
     provinces,
@@ -70,6 +72,7 @@ export default async function ProductDetailPage({
       page: reviewPage,
       limit: reviewLimit,
     }),
+    getReviewSummary(product.id),
     getManyBrands(),
     getCategoriesByParent(),
     getProvinces(),
@@ -127,6 +130,13 @@ export default async function ProductDetailPage({
         initialDistricts={initialDistricts}
         initialWards={initialWards}
       />
+
+      {/* AI Review Summary */}
+      {reviewSummary && (
+        <section className="max-w-5xl mx-auto">
+          <ReviewSummaryCard summary={reviewSummary} />
+        </section>
+      )}
 
       {/* Reviews */}
       <section className="max-w-5xl mx-auto card p-5">

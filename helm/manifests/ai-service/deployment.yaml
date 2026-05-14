@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-service-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ai-service
+  template:
+    metadata:
+      labels:
+        app: ai-service
+    spec:
+      serviceAccountName: hacmieu-sa
+      containers:
+        - name: ai-service
+          image: public.ecr.aws/h5u5b6t3/hacmieu/ai-service:latest
+          imagePullPolicy: Always
+          env:
+            - name: AI_SERVICE_GRPC_URL
+              value: '0.0.0.0:5009'
+          envFrom:
+            - secretRef:
+                name: hacmieu-secrets
+          ports:
+            - containerPort: 3009
+            - containerPort: 5009
+          resources:
+            requests:
+              cpu: '250m'
+              memory: '512Mi'
+            limits:
+              cpu: '500m'
+              memory: '1Gi'

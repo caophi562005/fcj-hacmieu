@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package AI_SERVICE;
+
+service ReviewSummaryModule {
+  rpc GetReviewSummary (GetReviewSummaryRequest) returns (ReviewSummaryResponse);
+  rpc GenerateReviewSummary (GenerateReviewSummaryRequest) returns (ReviewSummaryResponse);
+}
+
+message GetReviewSummaryRequest {
+  optional string processId = 1;
+  string productId = 2;
+}
+
+message GenerateReviewSummaryRequest {
+  optional string processId = 1;
+  string productId = 2;
+}
+
+message ReviewSummaryResponse {
+  string id = 1;
+  string productId = 2;
+  repeated string pros = 3;
+  repeated string cons = 4;
+  string summary = 5;
+  int32 reviewCount = 6;
+  string lastReviewAt = 7;
+  string createdAt = 8;
+  string updatedAt = 9;
+}

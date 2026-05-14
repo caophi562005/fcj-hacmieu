@@ -1,15 +1,16 @@
 import { GrpcClientProvider } from '@common/configurations/grpc.config';
 import { CacheProvider } from '@common/configurations/redis.config';
 import { GrpcService } from '@common/constants/grpc.constant';
+import { GroupValues } from '@common/constants/user.constant';
 import { AccessTokenGuard } from '@common/guards/access-token.guard';
 import { AuthenticationGuard } from '@common/guards/authentication.guard';
 import { PaymentAPIKeyGuard } from '@common/guards/payment-api-key.guard';
 import { ExceptionInterceptor } from '@common/interceptors/exception.interceptor';
 import { LoggerMiddleware } from '@common/middlewares/logger.middleware';
-import { GroupValues } from '@common/constants/user.constant';
 import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ClientsModule } from '@nestjs/microservices';
+import { AiModule } from './ai-service/ai.module';
 import { CatalogModule } from './catalog-service/catalog.module';
 import { IamModule } from './iam-service/iam.module';
 import { OrderModule } from './order-service/order.module';
@@ -22,6 +23,7 @@ import { WalletModule } from './wallet-service/wallet.module';
 @Module({
   imports: [
     CacheProvider,
+    AiModule,
     CatalogModule,
     IamModule,
     OrderModule,

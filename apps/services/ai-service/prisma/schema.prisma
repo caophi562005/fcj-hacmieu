@@ -1,0 +1,24 @@
+generator client {
+    provider      = "prisma-client"
+    output        = "../src/generated/prisma-client"
+    moduleFormat  = "cjs"
+    binaryTargets = ["native", "debian-openssl-1.1.x"]
+}
+
+datasource db {
+    provider = "postgresql"
+}
+
+model ReviewSummary {
+    id           String   @id @default(uuid())
+    productId    String   @unique
+    pros         String[]
+    cons         String[]
+    summary      String
+    reviewCount  Int
+    lastReviewAt DateTime
+    createdAt    DateTime @default(now())
+    updatedAt    DateTime @updatedAt
+
+    @@index([productId])
+}

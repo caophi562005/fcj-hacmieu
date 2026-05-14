@@ -20,6 +20,7 @@ export const GrpcConfigurationSchema = z.object({
   PAYMENT_SERVICE_GRPC_URL: grpcUrlSchema.default(defaultGrpcUrl),
   UTILITY_SERVICE_GRPC_URL: grpcUrlSchema.default(defaultGrpcUrl),
   WALLET_SERVICE_GRPC_URL: grpcUrlSchema.default(defaultGrpcUrl),
+  AI_SERVICE_GRPC_URL: grpcUrlSchema.default(defaultGrpcUrl),
 });
 
 const configServer = GrpcConfigurationSchema.safeParse(process.env);

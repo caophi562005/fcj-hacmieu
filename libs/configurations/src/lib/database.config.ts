@@ -9,6 +9,7 @@ export const DatabaseConfigurationSchema = z.object({
   IAM_SERVICE_DATABASE_URL: z.string(),
   SHOP_SERVICE_DATABASE_URL: z.string().default(''),
   WALLET_SERVICE_DATABASE_URL: z.string().default(''),
+  AI_SERVICE_DATABASE_URL: z.string().default(''),
 });
 
 const configServer = DatabaseConfigurationSchema.safeParse(process.env);
