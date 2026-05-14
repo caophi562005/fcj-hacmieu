@@ -61,7 +61,7 @@ jobs:
             {"name":"promotion-service","dockerfile":"apps/services/promotion-service/Dockerfile","path":"apps/services/promotion-service"},
             {"name":"shop-service","dockerfile":"apps/services/shop-service/Dockerfile","path":"apps/services/shop-service"},
             {"name":"utility-service","dockerfile":"apps/services/utility-service/Dockerfile","path":"apps/services/utility-service"},
-            {"name":"wallet-service","dockerfile":"apps/services/wallet-service/Dockerfile","path":"apps/services/wallet-service"}
+            {"name":"wallet-service","dockerfile":"apps/services/wallet-service/Dockerfile","path":"apps/services/wallet-service"},
             {"name":"ai-service","dockerfile":"apps/services/ai-service/Dockerfile","path":"apps/services/ai-service"}
           ]'
 
