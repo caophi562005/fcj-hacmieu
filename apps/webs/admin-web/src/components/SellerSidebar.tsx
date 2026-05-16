@@ -2,6 +2,7 @@
 
 import { DashboardSidebar, type NavItem } from '@common/web-ui/index';
 import {
+  BookOpen,
   CircleDollarSign,
   FolderTree,
   LayoutDashboard,
@@ -33,6 +34,7 @@ const ITEMS: NavItem[] = [
   { href: '/merchant', label: 'Quản lý duyệt', icon: ShieldUser },
   { href: '/shops', label: 'Quản lý shop', icon: Store },
   { href: '/payouts', label: 'Yêu cầu rút tiền', icon: CircleDollarSign },
+  { href: '/knowledge-base', label: 'Knowledge Base', icon: BookOpen },
   { href: '/reports', label: 'Báo cáo vi phạm', icon: Megaphone },
 ];
 

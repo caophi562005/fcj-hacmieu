@@ -1,6 +1,7 @@
 import { AppConvexProvider, ToastProvider } from '@common/web-ui/index';
 import type { Metadata } from 'next';
 import { BottomNav } from '../components/BottomNav';
+import { ChatBotWidget } from '../components/ChatBotWidget';
 import { Header } from '../components/Header';
 import './global.css';
 
@@ -31,6 +32,7 @@ export default function RootLayout({
             <BottomNav />
           </div>
           <ToastProvider />
+          <ChatBotWidget />
         </AppConvexProvider>
       </body>
     </html>

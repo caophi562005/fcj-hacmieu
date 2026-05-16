@@ -36,6 +36,10 @@ module.exports = {
       boxShadow: {
         'nav-up': '0 -4px 12px rgba(0,0,0,0.05)',
       },
+      spacing: {
+        sidebar: '0px',
+        topbar: '0px',
+      },
     },
   },
 };

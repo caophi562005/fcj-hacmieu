@@ -11,6 +11,12 @@
       "options": {
         "cwd": "{projectRoot}"
       }
+    },
+    "serve": {
+      "command": "convex dev",
+      "options": {
+        "cwd": "{projectRoot}"
+      }
     }
   }
 }

@@ -45,4 +45,27 @@ export default defineSchema({
     kind: v.union(v.literal('text'), v.literal('image')),
     body: v.string(),
   }).index('by_conversation', ['conversationId']),
+
+  // --- AI Chatbot (bot) ---
+  botConversations: defineTable({
+    sessionId: v.string(),
+    threadId: v.string(),
+    status: v.union(v.literal('active'), v.literal('resolved')),
+    createdAt: v.number(),
+    expiresAt: v.number(),
+  })
+    .index('by_session', ['sessionId'])
+    .index('by_expires_at', ['expiresAt']),
+
+  botKnowledgeBase: defineTable({
+    title: v.string(),
+    category: v.optional(v.string()),
+    storageId: v.id('_storage'),
+    status: v.union(
+      v.literal('processing'),
+      v.literal('ready'),
+      v.literal('error'),
+    ),
+    createdAt: v.number(),
+  }).index('by_status', ['status']),
 });
