@@ -15,6 +15,7 @@ import {
   Tags,
   TicketPercent,
   Users,
+  Video,
 } from 'lucide-react';
 
 const ITEMS: NavItem[] = [
@@ -30,6 +31,7 @@ const ITEMS: NavItem[] = [
   { href: '/brands', label: 'Quản lý thương hiệu', icon: Tags },
   { href: '/attributes', label: 'Quản lý thuộc tính', icon: Shapes },
   { href: '/orders', label: 'Quản lý đơn hàng', icon: ShoppingCart },
+  { href: '/videos', label: 'Quản lý video', icon: Video },
   { href: '/promotions', label: 'Quản lý voucher', icon: TicketPercent },
   { href: '/merchant', label: 'Quản lý duyệt', icon: ShieldUser },
   { href: '/shops', label: 'Quản lý shop', icon: Store },

@@ -157,3 +157,39 @@ model RatingAggregate {
 
     @@index([productId])
 }
+
+//==================== VIDEO ====================//
+
+enum VideoStatus {
+    PENDING
+    PROCESSING
+    READY
+    FAILED
+}
+
+model Video {
+    id        String      @id @default(uuid())
+    shopId    String
+    productId String?
+    status    VideoStatus @default(PENDING)
+    isHidden  Boolean     @default(false)
+
+    duration Int?
+    width    Int?
+    height   Int?
+
+    likeCount Int @default(0)
+
+    uploadedById String
+
+    deletedAt DateTime?
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+
+    @@index([shopId])
+    @@index([productId])
+    @@index([status])
+    @@index([isHidden])
+    @@index([uploadedById])
+    @@index([deletedAt])
+}

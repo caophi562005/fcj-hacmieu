@@ -1,0 +1,6 @@
+{
+  "name": "video-processor-lambda",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Lambda function for video processing with ffmpeg"
+}

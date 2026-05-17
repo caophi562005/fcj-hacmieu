@@ -21,6 +21,9 @@ export const SqsConfigurationSchema = z.object({
 
   CREATE_USER_QUEUE_NAME: z.string(),
   CREATE_USER_QUEUE_URL: z.string(),
+
+  UPDATE_VIDEO_STATUS_QUEUE_NAME: z.string(),
+  UPDATE_VIDEO_STATUS_QUEUE_URL: z.string(),
 });
 
 const configServer = SqsConfigurationSchema.safeParse(process.env);

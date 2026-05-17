@@ -10,6 +10,7 @@ import { MediaController } from './controllers/media.controller';
 import { NotificationController } from './controllers/notification.controller';
 import { ReportController } from './controllers/report.controller';
 import { ReviewController } from './controllers/review.controller';
+import { VideoController } from './controllers/video.controller';
 import { LocationService } from './services/location.service';
 import { MediaService } from './services/media.service';
 import { NotificationConsumerService } from './services/notification-consumer.service';
@@ -17,6 +18,7 @@ import { NotificationStreamService } from './services/notification-stream.servic
 import { NotificationService } from './services/notification.service';
 import { ReportService } from './services/report.service';
 import { ReviewService } from './services/review.service';
+import { VideoService } from './services/video.service';
 
 @Module({
   imports: [
@@ -34,6 +36,7 @@ import { ReviewService } from './services/review.service';
   controllers: [
     NotificationController,
     MediaController,
+    VideoController,
     ReportController,
     ReviewController,
     LocationController,
@@ -43,6 +46,7 @@ import { ReviewService } from './services/review.service';
     NotificationConsumerService,
     NotificationStreamService,
     MediaService,
+    VideoService,
     ReportService,
     ReviewService,
     LocationService,

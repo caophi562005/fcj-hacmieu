@@ -92,6 +92,75 @@ export interface CreatePresignedUrlResponse {
   url: string;
 }
 
+export interface CreateVideoRequest {
+  processId?: string | undefined;
+  shopId: string;
+  uploadedById: string;
+  productId?: string | undefined;
+}
+
+export interface GetManyVideosRequest {
+  processId?: string | undefined;
+  page: number;
+  limit: number;
+  shopId?: string | undefined;
+  productId?: string | undefined;
+  status?: string | undefined;
+}
+
+export interface GetManyVideosResponse {
+  page: number;
+  limit: number;
+  totalItems: number;
+  totalPages: number;
+  videos: VideoResponse[];
+}
+
+export interface GetVideoRequest {
+  processId?: string | undefined;
+  id: string;
+}
+
+export interface UpdateVideoStatusRequest {
+  processId?: string | undefined;
+  id: string;
+  status: string;
+  duration?: number | undefined;
+  width?: number | undefined;
+  height?: number | undefined;
+}
+
+export interface UpdateVideoRequest {
+  processId?: string | undefined;
+  id: string;
+  productId?: string | undefined;
+  isHidden?: boolean | undefined;
+}
+
+export interface DeleteVideoRequest {
+  processId?: string | undefined;
+  id: string;
+}
+
+export interface VideoResponse {
+  id: string;
+  shopId: string;
+  productId?: string | undefined;
+  status: string;
+  duration?: number | undefined;
+  width?: number | undefined;
+  height?: number | undefined;
+  likeCount: number;
+  uploadedById: string;
+  deletedAt?: string | undefined;
+  createdAt: string;
+  updatedAt: string;
+  presignedUrl: string;
+  hlsUrl: string;
+  thumbnailUrl: string;
+  isHidden: boolean;
+}
+
 export interface GetManyReportsRequest {
   processId?: string | undefined;
   page: number;
@@ -368,6 +437,66 @@ export function MediaServiceControllerMethods() {
 }
 
 export const MEDIA_SERVICE_NAME = "MediaService";
+
+/** ==================== VIDEO SERVICE ====================// */
+
+export interface VideoServiceClient {
+  createVideo(request: CreateVideoRequest): Observable<VideoResponse>;
+
+  getManyVideos(request: GetManyVideosRequest): Observable<GetManyVideosResponse>;
+
+  getVideo(request: GetVideoRequest): Observable<VideoResponse>;
+
+  updateVideo(request: UpdateVideoRequest): Observable<VideoResponse>;
+
+  updateVideoStatus(request: UpdateVideoStatusRequest): Observable<VideoResponse>;
+
+  deleteVideo(request: DeleteVideoRequest): Observable<VideoResponse>;
+}
+
+/** ==================== VIDEO SERVICE ====================// */
+
+export interface VideoServiceController {
+  createVideo(request: CreateVideoRequest): Promise<VideoResponse> | Observable<VideoResponse> | VideoResponse;
+
+  getManyVideos(
+    request: GetManyVideosRequest,
+  ): Promise<GetManyVideosResponse> | Observable<GetManyVideosResponse> | GetManyVideosResponse;
+
+  getVideo(request: GetVideoRequest): Promise<VideoResponse> | Observable<VideoResponse> | VideoResponse;
+
+  updateVideo(request: UpdateVideoRequest): Promise<VideoResponse> | Observable<VideoResponse> | VideoResponse;
+
+  updateVideoStatus(
+    request: UpdateVideoStatusRequest,
+  ): Promise<VideoResponse> | Observable<VideoResponse> | VideoResponse;
+
+  deleteVideo(request: DeleteVideoRequest): Promise<VideoResponse> | Observable<VideoResponse> | VideoResponse;
+}
+
+export function VideoServiceControllerMethods() {
+  return function (constructor: Function) {
+    const grpcMethods: string[] = [
+      "createVideo",
+      "getManyVideos",
+      "getVideo",
+      "updateVideo",
+      "updateVideoStatus",
+      "deleteVideo",
+    ];
+    for (const method of grpcMethods) {
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcMethod("VideoService", method)(constructor.prototype[method], method, descriptor);
+    }
+    const grpcStreamMethods: string[] = [];
+    for (const method of grpcStreamMethods) {
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcStreamMethod("VideoService", method)(constructor.prototype[method], method, descriptor);
+    }
+  };
+}
+
+export const VIDEO_SERVICE_NAME = "VideoService";
 
 /** ==================== REPORT SERVICE ====================// */
 

@@ -55,7 +55,7 @@ export const UpdatePaymentStatusRequestSchema = PaymentSchema.pick({
   updatedById: true,
 })
   .extend({
-    processId: z.string().uuid().optional(),
+    processId: z.uuid().optional(),
   })
   .strict();
 

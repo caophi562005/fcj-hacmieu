@@ -38,6 +38,7 @@ export const GrpcModuleName = {
   UTILITY: {
     NOTIFICATION: 'NotificationService',
     MEDIA: 'MediaService',
+    VIDEO: 'VideoService',
     REPORT: 'ReportService',
     REVIEW: 'ReviewService',
     LOCATION: 'LocationService',

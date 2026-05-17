@@ -4,6 +4,7 @@ import { MediaModule } from './modules/media/image.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { ReportModule } from './modules/report/report.module';
 import { ReviewModule } from './modules/review/review.module';
+import { VideoModule } from './modules/video/video.module';
 import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
@@ -11,6 +12,7 @@ import { PrismaModule } from './prisma/prisma.module';
     PrismaModule,
     NotificationModule,
     MediaModule,
+    VideoModule,
     ReportModule,
     ReviewModule,
     LocationModule,

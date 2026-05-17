@@ -7,6 +7,7 @@ import {
   Package,
   Settings,
   ShoppingCart,
+  Video,
   Wallet,
 } from 'lucide-react';
 
@@ -18,6 +19,7 @@ const ITEMS: NavItem[] = [
     match: (p) => p === '/',
   },
   { href: '/products', label: 'Quản lý Sản phẩm', icon: Package },
+  { href: '/videos', label: 'Quản lý Video', icon: Video },
   { href: '/orders', label: 'Quản lý Đơn hàng', icon: ShoppingCart },
   { href: '/chat', label: 'Quản lý Tin nhắn', icon: MessageSquare },
   { href: '/finance', label: 'Tài chính', icon: Wallet },

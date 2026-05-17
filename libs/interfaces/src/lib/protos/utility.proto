@@ -98,6 +98,85 @@ message CreatePresignedUrlResponse {
   string url = 2;
 }
 
+//==================== VIDEO SERVICE ====================//
+service VideoService {
+  rpc CreateVideo(CreateVideoRequest) returns (VideoResponse);
+  rpc GetManyVideos(GetManyVideosRequest) returns (GetManyVideosResponse);
+  rpc GetVideo(GetVideoRequest) returns (VideoResponse);
+  rpc UpdateVideo(UpdateVideoRequest) returns (VideoResponse);
+  rpc UpdateVideoStatus(UpdateVideoStatusRequest) returns (VideoResponse);
+  rpc DeleteVideo(DeleteVideoRequest) returns (VideoResponse);
+}
+
+message CreateVideoRequest {
+  optional string processId = 1;
+  string shopId = 2;
+  string uploadedById = 3;
+  optional string productId = 4;
+}
+
+message GetManyVideosRequest {
+  optional string processId = 1;
+  int32 page = 2;
+  int32 limit = 3;
+  optional string shopId = 4;
+  optional string productId = 5;
+  optional string status = 6;
+}
+
+message GetManyVideosResponse {
+  int32 page = 1;
+  int32 limit = 2;
+  int32 totalItems = 3;
+  int32 totalPages = 4;
+  repeated VideoResponse videos = 5;
+}
+
+message GetVideoRequest {
+  optional string processId = 1;
+  string id = 2;
+}
+
+message UpdateVideoStatusRequest {
+  optional string processId = 1;
+  string id = 2;
+  string status = 3;
+  optional int32 duration = 4;
+  optional int32 width = 5;
+  optional int32 height = 6;
+}
+
+message UpdateVideoRequest {
+  optional string processId = 1;
+  string id = 2;
+  optional string productId = 3;
+  optional bool isHidden = 4;
+}
+
+message DeleteVideoRequest {
+  optional string processId = 1;
+  string id = 2;
+}
+
+message VideoResponse {
+  string id = 1;
+  string shopId = 2;
+  optional string productId = 3;
+  string status = 4;
+  optional int32 duration = 5;
+  optional int32 width = 6;
+  optional int32 height = 7;
+  int32 likeCount = 8;
+  string uploadedById = 9;
+  optional string deletedAt = 10;
+  string createdAt = 11;
+  string updatedAt = 12;
+  string presignedUrl = 13;
+  string hlsUrl = 14;
+  string thumbnailUrl = 15;
+  bool isHidden = 16;
+}
+
 //==================== REPORT SERVICE ====================//
 service ReportService {
   rpc GetManyReports(GetManyReportsRequest) returns (GetManyReportsResponse);
