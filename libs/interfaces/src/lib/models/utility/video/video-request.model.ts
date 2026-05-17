@@ -60,6 +60,12 @@ export const UpdateVideoRequestSchema = z.object({
   isHidden: z.boolean().optional(),
 });
 
+export const GetVideoFeedRequestSchema = z.object({
+  processId: z.string().optional(),
+  limit: z.number().int().positive().default(10),
+  excludeIds: z.array(z.string()).default([]),
+});
+
 export type CreateVideoRequest = z.infer<typeof CreateVideoRequestSchema>;
 export type GetManyVideosRequest = z.infer<typeof GetManyVideosRequestSchema>;
 export type GetVideoRequest = z.infer<typeof GetVideoRequestSchema>;
@@ -68,3 +74,4 @@ export type UpdateVideoStatusRequest = z.infer<
 >;
 export type DeleteVideoRequest = z.infer<typeof DeleteVideoRequestSchema>;
 export type UpdateVideoRequest = z.infer<typeof UpdateVideoRequestSchema>;
+export type GetVideoFeedRequest = z.infer<typeof GetVideoFeedRequestSchema>;

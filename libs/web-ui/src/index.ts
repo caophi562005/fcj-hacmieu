@@ -12,4 +12,10 @@ export {
   type VideoCardProps,
   type VideoData,
 } from './lib/VideoCard';
+export {
+  VideoFeed,
+  type ProductInfo,
+  type VideoFeedItem,
+  type VideoFeedProps,
+} from './lib/VideoFeed';
 export { VideoPlayer, type VideoPlayerProps } from './lib/VideoPlayer';

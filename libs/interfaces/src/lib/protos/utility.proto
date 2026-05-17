@@ -103,6 +103,7 @@ service VideoService {
   rpc CreateVideo(CreateVideoRequest) returns (VideoResponse);
   rpc GetManyVideos(GetManyVideosRequest) returns (GetManyVideosResponse);
   rpc GetVideo(GetVideoRequest) returns (VideoResponse);
+  rpc GetVideoFeed(GetVideoFeedRequest) returns (GetManyVideosResponse);
   rpc UpdateVideo(UpdateVideoRequest) returns (VideoResponse);
   rpc UpdateVideoStatus(UpdateVideoStatusRequest) returns (VideoResponse);
   rpc DeleteVideo(DeleteVideoRequest) returns (VideoResponse);
@@ -135,6 +136,12 @@ message GetManyVideosResponse {
 message GetVideoRequest {
   optional string processId = 1;
   string id = 2;
+}
+
+message GetVideoFeedRequest {
+  optional string processId = 1;
+  int32 limit = 2;
+  repeated string excludeIds = 3;
 }
 
 message UpdateVideoStatusRequest {

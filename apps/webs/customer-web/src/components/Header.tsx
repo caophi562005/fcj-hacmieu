@@ -1,4 +1,4 @@
-import { MessageCircle, ShoppingCart } from 'lucide-react';
+import { Film, MessageCircle, ShoppingCart } from 'lucide-react';
 import Link from 'next/link';
 import { getAuth } from '../lib/auth';
 import { getMyCart } from '../lib/cart';
@@ -46,6 +46,13 @@ export async function Header() {
         <SearchBar variant="header" />
 
         <nav className="hidden md:flex items-center gap-1">
+          <Link
+            href="/videos"
+            className="inline-flex items-center justify-center w-10 h-10 rounded text-ink-muted hover:text-primary hover:bg-surface-muted transition-colors"
+            aria-label="Video"
+          >
+            <Film className="w-5 h-5" />
+          </Link>
           <Link
             href="/cart"
             className="relative inline-flex items-center justify-center w-10 h-10 rounded text-ink-muted hover:text-primary hover:bg-surface-muted transition-colors"

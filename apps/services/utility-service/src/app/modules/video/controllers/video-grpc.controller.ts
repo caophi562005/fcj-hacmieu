@@ -4,6 +4,7 @@ import {
   CreateVideoRequest,
   DeleteVideoRequest,
   GetManyVideosRequest,
+  GetVideoFeedRequest,
   GetVideoRequest,
   UpdateVideoRequest,
   UpdateVideoStatusRequest,
@@ -30,6 +31,11 @@ export class VideoGrpcController {
   @GrpcMethod(GrpcModuleName.UTILITY.VIDEO, 'GetVideo')
   getVideo(data: GetVideoRequest) {
     return this.videoService.findById(data);
+  }
+
+  @GrpcMethod(GrpcModuleName.UTILITY.VIDEO, 'GetVideoFeed')
+  getVideoFeed(data: GetVideoFeedRequest) {
+    return this.videoService.feed(data);
   }
 
   @GrpcMethod(GrpcModuleName.UTILITY.VIDEO, 'UpdateVideo')

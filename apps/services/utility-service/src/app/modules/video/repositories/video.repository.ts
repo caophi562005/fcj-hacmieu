@@ -82,4 +82,17 @@ export class VideoRepository {
       data: { deletedAt: new Date() },
     });
   }
+
+  async feed(data: { limit: number; excludeIds?: string[] }) {
+    const videos = await this.prismaService.$queryRawUnsafe<any[]>(
+      `SELECT * FROM "Video"
+       WHERE status = 'READY' AND "isHidden" = false AND "deletedAt" IS NULL
+       ${data.excludeIds?.length ? `AND id NOT IN (${data.excludeIds.map((id) => `'${id}'`).join(',')})` : ''}
+       ORDER BY random()
+       LIMIT $1`,
+      data.limit,
+    );
+
+    return videos;
+  }
 }

@@ -3,6 +3,7 @@ import {
   CreateVideoRequest,
   DeleteVideoRequest,
   GetManyVideosRequest,
+  GetVideoFeedRequest,
   GetVideoRequest,
   UpdateVideoRequest,
   UpdateVideoStatusRequest,
@@ -70,6 +71,21 @@ export class VideoService {
       isHidden: data.isHidden,
     });
     return this.toResponse(video);
+  }
+
+  async feed(data: GetVideoFeedRequest) {
+    const videos = await this.videoRepository.feed({
+      limit: data.limit,
+      excludeIds: data.excludeIds,
+    });
+
+    return {
+      page: 1,
+      limit: data.limit,
+      totalItems: videos.length,
+      totalPages: 1,
+      videos: videos.map((v: any) => this.toResponse(v)),
+    };
   }
 
   async delete(data: DeleteVideoRequest) {

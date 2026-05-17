@@ -121,6 +121,12 @@ export interface GetVideoRequest {
   id: string;
 }
 
+export interface GetVideoFeedRequest {
+  processId?: string | undefined;
+  limit: number;
+  excludeIds: string[];
+}
+
 export interface UpdateVideoStatusRequest {
   processId?: string | undefined;
   id: string;
@@ -447,6 +453,8 @@ export interface VideoServiceClient {
 
   getVideo(request: GetVideoRequest): Observable<VideoResponse>;
 
+  getVideoFeed(request: GetVideoFeedRequest): Observable<GetManyVideosResponse>;
+
   updateVideo(request: UpdateVideoRequest): Observable<VideoResponse>;
 
   updateVideoStatus(request: UpdateVideoStatusRequest): Observable<VideoResponse>;
@@ -465,6 +473,10 @@ export interface VideoServiceController {
 
   getVideo(request: GetVideoRequest): Promise<VideoResponse> | Observable<VideoResponse> | VideoResponse;
 
+  getVideoFeed(
+    request: GetVideoFeedRequest,
+  ): Promise<GetManyVideosResponse> | Observable<GetManyVideosResponse> | GetManyVideosResponse;
+
   updateVideo(request: UpdateVideoRequest): Promise<VideoResponse> | Observable<VideoResponse> | VideoResponse;
 
   updateVideoStatus(
@@ -480,6 +492,7 @@ export function VideoServiceControllerMethods() {
       "createVideo",
       "getManyVideos",
       "getVideo",
+      "getVideoFeed",
       "updateVideo",
       "updateVideoStatus",
       "deleteVideo",
