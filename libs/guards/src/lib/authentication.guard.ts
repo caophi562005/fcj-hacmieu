@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AccessTokenGuard } from './access-token.guard';
-import { PaymentAPIKeyGuard } from './payment-api-key.guard';
+import { SepayHmacGuard } from './sepay-hmac.guard';
 
 @Injectable()
 export class AuthenticationGuard implements CanActivate {
@@ -22,11 +22,11 @@ export class AuthenticationGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
     private readonly accessTokenGuard: AccessTokenGuard,
-    private readonly paymentApiKeyGuard: PaymentAPIKeyGuard
+    private readonly sepayHmacGuard: SepayHmacGuard,
   ) {
     this.authTypeGuardMap = {
       [AuthType.Cookie]: this.accessTokenGuard,
-      [AuthType.PaymentAPIKey]: this.paymentApiKeyGuard,
+      [AuthType.Sepay]: this.sepayHmacGuard,
       [AuthType.None]: { canActivate: () => true },
     };
   }
@@ -39,7 +39,7 @@ export class AuthenticationGuard implements CanActivate {
 
     const authTypeValue = this.getAuthTypeValue(context);
     const guards = authTypeValue.authTypes.map(
-      (type) => this.authTypeGuardMap[type]
+      (type) => this.authTypeGuardMap[type],
     );
 
     return authTypeValue.options.condition === ConditionGuard.And
@@ -48,12 +48,12 @@ export class AuthenticationGuard implements CanActivate {
   }
 
   private getAuthTypeValue(
-    context: ExecutionContext
+    context: ExecutionContext,
   ): AuthTypeDecoratorPayload {
     return (
       this.reflector.getAllAndOverride<AuthTypeDecoratorPayload | undefined>(
         AUTH_TYPES_KEY,
-        [context.getHandler(), context.getClass()]
+        [context.getHandler(), context.getClass()],
       ) ?? {
         authTypes: [AuthType.Cookie],
         options: { condition: ConditionGuard.And },
@@ -63,7 +63,7 @@ export class AuthenticationGuard implements CanActivate {
 
   private async handleOrCondition(
     guards: CanActivate[],
-    context: ExecutionContext
+    context: ExecutionContext,
   ) {
     let lastError: any = null;
     //Duyệt qua từng guard, nếu có pass thì return true
@@ -85,7 +85,7 @@ export class AuthenticationGuard implements CanActivate {
 
   private async handleAndCondition(
     guards: CanActivate[],
-    context: ExecutionContext
+    context: ExecutionContext,
   ) {
     //Duyệt qua hết các guard , nếu có 1 cái false thì return false
     for (const guard of guards) {

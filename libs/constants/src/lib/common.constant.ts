@@ -9,7 +9,7 @@ export enum MetadataKeys {
 export const AuthType = {
   Cookie: 'Cookie',
   None: 'None',
-  PaymentAPIKey: 'PaymentAPIKey',
+  Sepay: 'Sepay',
 } as const;
 
 export type AuthTypeType = (typeof AuthType)[keyof typeof AuthType];

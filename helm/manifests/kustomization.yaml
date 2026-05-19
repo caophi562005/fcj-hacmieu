@@ -21,8 +21,8 @@ resources:
   - order-service/service.yaml
   - order-service/deployment.yaml
   # # Payment Service
-  # - payment-service/service.yaml
-  # - payment-service/deployment.yaml
+  - payment-service/service.yaml
+  - payment-service/deployment.yaml
   # Promotion Service
   - promotion-service/service.yaml
   - promotion-service/deployment.yaml
@@ -35,27 +35,27 @@ resources:
   # AI Service
   - ai-service/service.yaml
   - ai-service/deployment.yaml
-  # Admin BFF
-  - admin-bff/service.yaml
-  - admin-bff/deployment.yaml
-  - admin-bff/ingress.yaml
-  # Admin Web
-  - admin-web/service.yaml
-  - admin-web/deployment.yaml
-  - admin-web/ingress.yaml
+  # # Admin BFF
+  # - admin-bff/service.yaml
+  # - admin-bff/deployment.yaml
+  # - admin-bff/ingress.yaml
+  # # Admin Web
+  # - admin-web/service.yaml
+  # - admin-web/deployment.yaml
+  # - admin-web/ingress.yaml
   # # Customer BFF
-  # - customer-bff/service.yaml
-  # - customer-bff/deployment.yaml
-  # - customer-bff/ingress.yaml
+  - customer-bff/service.yaml
+  - customer-bff/deployment.yaml
+  - customer-bff/ingress.yaml
   # # Customer Web
-  # - customer-web/service.yaml
-  # - customer-web/deployment.yaml
-  # - customer-web/ingress.yaml
-  # # Seller BFF
+  - customer-web/service.yaml
+  - customer-web/deployment.yaml
+  - customer-web/ingress.yaml
+  # # # Seller BFF
   # - seller-bff/service.yaml
   # - seller-bff/deployment.yaml
   # - seller-bff/ingress.yaml
-  # # Seller Web
+  # # # Seller Web
   # - seller-web/service.yaml
   # - seller-web/deployment.yaml
   # - seller-web/ingress.yaml

@@ -4,7 +4,7 @@ import { GrpcService } from '@common/constants/grpc.constant';
 import { GroupValues } from '@common/constants/user.constant';
 import { AccessTokenGuard } from '@common/guards/access-token.guard';
 import { AuthenticationGuard } from '@common/guards/authentication.guard';
-import { PaymentAPIKeyGuard } from '@common/guards/payment-api-key.guard';
+import { SepayHmacGuard } from '@common/guards/sepay-hmac.guard';
 import { ExceptionInterceptor } from '@common/interceptors/exception.interceptor';
 import { LoggerMiddleware } from '@common/middlewares/logger.middleware';
 import { MiddlewareConsumer, Module } from '@nestjs/common';
@@ -36,7 +36,7 @@ import { WalletModule } from './wallet-service/wallet.module';
       useValue: GroupValues.SELLER,
     },
     AccessTokenGuard,
-    PaymentAPIKeyGuard,
+    SepayHmacGuard,
     // {
     //   provide: APP_PIPE,
     //   useClass: CustomZodValidationPipe,

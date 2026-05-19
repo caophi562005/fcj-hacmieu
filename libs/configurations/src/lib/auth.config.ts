@@ -19,7 +19,7 @@ export const AuthConfigurationSchema = z.object({
   ADMIN_LOGOUT_URI: z.string(),
 
   USER_POOL_ID: z.string(),
-  PAYMENT_API_KEY: z.string(),
+  PAYMENT_SECRET: z.string(),
 });
 
 const configServer = AuthConfigurationSchema.safeParse(process.env);

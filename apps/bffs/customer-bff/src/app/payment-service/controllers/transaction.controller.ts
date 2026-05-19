@@ -20,7 +20,7 @@ export class TransactionController {
   ) {}
 
   @Post('receiver')
-  @Auth([AuthType.PaymentAPIKey])
+  @Auth([AuthType.Sepay])
   @ApiOkResponse({
     type: WebhookTransactionResponseDto,
   })
