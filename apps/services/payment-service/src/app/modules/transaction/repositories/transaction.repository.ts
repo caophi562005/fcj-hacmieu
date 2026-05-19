@@ -53,7 +53,12 @@ export class TransactionRepository {
       });
 
       // Kiểm tra nội dung chuyển tiền và tổng số tiền có khớp không
-      const paymentCode = data.code ? String(data.code) : String(data.content);
+      // data.code là mã SePay gán, data.content là nội dung chuyển khoản
+      // Ưu tiên tìm payment code (dạng PREFIX + YYMMDD + 6 chars) trong content
+      const extractedCode = data.content?.match(/[A-Z]+\d{6}[A-Z0-9]{6}/)?.[0];
+      const paymentCode = data.code
+        ? String(data.code)
+        : (extractedCode ?? String(data.content));
       const payment = await tx.payment.findUnique({
         where: {
           code: paymentCode,
