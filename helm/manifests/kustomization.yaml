@@ -35,15 +35,15 @@ resources:
   # AI Service
   - ai-service/service.yaml
   - ai-service/deployment.yaml
-  # # Admin BFF
-  # - admin-bff/service.yaml
-  # - admin-bff/deployment.yaml
-  # - admin-bff/ingress.yaml
-  # # Admin Web
-  # - admin-web/service.yaml
-  # - admin-web/deployment.yaml
-  # - admin-web/ingress.yaml
-  # # Customer BFF
+  # Admin BFF
+  - admin-bff/service.yaml
+  - admin-bff/deployment.yaml
+  - admin-bff/ingress.yaml
+  # Admin Web
+  - admin-web/service.yaml
+  - admin-web/deployment.yaml
+  - admin-web/ingress.yaml
+  # Customer BFF
   - customer-bff/service.yaml
   - customer-bff/deployment.yaml
   - customer-bff/ingress.yaml
@@ -51,14 +51,14 @@ resources:
   - customer-web/service.yaml
   - customer-web/deployment.yaml
   - customer-web/ingress.yaml
-  # # # Seller BFF
-  # - seller-bff/service.yaml
-  # - seller-bff/deployment.yaml
-  # - seller-bff/ingress.yaml
-  # # # Seller Web
-  # - seller-web/service.yaml
-  # - seller-web/deployment.yaml
-  # - seller-web/ingress.yaml
+  # # Seller BFF
+  - seller-bff/service.yaml
+  - seller-bff/deployment.yaml
+  - seller-bff/ingress.yaml
+  # # Seller Web
+  - seller-web/service.yaml
+  - seller-web/deployment.yaml
+  - seller-web/ingress.yaml
   # API MB
   - api-mb/service.yaml
   - api-mb/deployment.yaml
