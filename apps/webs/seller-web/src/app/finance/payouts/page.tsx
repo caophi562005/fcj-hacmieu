@@ -1,11 +1,23 @@
 import Link from 'next/link';
 import { getShopPayouts } from '../../../lib/credit';
+import { getMerchant, getShop } from '../../../lib/shop';
 import { PayoutForm } from './PayoutForm';
 
 export const metadata = { title: 'Yêu cầu rút tiền — V-Shop Seller' };
 
 export default async function FinancePayoutsPage() {
-  const payoutData = await getShopPayouts({ page: 1, limit: 20 });
+  const [payoutData, shop, merchant] = await Promise.all([
+    getShopPayouts({ page: 1, limit: 20 }),
+    getShop(),
+    getMerchant(),
+  ]);
+
+  const bankInfo = {
+    bankName: shop?.bankName ?? null,
+    bankAccountNumber: shop?.bankAccountNumber ?? null,
+    bankAccountName:
+      shop?.bankAccountName ?? merchant?.legalName ?? null,
+  };
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
@@ -21,7 +33,8 @@ export default async function FinancePayoutsPage() {
         </Link>
       </div>
 
-      <PayoutForm payouts={payoutData.payouts} />
+      <PayoutForm payouts={payoutData.payouts} bankInfo={bankInfo} />
     </div>
   );
 }
+

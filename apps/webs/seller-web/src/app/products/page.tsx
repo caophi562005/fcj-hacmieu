@@ -156,10 +156,10 @@ export default async function ProductsPage({
                 </th>
                 <th className="py-3 px-4 text-left font-semibold">Sản phẩm</th>
                 <th className="py-3 px-4 text-right font-semibold whitespace-nowrap">
-                  Giá gốc
+                  Giá bán
                 </th>
                 <th className="py-3 px-4 text-right font-semibold whitespace-nowrap">
-                  Giá niêm yết
+                  Giá Ảo
                 </th>
                 <th className="py-3 px-4 text-center font-semibold">
                   Trạng thái

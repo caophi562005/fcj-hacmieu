@@ -1,12 +1,30 @@
 import { Coins, Package, TicketPercent } from 'lucide-react';
 import { redirect } from 'next/navigation';
 import { getAuth } from '../../lib/auth';
+import {
+  getDistricts,
+  getProvinces,
+  getWards,
+  type DistrictResponse,
+  type WardResponse,
+} from '../../lib/location';
 import { AvatarUploader } from './AvatarUploader';
 import { ProfileForm } from './ProfileForm';
 
 export default async function ProfilePage() {
   const user = await getAuth();
   if (!user) redirect('/login?next=/profile');
+
+  const provinces = await getProvinces();
+  let districts: DistrictResponse[] = [];
+  let wards: WardResponse[] = [];
+
+  if (user.provinceId) {
+    districts = await getDistricts(user.provinceId);
+  }
+  if (user.districtId) {
+    wards = await getWards(user.districtId);
+  }
 
   return (
     <>
@@ -54,6 +72,13 @@ export default async function ProfilePage() {
           phone={user.phone}
           gender={user.gender}
           birthday={user.birthday}
+          initialProvinceId={user.provinceId ?? 0}
+          initialDistrictId={user.districtId ?? 0}
+          initialWardId={user.wardId ?? 0}
+          initialAddress={user.address ?? ''}
+          provinces={provinces}
+          initialDistricts={districts}
+          initialWards={wards}
         />
 
         <div className="order-1 md:order-2">

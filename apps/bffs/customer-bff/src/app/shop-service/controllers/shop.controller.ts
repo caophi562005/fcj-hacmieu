@@ -1,3 +1,4 @@
+import { IsPublic } from '@common/decorators/auth.decorator';
 import { ProcessId } from '@common/decorators/process-id.decorator';
 import {
   GetManyShopsRequestDto,
@@ -11,6 +12,7 @@ import { ShopService } from '../services/shop.service';
 
 @Controller('shop/shop')
 @ApiTags('Shop/Shop')
+@IsPublic()
 export class ShopController {
   constructor(private readonly shopService: ShopService) {}
 

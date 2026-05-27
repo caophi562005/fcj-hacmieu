@@ -8,16 +8,24 @@ export type PayoutMutationResult = {
   message: string;
 };
 
+const ERROR_MESSAGES: Record<string, string> = {
+  'Error.CreditInsufficientBalance':
+    'Số dư không đủ để thực hiện yêu cầu rút tiền.',
+  'Error.PayoutAmountTooLow': 'Số tiền rút tối thiểu chưa đạt yêu cầu.',
+  'Error.PayoutNotFound': 'Không tìm thấy yêu cầu rút tiền.',
+  'Error.ShopNotFound': 'Không tìm thấy thông tin cửa hàng.',
+};
+
 function extractErrorMessage(err: unknown): string {
   const message = (err as { response?: { data?: { message?: unknown } } })
     ?.response?.data?.message;
 
   if (Array.isArray(message)) {
-    return message.join(', ');
+    return message.map((m) => ERROR_MESSAGES[m] ?? m).join(', ');
   }
 
   if (typeof message === 'string') {
-    return message;
+    return ERROR_MESSAGES[message] ?? message;
   }
 
   return 'Đã xảy ra lỗi. Vui lòng thử lại.';

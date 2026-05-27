@@ -1,7 +1,6 @@
 import { AppConvexProvider, ToastProvider } from '@common/web-ui/index';
 import type { Metadata } from 'next';
-import { SellerSidebar } from '../components/SellerSidebar';
-import { SellerTopbar } from '../components/SellerTopbar';
+
 import './global.css';
 
 export const metadata: Metadata = {
@@ -19,11 +18,7 @@ export default function RootLayout({
     <html lang="vi" suppressHydrationWarning>
       <body className="min-h-screen bg-background text-ink">
         <AppConvexProvider>
-          <SellerSidebar />
-          <SellerTopbar />
-          <main className="ml-sidebar pt-topbar min-h-screen">
-            <div className="p-6">{children}</div>
-          </main>
+          {children}
           <ToastProvider />
         </AppConvexProvider>
       </body>

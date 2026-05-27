@@ -16,6 +16,7 @@ import {
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { formatVnd } from '../../../../components/ProductCard';
+import { ReportButton } from '../../../../components/ReportButton';
 import { getMyOrderById } from '../../../../lib/order';
 import { getMyReviewByOrderItemId } from '../../../../lib/review';
 import { OrderReviews } from './OrderReviews';
@@ -367,7 +368,14 @@ export default async function OrderDetailPage({
           <button className="btn-outline btn-md cursor-pointer">
             Liên hệ shop
           </button>
-          <button className="btn-primary btn-md cursor-pointer">Mua lại</button>
+          <ReportButton
+            targetType="ORDER"
+            targetId={order.id}
+            variant="custom"
+            className="btn-outline btn-md cursor-pointer text-ink-muted hover:text-danger hover:border-danger hover:bg-danger-50 transition-colors"
+            label="Báo cáo"
+          />
+          <button className="btn-primary btn-md cursor-pointer ml-auto">Mua lại</button>
         </div>
       </div>
     </>

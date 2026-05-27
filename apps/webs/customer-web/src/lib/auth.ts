@@ -15,6 +15,13 @@ export type MockUser = {
   birthday: string;
   vXu: number;
   vouchers: number;
+  provinceId?: number | null;
+  provinceName?: string | null;
+  districtId?: number | null;
+  districtName?: string | null;
+  wardId?: number | null;
+  wardName?: string | null;
+  address?: string | null;
 };
 
 const DEFAULT_AVATAR = 'https://i.pravatar.cc/200?img=12';
@@ -61,6 +68,13 @@ export const getAuth = cache(async (): Promise<MockUser | null> => {
     birthday: formatBirthday(user.birthday),
     vXu: 0,
     vouchers: 0,
+    provinceId: user.provinceId,
+    provinceName: user.provinceName,
+    districtId: user.districtId,
+    districtName: user.districtName,
+    wardId: user.wardId,
+    wardName: user.wardName,
+    address: user.address,
   };
 });
 

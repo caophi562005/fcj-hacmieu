@@ -1,5 +1,5 @@
-import { AlertTriangle, Home, RefreshCcw } from 'lucide-react';
-import Link from 'next/link';
+import { AlertTriangle, LogOut } from 'lucide-react';
+import { logoutAction } from '../login/actions';
 
 export default function ServiceUnavailablePage() {
   return (
@@ -27,14 +27,15 @@ export default function ServiceUnavailablePage() {
           </div>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-            <Link href="/" className="btn-outline btn-md w-full sm:w-auto">
-              <RefreshCcw className="w-4 h-4" />
-              Thử lại
-            </Link>
-            <Link href="/login" className="btn-primary btn-md w-full sm:w-auto">
-              <Home className="w-4 h-4" />
-              Đăng nhập tài khoản khác
-            </Link>
+            <form action={logoutAction} className="w-full sm:w-auto">
+              <button
+                type="submit"
+                className="btn-primary btn-md w-full sm:w-auto cursor-pointer"
+              >
+                <LogOut className="w-4 h-4" />
+                Đăng xuất
+              </button>
+            </form>
           </div>
         </div>
       </div>

@@ -16,10 +16,17 @@ export async function updateProfileAction(
   _prev: UpdateProfileState,
   formData: FormData,
 ): Promise<UpdateProfileState> {
-  // Pull values; only the 3 editable fields per skill guidance.
   const phoneRaw = formData.get('phoneNumber');
   const genderRaw = formData.get('gender');
   const birthdayRaw = formData.get('birthday');
+  
+  const provinceIdRaw = formData.get('provinceId');
+  const provinceNameRaw = formData.get('provinceName');
+  const districtIdRaw = formData.get('districtId');
+  const districtNameRaw = formData.get('districtName');
+  const wardIdRaw = formData.get('wardId');
+  const wardNameRaw = formData.get('wardName');
+  const addressRaw = formData.get('address');
 
   const payload: UpdateCurrentUserPayload = {};
 
@@ -35,6 +42,31 @@ export async function updateProfileAction(
   if (typeof birthdayRaw === 'string' && birthdayRaw !== '') {
     // Backend `birthday` is z.any().nullable(); send ISO string for consistency.
     payload.birthday = new Date(birthdayRaw).toISOString();
+  }
+
+  if (typeof provinceIdRaw === 'string' && provinceIdRaw !== '') {
+    payload.provinceId = Number(provinceIdRaw);
+    if (typeof provinceNameRaw === 'string') {
+      payload.provinceName = provinceNameRaw;
+    }
+  }
+
+  if (typeof districtIdRaw === 'string' && districtIdRaw !== '') {
+    payload.districtId = Number(districtIdRaw);
+    if (typeof districtNameRaw === 'string') {
+      payload.districtName = districtNameRaw;
+    }
+  }
+
+  if (typeof wardIdRaw === 'string' && wardIdRaw !== '') {
+    payload.wardId = Number(wardIdRaw);
+    if (typeof wardNameRaw === 'string') {
+      payload.wardName = wardNameRaw;
+    }
+  }
+
+  if (typeof addressRaw === 'string') {
+    payload.address = addressRaw.trim();
   }
 
   if (Object.keys(payload).length === 0) {

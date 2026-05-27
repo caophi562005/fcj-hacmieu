@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { MainShell } from '../../../components/MainShell';
 import { ProductCard } from '../../../components/ProductCard';
+import { ReportButton } from '../../../components/ReportButton';
 import { getManyProducts, toCardProduct } from '../../../lib/catalog';
 import { getShopById } from '../../../lib/shop';
 
@@ -124,13 +125,12 @@ export default async function ShopDetailPage({
                   <MessageCircle className="w-4 h-4" />
                   Chat ngay
                 </Link>
-                <button
-                  type="button"
-                  className="inline-flex items-center gap-2 h-11 px-4 md:px-5 rounded bg-primary text-white font-semibold text-sm shadow-[0_4px_12px_rgba(255,107,53,0.25)] hover:bg-primary-600 transition-colors cursor-pointer"
-                >
-                  <Plus className="w-4 h-4" />
-                  Theo dõi
-                </button>
+
+                <ReportButton
+                  targetType="SELLER"
+                  targetId={shop.id}
+                  className="h-11 px-3 md:px-4 rounded border border-border bg-white text-ink-muted hover:bg-danger-50 hover:text-danger hover:border-danger transition-colors font-medium text-sm inline-flex items-center gap-2 justify-center"
+                />
               </div>
             </div>
           </div>

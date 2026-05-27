@@ -5,6 +5,7 @@ import type {
   ShopResponse,
   UpdateShopRequest,
 } from '@common/interfaces/models/shop';
+import { cache } from 'react';
 import { createServerApi } from './api';
 
 // BFF inject `processId`, `merchantId` (cho create), `createdById/updatedById`
@@ -19,22 +20,32 @@ export type UpdateShopPayload = Omit<
   'id' | 'processId' | 'updatedById' | 'merchantId'
 >;
 
-export async function getMerchant(): Promise<MerchantResponse | null> {
-  const api = await createServerApi();
-  const res = await api.get<ApiResponse<MerchantResponse>>('/shop/merchant', {
-    validateStatus: (s) => (s >= 200 && s < 300) || s === 404 || s === 400,
-  });
-  if (res.status === 404 || res.status === 400) return null;
-  return res.data?.data ?? null;
-}
+const _getMerchantCached = cache(
+  async (): Promise<MerchantResponse | null> => {
+    const api = await createServerApi();
+    const res = await api.get<ApiResponse<MerchantResponse>>('/shop/merchant', {
+      validateStatus: (s) => (s >= 200 && s < 300) || s === 404 || s === 400,
+    });
+    if (res.status === 404 || res.status === 400) return null;
+    return res.data?.data ?? null;
+  },
+);
 
-export async function getShop(): Promise<ShopResponse | null> {
+const _getShopCached = cache(async (): Promise<ShopResponse | null> => {
   const api = await createServerApi();
   const res = await api.get<ApiResponse<ShopResponse>>('/shop/shop', {
     validateStatus: (s) => (s >= 200 && s < 300) || s === 404 || s === 400,
   });
   if (res.status === 404 || res.status === 400) return null;
   return res.data?.data ?? null;
+});
+
+export function getMerchant(): Promise<MerchantResponse | null> {
+  return _getMerchantCached();
+}
+
+export function getShop(): Promise<ShopResponse | null> {
+  return _getShopCached();
 }
 
 export async function createShop(

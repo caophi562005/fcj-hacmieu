@@ -5,6 +5,7 @@ import {
 } from '@aws-sdk/client-cognito-identity-provider';
 import { AuthConfiguration } from '@common/configurations/auth.config';
 import { BaseConfiguration } from '@common/configurations/base.config';
+import { RedisConfiguration } from '@common/configurations/redis.config';
 import { PrismaErrorValues } from '@common/constants/prisma.constant';
 import { GroupValues } from '@common/constants/user.constant';
 import {
@@ -16,12 +17,17 @@ import {
   ShopResponse,
   UpdateShopRequest,
 } from '@common/interfaces/models/shop';
+import { generateShopByIdCacheKey } from '@common/utils/cache-key.util';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import {
   BadRequestException,
+  Inject,
   Injectable,
   Logger,
   NotFoundException,
 } from '@nestjs/common';
+import { Cache } from 'cache-manager';
+import ms, { StringValue } from 'ms';
 import { MerchantRepository } from '../../merchant/repositories/merchant.repository';
 import { ShopRepository } from '../repositories/shop.repository';
 
@@ -36,6 +42,7 @@ export class ShopService {
   constructor(
     private readonly shopRepository: ShopRepository,
     private readonly merchantRepository: MerchantRepository,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
   async list(data: GetManyShopsRequest): Promise<GetManyShopsResponse> {
@@ -47,10 +54,20 @@ export class ShopService {
   }
 
   async findById(data: GetShopRequest): Promise<ShopResponse> {
+    const cacheKey = generateShopByIdCacheKey(data.id);
+    const cached = await this.cacheManager.get<ShopResponse>(cacheKey);
+    if (cached) return cached;
+
     const shop = await this.shopRepository.findById(data);
     if (!shop) {
       throw new NotFoundException('Error.ShopNotFound');
     }
+
+    this.cacheManager.set(
+      cacheKey,
+      shop,
+      ms(RedisConfiguration.CACHE_SHOP_TTL as StringValue),
+    );
     return shop;
   }
 
@@ -116,6 +133,7 @@ export class ShopService {
   }: UpdateShopRequest): Promise<ShopResponse> {
     try {
       const updatedShop = await this.shopRepository.update(data);
+      this.cacheManager.del(generateShopByIdCacheKey(updatedShop.id));
       return updatedShop;
     } catch (error: any) {
       if (error.code === PrismaErrorValues.RECORD_NOT_FOUND) {
@@ -128,6 +146,7 @@ export class ShopService {
   async delete(data: DeleteShopRequest): Promise<ShopResponse> {
     try {
       const deletedShop = await this.shopRepository.delete(data, false);
+      this.cacheManager.del(generateShopByIdCacheKey(deletedShop.id));
       return deletedShop;
     } catch (error: any) {
       if (error.code === PrismaErrorValues.RECORD_NOT_FOUND) {
@@ -137,3 +156,4 @@ export class ShopService {
     }
   }
 }
+

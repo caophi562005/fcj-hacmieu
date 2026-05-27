@@ -2,7 +2,7 @@
 
 import 'react-medium-image-zoom/dist/styles.css';
 
-import { Heart, ShieldCheck, ShoppingCart, Truck } from 'lucide-react';
+import { Flag, Heart, ShieldCheck, ShoppingCart, Truck } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState, useTransition } from 'react';
@@ -10,6 +10,7 @@ import Zoom from 'react-medium-image-zoom';
 import { toast } from 'react-toastify';
 import { addCartItemAction } from '../lib/cart.actions';
 import { formatVnd } from './ProductCard';
+import { ReportModal } from './ReportModal';
 
 type Variant = { value: string; options: string[] };
 type Sku = {
@@ -70,6 +71,7 @@ export function ProductInteractive(props: ProductInteractiveProps) {
   );
   const [qty, setQty] = useState(1);
   const [activeImage, setActiveImage] = useState<string>(allImages[0]);
+  const [isReportOpen, setIsReportOpen] = useState(false);
 
   // Tìm SKU khớp khi tất cả variant đã chọn (>=2 variant cần đầy đủ; 1 variant chỉ cần chọn 1).
   const matchedSku = useMemo<Sku | null>(() => {
@@ -305,8 +307,23 @@ export function ProductInteractive(props: ProductInteractiveProps) {
           >
             <Heart className="w-4 h-4" />
           </button>
+          <button
+            type="button"
+            onClick={() => setIsReportOpen(true)}
+            className="btn-outline btn-md w-11 px-0 cursor-pointer text-ink-muted hover:text-danger hover:border-danger hover:bg-danger-50 transition-colors"
+            aria-label="Báo cáo sản phẩm"
+            title="Báo cáo sản phẩm này"
+          >
+            <Flag className="w-4 h-4" />
+          </button>
         </div>
       </div>
+      <ReportModal
+        isOpen={isReportOpen}
+        onClose={() => setIsReportOpen(false)}
+        targetType="PRODUCT"
+        targetId={productId}
+      />
     </div>
   );
 }

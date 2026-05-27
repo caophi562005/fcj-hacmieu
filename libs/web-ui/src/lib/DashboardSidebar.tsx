@@ -40,7 +40,7 @@ export function DashboardSidebar({
         </Link>
       </div>
 
-      <div className="flex flex-col gap-1 px-4 flex-1">
+      <div className="flex flex-col gap-1 px-4 flex-1 overflow-y-auto scrollbar-none pb-4">
         {items.map((it) => {
           const active = it.match
             ? it.match(pathname)

@@ -1,7 +1,7 @@
 import { DashboardTopbar, UserMenu } from '@common/web-ui/index';
 import { LogIn } from 'lucide-react';
 import Link from 'next/link';
-import { changePasswordAction } from '../app/account/password/actions';
+import { changePasswordAction } from '../app/(dashboard)/account/password/actions';
 import { logoutAction } from '../app/login/actions';
 import { getAuth } from '../lib/auth';
 

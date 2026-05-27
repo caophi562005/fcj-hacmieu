@@ -491,7 +491,7 @@ export function ProductForm({
 
     // Validate cơ bản
     if (!name.trim()) return setError('Vui lòng nhập tên sản phẩm.');
-    if (basePrice < 0) return setError('Giá gốc không hợp lệ.');
+    if (basePrice < 0) return setError('Giá bán không hợp lệ.');
 
     // SKU values phải khớp generate (backend sẽ validate lần nữa)
     const finalSkus =
@@ -670,7 +670,7 @@ export function ProductForm({
           />
         </Field>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Field label="Giá gốc (VND)" required>
+          <Field label="Giá bán (VND)" required>
             <input
               type="number"
               className="input"
@@ -679,7 +679,7 @@ export function ProductForm({
               onChange={(e) => setBasePrice(Number(e.target.value) || 0)}
             />
           </Field>
-          <Field label="Giá niêm yết (VND)">
+          <Field label="Giá Ảo (VND)">
             <input
               type="number"
               className="input"

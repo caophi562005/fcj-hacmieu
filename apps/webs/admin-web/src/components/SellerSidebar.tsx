@@ -37,7 +37,7 @@ const ITEMS: NavItem[] = [
   { href: '/shops', label: 'Quản lý shop', icon: Store },
   { href: '/payouts', label: 'Yêu cầu rút tiền', icon: CircleDollarSign },
   { href: '/knowledge-base', label: 'Knowledge Base', icon: BookOpen },
-  { href: '/reports', label: 'Báo cáo vi phạm', icon: Megaphone },
+  { href: '/reports', label: 'Quản lý báo cáo', icon: Megaphone },
 ];
 
 export function SellerSidebar() {
@@ -50,3 +50,5 @@ export function SellerSidebar() {
     />
   );
 }
+
+// force refresh

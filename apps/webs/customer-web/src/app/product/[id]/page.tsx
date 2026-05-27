@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import { MainShell } from '../../../components/MainShell';
 import { ProductCard } from '../../../components/ProductCard';
 import { ProductInteractive } from '../../../components/ProductInteractive';
+import { ReportButton } from '../../../components/ReportButton';
 import {
   getManyProducts,
   getProductById,
@@ -141,6 +142,13 @@ export default async function ProductDetail({
               >
                 Xem shop
               </Link>
+              <ReportButton
+                targetType="SELLER"
+                targetId={shop.id}
+                variant="custom"
+                className="btn-outline btn-sm cursor-pointer text-ink-muted hover:text-danger hover:border-danger hover:bg-danger-50 transition-colors"
+                label="Báo cáo"
+              />
             </div>
           </div>
         )}
@@ -224,6 +232,14 @@ export default async function ProductDetail({
                         <span className="text-xs text-ink-subtle">
                           {createdAtText}
                         </span>
+                        <div className="ml-auto">
+                          <ReportButton
+                            targetType="REVIEW"
+                            targetId={review.id}
+                            variant="icon"
+                            label="Báo cáo đánh giá này"
+                          />
+                        </div>
                       </div>
                       <p className="text-sm text-ink-muted mt-1 whitespace-pre-line">
                         {review.content || 'Không có nội dung đánh giá.'}

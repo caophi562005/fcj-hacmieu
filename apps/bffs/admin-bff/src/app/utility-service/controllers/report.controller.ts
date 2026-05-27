@@ -33,11 +33,9 @@ export class ReportController {
   async getManyReports(
     @Query() queries: GetManyReportsRequestDto,
     @ProcessId() processId: string,
-    @UserData('userId') userId: string,
   ) {
     return this.reportService.getManyReports({
       ...queries,
-      userId,
       processId,
     });
   }
@@ -80,10 +78,12 @@ export class ReportController {
     @Param('id') id: string,
     @Body() body: UpdateReportRequestDto,
     @ProcessId() processId: string,
+    @UserData('userId') userId: string,
   ) {
     return this.reportService.updateReport({
       ...body,
       id,
+      assigneeAdminId: userId,
       processId,
     });
   }

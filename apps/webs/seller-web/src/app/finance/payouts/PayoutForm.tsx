@@ -20,8 +20,15 @@ type PayoutItem = {
   note?: string | null;
 };
 
+type BankInfo = {
+  bankName: string | null;
+  bankAccountNumber: string | null;
+  bankAccountName: string | null;
+};
+
 type Props = {
   payouts: PayoutItem[];
+  bankInfo: BankInfo;
 };
 
 const initialState: PayoutMutationResult = {
@@ -34,7 +41,11 @@ function maskAccount(value: string) {
   return `••••${value.slice(-4)}`;
 }
 
-export function PayoutForm({ payouts }: Props) {
+export function PayoutForm({ payouts, bankInfo }: Props) {
+  const hasBankInfo =
+    !!bankInfo.bankName &&
+    !!bankInfo.bankAccountNumber &&
+    !!bankInfo.bankAccountName;
   const [state, formAction, isPending] = useActionState(
     createPayoutAction,
     initialState,
@@ -59,6 +70,19 @@ export function PayoutForm({ payouts }: Props) {
           hoàn lại.
         </p>
 
+        {!hasBankInfo && (
+          <div className="mt-4 rounded-md border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-800">
+            Bạn chưa thiết lập tài khoản ngân hàng.{' '}
+            <a
+              href="/finance"
+              className="font-semibold text-primary underline underline-offset-2 hover:text-primary/80 transition-colors"
+            >
+              Thiết lập tại trang Tài chính
+            </a>{' '}
+            trước khi yêu cầu rút tiền.
+          </div>
+        )}
+
         <form
           action={formAction}
           className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-5"
@@ -81,8 +105,10 @@ export function PayoutForm({ payouts }: Props) {
               name="bankName"
               type="text"
               required
-              className="input"
-              placeholder="Ví dụ: Vietcombank"
+              readOnly
+              value={bankInfo.bankName ?? ''}
+              className="input bg-surface-alt text-ink-muted cursor-not-allowed"
+              placeholder="Chưa thiết lập"
             />
           </label>
 
@@ -92,8 +118,10 @@ export function PayoutForm({ payouts }: Props) {
               name="accountNumber"
               type="text"
               required
-              className="input"
-              placeholder="0123456789"
+              readOnly
+              value={bankInfo.bankAccountNumber ?? ''}
+              className="input bg-surface-alt text-ink-muted cursor-not-allowed"
+              placeholder="Chưa thiết lập"
             />
           </label>
 
@@ -103,8 +131,10 @@ export function PayoutForm({ payouts }: Props) {
               name="accountHolder"
               type="text"
               required
-              className="input"
-              placeholder="NGUYEN VAN A"
+              readOnly
+              value={bankInfo.bankAccountName ?? ''}
+              className="input bg-surface-alt text-ink-muted cursor-not-allowed"
+              placeholder="Chưa thiết lập"
             />
           </label>
 
@@ -121,7 +151,7 @@ export function PayoutForm({ payouts }: Props) {
           <div className="md:col-span-2">
             <button
               type="submit"
-              disabled={isPending}
+              disabled={isPending || !hasBankInfo}
               className="btn-primary btn-md disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {isPending ? 'Đang gửi yêu cầu...' : 'Gửi yêu cầu rút tiền'}

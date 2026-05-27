@@ -4,6 +4,7 @@ import {
 } from '@aws-sdk/client-cognito-identity-provider';
 import { AuthConfiguration } from '@common/configurations/auth.config';
 import { BaseConfiguration } from '@common/configurations/base.config';
+import { RedisConfiguration } from '@common/configurations/redis.config';
 import { PrismaErrorValues } from '@common/constants/prisma.constant';
 import {
   CreateMerchantRequest,
@@ -14,7 +15,11 @@ import {
   MerchantResponse,
   UpdateMerchantRequest,
 } from '@common/interfaces/models/shop';
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { generateMerchantByIdCacheKey } from '@common/utils/cache-key.util';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Cache } from 'cache-manager';
+import ms, { StringValue } from 'ms';
 import { MerchantRepository } from '../repositories/merchant.repository';
 
 const cognitoClient = new CognitoIdentityProviderClient({
@@ -25,7 +30,10 @@ const cognitoClient = new CognitoIdentityProviderClient({
 export class MerchantService {
   private readonly logger = new Logger(MerchantService.name);
 
-  constructor(private readonly merchantRepository: MerchantRepository) {}
+  constructor(
+    private readonly merchantRepository: MerchantRepository,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+  ) {}
 
   async list(data: GetManyMerchantsRequest): Promise<GetManyMerchantsResponse> {
     const merchants = await this.merchantRepository.list(data);
@@ -36,10 +44,20 @@ export class MerchantService {
   }
 
   async findById(data: GetMerchantRequest): Promise<MerchantResponse> {
+    const cacheKey = generateMerchantByIdCacheKey(data.id);
+    const cached = await this.cacheManager.get<MerchantResponse>(cacheKey);
+    if (cached) return cached;
+
     const merchant = await this.merchantRepository.findById(data);
     if (!merchant) {
       throw new NotFoundException('Error.MerchantNotFound');
     }
+
+    this.cacheManager.set(
+      cacheKey,
+      merchant,
+      ms(RedisConfiguration.CACHE_SHOP_TTL as StringValue),
+    );
     return merchant;
   }
 
@@ -64,6 +82,7 @@ export class MerchantService {
   }: UpdateMerchantRequest): Promise<MerchantResponse> {
     try {
       const updatedMerchant = await this.merchantRepository.update(data);
+      this.cacheManager.del(generateMerchantByIdCacheKey(updatedMerchant.id));
 
       // Khi admin approve merchant → set custom:merchant_id trên Cognito
       if (data.approvalStatus === 'APPROVED' && updatedMerchant.userId) {
@@ -97,6 +116,7 @@ export class MerchantService {
   async delete(data: DeleteMerchantRequest): Promise<MerchantResponse> {
     try {
       const deletedMerchant = await this.merchantRepository.delete(data, false);
+      this.cacheManager.del(generateMerchantByIdCacheKey(deletedMerchant.id));
       return deletedMerchant;
     } catch (error: any) {
       if (error.code === PrismaErrorValues.RECORD_NOT_FOUND) {
@@ -106,3 +126,4 @@ export class MerchantService {
     }
   }
 }
+
