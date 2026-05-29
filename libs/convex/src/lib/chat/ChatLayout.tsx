@@ -388,7 +388,7 @@ function ChatThread({
         onSubmit={onSubmit}
         className="shrink-0 p-3 md:p-4 bg-white border-t border-slate-200"
       >
-        <div className="flex items-center gap-1 bg-surface-muted border border-transparent rounded-md px-1 focus-within:bg-white focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-colors">
+        <div className="flex items-center gap-2 bg-surface-muted border border-transparent rounded-md p-1.5 focus-within:bg-white focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-colors">
           <input
             type="file"
             accept="image/*"
@@ -399,23 +399,23 @@ function ChatThread({
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="p-2 text-ink-muted hover:text-primary rounded transition-colors cursor-pointer"
+            className="p-2 text-ink-muted hover:text-primary hover:bg-surface-alt rounded transition-colors cursor-pointer"
             aria-label="Đính kèm ảnh"
             title="Đính kèm ảnh"
           >
-            <ImagePlus className="w-4 h-4" />
+            <ImagePlus className="w-5 h-5" />
           </button>
           <input
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             placeholder="Nhập tin nhắn…"
-            className="flex-1 bg-transparent border-0 outline-none text-sm py-2 px-1"
+            className="flex-1 bg-transparent border-0 outline-none text-sm py-1.5 px-2"
             aria-label="Nội dung tin nhắn"
           />
           <button
             type="submit"
             disabled={!draft.trim() || sending}
-            className="inline-flex items-center gap-1 px-3 h-9 bg-primary text-white text-sm font-medium rounded hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-4 h-9 bg-primary text-white text-sm font-medium rounded-md hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
             <Send className="w-4 h-4" />
             <span className="hidden sm:inline">Gửi</span>

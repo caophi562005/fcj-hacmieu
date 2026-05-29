@@ -37,6 +37,36 @@ export const getOrCreate = mutation({
       .unique();
 
     if (existingMember) {
+      // Cập nhật tên/avatar của peer nếu có thay đổi
+      if (
+        existingMember.peerName !== args.peerName ||
+        existingMember.peerAvatar !== args.peerAvatar
+      ) {
+        await ctx.db.patch(existingMember._id, {
+          peerName: args.peerName,
+          peerAvatar: args.peerAvatar,
+        });
+      }
+
+      // Cập nhật tên/avatar của chính mình cho peer xem
+      const reverseMember = await ctx.db
+        .query('conversationMembers')
+        .withIndex('by_user_peer', (q) =>
+          q.eq('userId', args.peerId).eq('peerId', args.userId),
+        )
+        .unique();
+
+      if (
+        reverseMember &&
+        (reverseMember.peerName !== args.userName ||
+          reverseMember.peerAvatar !== args.userAvatar)
+      ) {
+        await ctx.db.patch(reverseMember._id, {
+          peerName: args.userName,
+          peerAvatar: args.userAvatar,
+        });
+      }
+
       return existingMember.conversationId;
     }
 
