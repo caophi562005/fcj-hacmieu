@@ -64,3 +64,16 @@ kubectl apply -f helm/manifests/metrics-server.yaml
 kubectl apply -k helm/manifests/
 
 kubectl delete -k helm/manifests/
+
+aws eks create-access-entry \
+ --region ap-southeast-1 \
+ --cluster-name fcj-hacmieu \
+ --principal-arn arn:aws:iam::491333778094:role/<TÊN_ROLE_CỦA_GITHUB_ACTIONS> \
+ --type STANDARD
+
+aws eks associate-access-policy \
+ --region ap-southeast-1 \
+ --cluster-name fcj-hacmieu \
+ --principal-arn arn:aws:iam::491333778094:role/<TÊN_ROLE_CỦA_GITHUB_ACTIONS> \
+ --policy-arn arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy \
+ --access-scope type=cluster

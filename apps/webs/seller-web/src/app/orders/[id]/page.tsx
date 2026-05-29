@@ -322,7 +322,7 @@ export default async function OrderDetailPage({
             }
           />
           <Row
-            label="Voucher giảm giá"
+            label="Giảm giá"
             value={
               hasDiscount ? (
                 <span className="text-success">

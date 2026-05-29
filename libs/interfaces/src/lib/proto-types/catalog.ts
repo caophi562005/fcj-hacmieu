@@ -20,6 +20,10 @@ export interface GetManyProductsRequest {
   isApproved?: boolean | undefined;
   status?: string | undefined;
   categories: string[];
+  minPrice?: number | undefined;
+  maxPrice?: number | undefined;
+  sortBy?: string | undefined;
+  orderBy?: string | undefined;
 }
 
 /** ==================== GetManyProductsResponse ====================// */

@@ -2,7 +2,7 @@ import { ChevronDown, SlidersHorizontal } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { ProductCard, type Product } from './ProductCard';
 
-const SORTS = ['Phổ biến', 'Mới nhất', 'Bán chạy', 'Giá tăng', 'Giá giảm'];
+const SORTS = ['Phổ biến', 'Mới nhất', 'Giá tăng', 'Giá giảm'];
 
 type CategoryItem = { name: string; slug: string };
 

@@ -337,7 +337,7 @@ export default async function OrderDetailPage({
             }
           />
           <Row
-            label="Voucher giảm giá"
+            label="Giảm giá"
             value={
               hasDiscount ? (
                 <span className="text-success">
@@ -375,7 +375,9 @@ export default async function OrderDetailPage({
             className="btn-outline btn-md cursor-pointer text-ink-muted hover:text-danger hover:border-danger hover:bg-danger-50 transition-colors"
             label="Báo cáo"
           />
-          <button className="btn-primary btn-md cursor-pointer ml-auto">Mua lại</button>
+          <button className="btn-primary btn-md cursor-pointer ml-auto">
+            Mua lại
+          </button>
         </div>
       </div>
     </>

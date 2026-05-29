@@ -20,7 +20,7 @@ const POPULAR = [
   'Son lì',
 ];
 
-type SortKey = 'newest' | 'sale' | 'price_asc' | 'price_desc';
+type SortKey = 'newest' | 'price_asc' | 'price_desc';
 
 const SORTS: {
   key: SortKey;
@@ -29,7 +29,6 @@ const SORTS: {
   orderBy: 'asc' | 'desc';
 }[] = [
   { key: 'newest', label: 'Mới nhất', sortBy: 'createdAt', orderBy: 'desc' },
-  { key: 'sale', label: 'Bán chạy', sortBy: 'sale', orderBy: 'desc' },
   { key: 'price_asc', label: 'Giá tăng', sortBy: 'price', orderBy: 'asc' },
   { key: 'price_desc', label: 'Giá giảm', sortBy: 'price', orderBy: 'desc' },
 ];
@@ -58,7 +57,6 @@ function toPositiveInt(v: string | undefined): number | undefined {
 function currentSortKey(sortBy?: string, orderBy?: string): SortKey {
   if (sortBy === 'price' && orderBy === 'asc') return 'price_asc';
   if (sortBy === 'price' && orderBy === 'desc') return 'price_desc';
-  if (sortBy === 'sale') return 'sale';
   return 'newest';
 }
 

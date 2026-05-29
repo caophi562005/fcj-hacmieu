@@ -264,10 +264,78 @@ function ChatThread({
     }
   };
 
-  const onAttachImage = () => {
-    const url = window.prompt('Nhập URL ảnh:');
-    if (!url) return;
-    setDraft(url);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    e.target.value = ''; // Reset input để có thể chọn lại cùng 1 file nếu cần
+
+    const objectUrl = URL.createObjectURL(file);
+    const img = new Image();
+
+    img.onload = async () => {
+      URL.revokeObjectURL(objectUrl);
+
+      // Thiết lập kích thước tối đa
+      const MAX_WIDTH = 1200;
+      const MAX_HEIGHT = 1200;
+      let width = img.width;
+      let height = img.height;
+
+      // Tính toán tỷ lệ thu nhỏ nếu ảnh quá lớn
+      if (width > height) {
+        if (width > MAX_WIDTH) {
+          height = Math.round(height * (MAX_WIDTH / width));
+          width = MAX_WIDTH;
+        }
+      } else {
+        if (height > MAX_HEIGHT) {
+          width = Math.round(width * (MAX_HEIGHT / height));
+          height = MAX_HEIGHT;
+        }
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      // Vẽ ảnh lên canvas với kích thước mới
+      ctx.drawImage(img, 0, 0, width, height);
+
+      // Xuất ảnh ra định dạng JPEG với chất lượng 80%
+      const base64 = canvas.toDataURL('image/jpeg', 0.8);
+
+      // Convex giới hạn document size là 1MB. Kiểm tra lại lần cuối sau khi nén
+      // Độ dài chuỗi Base64 ~1,33 lần kích thước byte thực tế
+      if (base64.length > 1000000) {
+        alert('Ảnh vẫn quá lớn sau khi nén. Vui lòng chọn ảnh khác nhẹ hơn.');
+        return;
+      }
+
+      setSending(true);
+      try {
+        await sendMessage({
+          conversationId,
+          userId: viewer.id,
+          kind: 'image',
+          body: base64,
+        });
+      } finally {
+        setSending(false);
+      }
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      alert('Đã xảy ra lỗi khi đọc ảnh. Vui lòng thử lại.');
+    };
+
+    img.src = objectUrl;
   };
 
   return (
@@ -321,19 +389,26 @@ function ChatThread({
         className="shrink-0 p-3 md:p-4 bg-white border-t border-slate-200"
       >
         <div className="flex items-center gap-1 bg-surface-muted border border-transparent rounded-md px-1 focus-within:bg-white focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-colors">
+          <input
+            type="file"
+            accept="image/*"
+            ref={fileInputRef}
+            className="hidden"
+            onChange={handleImageSelect}
+          />
           <button
             type="button"
-            onClick={onAttachImage}
+            onClick={() => fileInputRef.current?.click()}
             className="p-2 text-ink-muted hover:text-primary rounded transition-colors cursor-pointer"
-            aria-label="Đính kèm ảnh (URL)"
-            title="Đính kèm ảnh (URL)"
+            aria-label="Đính kèm ảnh"
+            title="Đính kèm ảnh"
           >
             <ImagePlus className="w-4 h-4" />
           </button>
           <input
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            placeholder="Nhập tin nhắn hoặc dán URL ảnh…"
+            placeholder="Nhập tin nhắn…"
             className="flex-1 bg-transparent border-0 outline-none text-sm py-2 px-1"
             aria-label="Nội dung tin nhắn"
           />

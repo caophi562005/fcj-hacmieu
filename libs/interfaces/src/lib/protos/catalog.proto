@@ -21,6 +21,10 @@ message GetManyProductsRequest {
   optional bool isApproved = 6;
   optional string status = 7;
   repeated string categories = 8;
+  optional int32 minPrice = 9;
+  optional int32 maxPrice = 10;
+  optional string sortBy = 11;
+  optional string orderBy = 12;
 }
 
 //==================== GetManyProductsResponse ====================//

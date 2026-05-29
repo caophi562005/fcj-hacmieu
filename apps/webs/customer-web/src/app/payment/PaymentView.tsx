@@ -36,7 +36,12 @@ const SHIPPING_OPTIONS: Array<{
   eta: string;
   fee: number;
 }> = [
-  { id: 'fast', label: 'Giao nhanh 2h', eta: 'Hôm nay 14:00 - 16:00', fee: 25000 },
+  {
+    id: 'fast',
+    label: 'Giao nhanh 2h',
+    eta: 'Hôm nay 14:00 - 16:00',
+    fee: 25000,
+  },
   { id: 'std', label: 'Giao tiêu chuẩn', eta: '2 - 3 ngày', fee: 0 },
 ];
 
@@ -47,7 +52,12 @@ const PAYMENT_OPTIONS: Array<{
   disabled?: boolean;
 }> = [
   { id: 'COD', label: 'Thanh toán khi nhận hàng', icon: Wallet },
-  { id: 'ONLINE', label: 'Thẻ tín dụng / ghi nợ (sắp tới)', icon: CreditCard, disabled: true },
+  {
+    id: 'ONLINE',
+    label: 'Thẻ tín dụng / ghi nợ (sắp tới)',
+    icon: CreditCard,
+    disabled: true,
+  },
   { id: 'WALLET', label: 'Ví điện tử', icon: Wallet },
 ];
 
@@ -62,20 +72,23 @@ function calcDiscount(voucher: PaymentVoucherView, subtotal: number): number {
   return Math.min(voucher.discountValue, subtotal);
 }
 
-export function PaymentView({ groups, voucher, availableCoin, initialName, initialPhone, initialAddress }: Props) {
+export function PaymentView({
+  groups,
+  voucher,
+  availableCoin,
+  initialName,
+  initialPhone,
+  initialAddress,
+}: Props) {
   const router = useRouter();
   const [shippingMethod, setShippingMethod] = useState<ShippingMethod>('fast');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('COD');
   const [coinInput, setCoinInput] = useState('0');
 
-  const [receiverName, setReceiverName] = useState(
-    () => initialName || ''
-  );
-  const [receiverPhone, setReceiverPhone] = useState(
-    () => initialPhone || ''
-  );
+  const [receiverName, setReceiverName] = useState(() => initialName || '');
+  const [receiverPhone, setReceiverPhone] = useState(() => initialPhone || '');
   const [receiverAddress, setReceiverAddress] = useState(
-    () => initialAddress || ''
+    () => initialAddress || '',
   );
   const [receiverNote, setReceiverNote] = useState('');
 
@@ -424,7 +437,7 @@ export function PaymentView({ groups, voucher, availableCoin, initialName, initi
               </dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-ink-muted">Voucher giảm giá</dt>
+              <dt className="text-ink-muted">Giảm giá</dt>
               <dd
                 className={
                   voucherDiscount > 0 ? 'text-success' : 'text-ink-muted'
