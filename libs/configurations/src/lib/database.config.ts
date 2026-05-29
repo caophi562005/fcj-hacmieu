@@ -1,15 +1,15 @@
 import z from 'zod';
 
 export const DatabaseConfigurationSchema = z.object({
-  CATALOG_SERVICE_DATABASE_URL: z.string().default(''),
-  ORDER_SERVICE_DATABASE_URL: z.string().default(''),
-  PROMOTION_SERVICE_DATABASE_URL: z.string().default(''),
-  PAYMENT_SERVICE_DATABASE_URL: z.string().default(''),
-  UTILITY_SERVICE_DATABASE_URL: z.string().default(''),
+  CATALOG_SERVICE_DATABASE_URL: z.string(),
+  ORDER_SERVICE_DATABASE_URL: z.string(),
+  PROMOTION_SERVICE_DATABASE_URL: z.string(),
+  PAYMENT_SERVICE_DATABASE_URL: z.string(),
+  UTILITY_SERVICE_DATABASE_URL: z.string(),
   IAM_SERVICE_DATABASE_URL: z.string(),
-  SHOP_SERVICE_DATABASE_URL: z.string().default(''),
-  WALLET_SERVICE_DATABASE_URL: z.string().default(''),
-  AI_SERVICE_DATABASE_URL: z.string().default(''),
+  SHOP_SERVICE_DATABASE_URL: z.string(),
+  WALLET_SERVICE_DATABASE_URL: z.string(),
+  AI_SERVICE_DATABASE_URL: z.string(),
 });
 
 const configServer = DatabaseConfigurationSchema.safeParse(process.env);

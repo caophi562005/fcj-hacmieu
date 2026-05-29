@@ -207,8 +207,6 @@ jobs:
       - name: Update kubeconfig for EKS
         run: aws eks update-kubeconfig --region ${{ secrets.AWS_REGION }} --name ${{ secrets.EKS_CLUSTER_NAME }}
 
-      - name: Apply Kustomize Manifests
-        run: kubectl apply -k helm/manifests/
 
       - name: Restart Affected Deployments
         env:
