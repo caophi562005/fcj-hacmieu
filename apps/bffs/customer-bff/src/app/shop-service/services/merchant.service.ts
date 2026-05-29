@@ -1,6 +1,8 @@
 import {
   CreateMerchantRequest,
   DeleteMerchantRequest,
+  GetManyMerchantsRequest,
+  GetManyMerchantsResponse,
   GetMerchantRequest,
   MERCHANT_MODULE_SERVICE_NAME,
   MerchantModuleClient,
@@ -25,6 +27,12 @@ export class MerchantService implements OnModuleInit {
     this.merchantModule = this.shopClient.getService<MerchantModuleClient>(
       MERCHANT_MODULE_SERVICE_NAME,
     );
+  }
+
+  async getManyMerchants(
+    data: GetManyMerchantsRequest,
+  ): Promise<GetManyMerchantsResponse> {
+    return firstValueFrom(this.merchantModule.getManyMerchants(data));
   }
 
   async getMerchant(data: GetMerchantRequest): Promise<MerchantResponse> {

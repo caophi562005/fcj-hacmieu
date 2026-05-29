@@ -7,6 +7,7 @@ import {
   Lock,
   LogOut,
   Package,
+  Store,
   TicketPercent,
   UserRound,
 } from 'lucide-react';
@@ -22,6 +23,7 @@ const ITEMS: { href: string; label: string; icon: LucideIcon }[] = [
   { href: '/profile/orders', label: 'Đơn mua', icon: Package },
   { href: '/profile/voucher', label: 'Kho voucher', icon: TicketPercent },
   { href: '/profile/coin', label: 'V-Xu', icon: Coins },
+  { href: '/profile/merchant', label: 'Giấy phép đăng ký shop', icon: Store },
 ];
 
 export function ProfileSidebar({ user }: { user: MockUser }) {

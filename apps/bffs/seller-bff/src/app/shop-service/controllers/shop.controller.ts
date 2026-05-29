@@ -5,7 +5,7 @@ import {
   GetShopResponseDto,
   UpdateShopRequestDto,
 } from '@common/interfaces/dtos/shop';
-import { Body, Controller, Get, Post, Put } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Post, Put } from '@nestjs/common';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { ShopService } from '../services/shop.service';
 
@@ -22,6 +22,9 @@ export class ShopController {
     @ProcessId() processId: string,
     @UserData('shopId') shopId: string,
   ) {
+    if (!shopId) {
+      throw new BadRequestException('Shop ID is required');
+    }
     return this.shopService.getShop({
       processId,
       id: shopId,
@@ -56,6 +59,9 @@ export class ShopController {
     @UserData('userId') userId: string,
     @UserData('shopId') shopId: string,
   ) {
+    if (!shopId) {
+      throw new BadRequestException('Shop ID is required');
+    }
     return this.shopService.updateShop({
       ...body,
       processId,

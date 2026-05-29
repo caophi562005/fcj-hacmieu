@@ -210,6 +210,7 @@ message GetManyUsersRequest {
   optional string gender = 7; // "MALE" | "FEMALE" | "OTHER"
   optional string status = 8; // "ACTIVE" | "INACTIVE" | "BLOCKED"
   repeated string group = 9;
+  repeated string ids = 10;
 }
 
 message GetManyUsersResponse {
@@ -228,4 +229,5 @@ message UserBasicInfo {
   string gender = 5;
   string status = 6;
   repeated string group = 7;
+  string avatar = 8;
 }

@@ -1,7 +1,7 @@
 import { ProcessId } from '@common/decorators/process-id.decorator';
 import { UserData } from '@common/decorators/user-data.decorator';
 import { GetMerchantResponseDto } from '@common/interfaces/dtos/shop';
-import { Controller, Get } from '@nestjs/common';
+import { BadRequestException, Controller, Get } from '@nestjs/common';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { MerchantService } from '../services/merchant.service';
 
@@ -18,6 +18,9 @@ export class MerchantController {
     @ProcessId() processId: string,
     @UserData('merchantId') merchantId: string,
   ) {
+    if (!merchantId) {
+      throw new BadRequestException('Merchant ID is required');
+    }
     return this.merchantService.getMerchant({
       id: merchantId,
       processId,

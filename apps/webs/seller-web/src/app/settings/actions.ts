@@ -14,6 +14,74 @@ import {
   type CreateShopPayload,
   type UpdateShopPayload,
 } from '../../lib/shop';
+import { cookies } from 'next/headers';
+import { AppConfiguration } from '@common/configurations/app.config';
+import { ACCESS_TOKEN_COOKIE } from '../../lib/auth';
+
+type RefreshResponse = {
+  data?: {
+    accessToken?: string;
+    idToken?: string;
+    refreshToken?: string;
+    expiresIn?: number;
+  };
+};
+
+async function forceRefreshToken() {
+  const c = await cookies();
+  const refreshToken = c.get('refresh_token')?.value;
+  if (!refreshToken) return;
+
+  try {
+    const BFF_BASE_URL = AppConfiguration.SELLER_BFF_URL;
+    const r = await fetch(`${BFF_BASE_URL}/iam/auth/refresh`, {
+      method: 'POST',
+      headers: {
+        'x-refresh-token': refreshToken,
+        'Content-Type': 'application/json',
+      },
+      cache: 'no-store',
+    });
+
+    if (!r.ok) return;
+    const body = (await r.json()) as RefreshResponse;
+    const data = body?.data;
+    if (!data?.accessToken) return;
+
+    const expiresIn = data.expiresIn ?? 3600;
+    const isProd = process.env.NODE_ENV === 'production';
+
+    c.set(ACCESS_TOKEN_COOKIE, data.accessToken, {
+      httpOnly: true,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: expiresIn,
+      secure: isProd,
+    });
+
+    if (data.idToken) {
+      c.set('id_token', data.idToken, {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        maxAge: expiresIn,
+        secure: isProd,
+      });
+    }
+
+    if (data.refreshToken) {
+      c.set('refresh_token', data.refreshToken, {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 60 * 60 * 24 * 30,
+        secure: isProd,
+      });
+    }
+  } catch (err) {
+    console.error('[forceRefreshToken] Failed to refresh token:', err);
+  }
+}
 
 export type ShopMutationResult = {
   ok: boolean;
@@ -95,6 +163,11 @@ export async function createShopAction(
       logo: logoUrl ?? payload.logo ?? null,
       banner: bannerUrl ?? payload.banner ?? null,
     });
+    
+    // Đợi một chút để Cognito sync attribute, sau đó force refresh token
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    await forceRefreshToken();
+    
     revalidatePath('/settings');
     return { ok: true, id: shop.id };
   } catch (err) {

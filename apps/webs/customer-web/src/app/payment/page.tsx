@@ -4,6 +4,7 @@ import { getMyCart } from '../../lib/cart';
 import { getProductById } from '../../lib/catalog';
 import { getMyVouchers } from '../../lib/promotions';
 import { getShopById } from '../../lib/shop';
+import { getCurrentUser } from '../../lib/iam';
 import { getMyWallet } from '../../lib/wallet';
 import { PaymentView } from './PaymentView';
 import type { PaymentShopGroupView, PaymentVoucherView } from './payment.types';
@@ -56,11 +57,12 @@ export default async function PaymentPage({
     new Set(cart.cartItems.flatMap((g) => g.cartItems.map((i) => i.productId))),
   );
 
-  const [shops, products, myVouchers, wallet] = await Promise.all([
+  const [shops, products, myVouchers, wallet, user] = await Promise.all([
     Promise.all(cart.cartItems.map((g) => getShopById(g.shopId))),
     Promise.all(productIds.map((id) => getProductById(id))),
     getMyVouchers({ status: 'AVAILABLE', limit: 50 }),
     getMyWallet(),
+    getCurrentUser(),
   ]);
 
   const skuPrice = new Map<string, number>();
@@ -125,6 +127,13 @@ export default async function PaymentPage({
             groups={groups}
             voucher={voucherView}
             availableCoin={Math.max(0, Math.floor(wallet.balance ?? 0))}
+            initialName={user?.username ?? ''}
+            initialPhone={user?.phoneNumber ?? ''}
+            initialAddress={
+              [user?.address, user?.wardName, user?.districtName, user?.provinceName]
+                .filter(Boolean)
+                .join(', ') || ''
+            }
           />
         )}
       </div>

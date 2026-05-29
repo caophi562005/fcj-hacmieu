@@ -52,11 +52,25 @@ export class ReviewService implements OnModuleInit {
       );
   }
 
+  private async getReviewListCacheVersion(productId?: string): Promise<number> {
+    if (!productId) return 1;
+    const versionKey = `utility:review:version:${productId}`;
+    const version = await this.cacheManager.get<number>(versionKey);
+    return version || 1;
+  }
+
+  private async invalidateReviewListCache(productId: string): Promise<void> {
+    const versionKey = `utility:review:version:${productId}`;
+    const version = (await this.cacheManager.get<number>(versionKey)) || 1;
+    await this.cacheManager.set(versionKey, version + 1, ms('7d'));
+  }
+
   async list({
     processId,
     ...data
   }: GetManyReviewsRequest): Promise<GetManyReviewsResponse> {
-    const cacheKey = generateReviewListCacheKey(data);
+    const version = await this.getReviewListCacheVersion(data.productId);
+    const cacheKey = generateReviewListCacheKey(data, version);
     const cached =
       await this.cacheManager.get<GetManyReviewsResponse>(cacheKey);
     if (cached) return cached;
@@ -109,6 +123,7 @@ export class ReviewService implements OnModuleInit {
   }: CreateReviewRequest): Promise<ReviewResponse> {
     const review = await this.reviewRepository.create(data);
     await this.reviewRepository.recalculateRatingAggregate(review.productId);
+    await this.invalidateReviewListCache(review.productId);
 
     // Fire-and-forget: trigger AI summary regeneration
     firstValueFrom(
@@ -133,6 +148,7 @@ export class ReviewService implements OnModuleInit {
       const review = await this.reviewRepository.update(data);
       await this.reviewRepository.recalculateRatingAggregate(review.productId);
       this.cacheManager.del(generateReviewByIdCacheKey(review.id));
+      await this.invalidateReviewListCache(review.productId);
       return review;
     } catch (error) {
       if (error.code === PrismaErrorValues.RECORD_NOT_FOUND) {
@@ -150,6 +166,7 @@ export class ReviewService implements OnModuleInit {
       const review = await this.reviewRepository.delete(data, false);
       await this.reviewRepository.recalculateRatingAggregate(review.productId);
       this.cacheManager.del(generateReviewByIdCacheKey(review.id));
+      await this.invalidateReviewListCache(review.productId);
       return review;
     } catch (error) {
       if (error.code === PrismaErrorValues.RECORD_NOT_FOUND) {

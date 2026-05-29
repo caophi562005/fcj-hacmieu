@@ -14,6 +14,27 @@ import { MerchantService } from '../services/merchant.service';
 export class MerchantController {
   constructor(private readonly merchantService: MerchantService) {}
 
+  @Get('me')
+  @ApiOkResponse({
+    type: GetMerchantResponseDto,
+  })
+  async getMyMerchant(
+    @ProcessId() processId: string,
+    @UserData('userId') userId: string,
+  ) {
+    const res = await this.merchantService.getManyMerchants({
+      processId,
+      userId,
+      page: 1,
+      limit: 1,
+    });
+    return {
+      status: 200,
+      message: 'Lấy thông tin merchant thành công',
+      data: res.merchants?.[0] ?? null,
+    };
+  }
+
   @Get(':id')
   @ApiOkResponse({
     type: GetMerchantResponseDto,

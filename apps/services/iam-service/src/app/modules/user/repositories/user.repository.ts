@@ -33,6 +33,11 @@ export class UserRepository {
       username: data?.username || undefined,
       gender: data?.gender || undefined,
       status: data?.status || undefined,
+      id: data?.ids?.length
+        ? {
+            in: data.ids,
+          }
+        : undefined,
       group: data?.group?.length
         ? {
             hasSome: data.group,

@@ -17,7 +17,10 @@ import { VideoService } from './services/video.service';
 
 @Module({
   imports: [
-    ClientsModule.register([GrpcClientProvider(GrpcService.UTILITY_SERVICE)]),
+    ClientsModule.register([
+      GrpcClientProvider(GrpcService.UTILITY_SERVICE),
+      GrpcClientProvider(GrpcService.IAM_SERVICE),
+    ]),
   ],
   controllers: [
     NotificationController,

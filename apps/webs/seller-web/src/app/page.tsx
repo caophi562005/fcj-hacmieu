@@ -6,11 +6,18 @@ import { formatCurrency } from '@common/web-core/lib/format';
 import { CopyButton } from '@common/web-ui/index';
 import { Boxes, Clock3, Truck, Wallet } from 'lucide-react';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { getSellerProducts } from '../lib/catalog';
 import { getShopCredit, getShopRevenueSummary } from '../lib/credit';
 import { getSellerOrders } from '../lib/order';
+import { getShop } from '../lib/shop';
 
 export default async function DashboardPage() {
+  const shop = await getShop();
+  if (!shop) {
+    redirect('/settings');
+  }
+
   const [
     credit,
     pendingOrders,

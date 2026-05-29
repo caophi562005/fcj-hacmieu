@@ -7,7 +7,8 @@ import {
   GetOrderResponseDto,
   UpdateOrderStatusRequestDto,
 } from '@common/interfaces/dtos/order/order.dto';
-import { Body, Controller, Get, Param, Put, Query } from '@nestjs/common';
+import { OrderStatusValues } from '@common/constants/order.constant';
+import { BadRequestException, Body, Controller, Get, Param, Put, Query } from '@nestjs/common';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { OrderService } from '../services/order.service';
 
@@ -54,6 +55,9 @@ export class OrderController {
     @ProcessId() processId: string,
     @UserData('shopId') shopId: string,
   ) {
+    if (body.status === OrderStatusValues.COMPLETED) {
+      throw new BadRequestException('Seller cannot update order to COMPLETED');
+    }
     return this.orderService.updateStatusOrder({
       ...body,
       shopId,

@@ -4,7 +4,7 @@ import {
   OrderStatusValues,
   type OrderStatus,
 } from '@common/constants/order.constant';
-import { CheckCircle2, Package, Truck, XCircle } from 'lucide-react';
+import { CheckCircle2, Truck, XCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useTransition } from 'react';
 import { toast } from 'react-toastify';
@@ -50,15 +50,6 @@ function getAvailableActions(current: OrderStatus): Action[] {
           variant: 'danger',
           icon: XCircle,
           confirm: 'Bạn có chắc muốn hủy đơn hàng này?',
-        },
-      ];
-    case OrderStatusValues.SHIPPING:
-      return [
-        {
-          status: OrderStatusValues.COMPLETED,
-          label: 'Hoàn tất đơn',
-          variant: 'primary',
-          icon: Package,
         },
       ];
     default:

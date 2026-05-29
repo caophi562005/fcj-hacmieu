@@ -6,6 +6,12 @@ import { AuthConfiguration } from '@common/configurations/auth.config';
 import { BaseConfiguration } from '@common/configurations/base.config';
 import { RedisConfiguration } from '@common/configurations/redis.config';
 import { PrismaErrorValues } from '@common/constants/prisma.constant';
+import { GroupValues } from '@common/constants/user.constant';
+import {
+  IAM_SERVICE_PACKAGE_NAME,
+  USER_MODULE_SERVICE_NAME,
+  UserModuleClient,
+} from '@common/interfaces/proto-types/iam';
 import {
   CreateMerchantRequest,
   DeleteMerchantRequest,
@@ -17,8 +23,16 @@ import {
 } from '@common/interfaces/models/shop';
 import { generateMerchantByIdCacheKey } from '@common/utils/cache-key.util';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  Logger,
+  NotFoundException,
+  OnModuleInit,
+} from '@nestjs/common';
+import { ClientGrpc } from '@nestjs/microservices';
 import { Cache } from 'cache-manager';
+import { firstValueFrom } from 'rxjs';
 import ms, { StringValue } from 'ms';
 import { MerchantRepository } from '../repositories/merchant.repository';
 
@@ -27,13 +41,21 @@ const cognitoClient = new CognitoIdentityProviderClient({
 });
 
 @Injectable()
-export class MerchantService {
+export class MerchantService implements OnModuleInit {
   private readonly logger = new Logger(MerchantService.name);
+  private userModule!: UserModuleClient;
 
   constructor(
     private readonly merchantRepository: MerchantRepository,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    @Inject(IAM_SERVICE_PACKAGE_NAME) private iamClient: ClientGrpc,
   ) {}
+
+  onModuleInit() {
+    this.userModule = this.iamClient.getService<UserModuleClient>(
+      USER_MODULE_SERVICE_NAME,
+    );
+  }
 
   async list(data: GetManyMerchantsRequest): Promise<GetManyMerchantsResponse> {
     const merchants = await this.merchantRepository.list(data);
@@ -76,6 +98,21 @@ export class MerchantService {
     }
   }
 
+  private async syncUserGroup(userId: string) {
+    const user = await firstValueFrom(this.userModule.getUser({ id: userId }));
+    const groups = user.group || [];
+    if (!groups.includes(GroupValues.SELLER)) {
+      groups.push(GroupValues.SELLER);
+      await firstValueFrom(
+        this.userModule.updateUser({
+          id: userId,
+          group: groups,
+        }),
+      );
+    }
+    return user;
+  }
+
   async update({
     processId,
     ...data
@@ -84,24 +121,30 @@ export class MerchantService {
       const updatedMerchant = await this.merchantRepository.update(data);
       this.cacheManager.del(generateMerchantByIdCacheKey(updatedMerchant.id));
 
-      // Khi admin approve merchant → set custom:merchant_id trên Cognito
+      // Khi admin approve merchant → set custom:merchant_id và thêm user vào group SELLER
       if (data.approvalStatus === 'APPROVED' && updatedMerchant.userId) {
-        cognitoClient
-          .send(
+        const userId = updatedMerchant.userId;
+        const userPoolId = AuthConfiguration.USER_POOL_ID;
+
+        try {
+          const user = await this.syncUserGroup(userId);
+          const cognitoUsername = user.username || userId;
+
+          await cognitoClient.send(
             new AdminUpdateUserAttributesCommand({
-              UserPoolId: AuthConfiguration.USER_POOL_ID,
-              Username: updatedMerchant.userId,
+              UserPoolId: userPoolId,
+              Username: cognitoUsername,
               UserAttributes: [
                 { Name: 'custom:merchant_id', Value: updatedMerchant.id },
               ],
             }),
-          )
-          .catch((error) => {
-            this.logger.warn(
-              `Failed to set custom:merchant_id for user ${updatedMerchant.userId}:`,
-              error?.message,
-            );
-          });
+          );
+        } catch (error: any) {
+          this.logger.error(
+            `Failed to update Cognito/IAM for user ${userId}: ${error?.message}`,
+            error?.stack,
+          );
+        }
       }
 
       return updatedMerchant;

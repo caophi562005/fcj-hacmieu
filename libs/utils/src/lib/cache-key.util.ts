@@ -47,11 +47,11 @@ export const generateAttributeByIdCacheKey = (id: string): string => {
 
 // ─── Utility ──────────────────────────────────────────────────────────────────
 
-export const generateReviewListCacheKey = (params: object): string => {
+export const generateReviewListCacheKey = (params: object, version = 1): string => {
   const hash = createHash('sha256')
     .update(JSON.stringify(params))
     .digest('hex');
-  return `utility:review:list:${hash}`;
+  return `utility:review:list:v${version}:${hash}`;
 };
 
 export const generateReviewByIdCacheKey = (id: string): string => {

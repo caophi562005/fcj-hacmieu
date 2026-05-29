@@ -116,7 +116,7 @@ export function ProfileForm({
 
   return (
     <form action={formAction} className="space-y-4 order-2 md:order-1">
-      <ReadonlyField label="Họ và tên" value={name} />
+      <ReadonlyField label="Username" value={name} />
       <ReadonlyField label="Email" value={email} />
 
       <Field

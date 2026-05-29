@@ -22,6 +22,9 @@ type Props = {
   groups: PaymentShopGroupView[];
   voucher: PaymentVoucherView | null;
   availableCoin: number;
+  initialName?: string;
+  initialPhone?: string;
+  initialAddress?: string;
 };
 
 type ShippingMethod = 'fast' | 'std';
@@ -58,15 +61,21 @@ function calcDiscount(voucher: PaymentVoucherView, subtotal: number): number {
   return Math.min(voucher.discountValue, subtotal);
 }
 
-export function PaymentView({ groups, voucher, availableCoin }: Props) {
+export function PaymentView({ groups, voucher, availableCoin, initialName, initialPhone, initialAddress }: Props) {
   const router = useRouter();
   const [shippingMethod, setShippingMethod] = useState<ShippingMethod>('fast');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('COD');
   const [coinInput, setCoinInput] = useState('0');
 
-  const [receiverName, setReceiverName] = useState('');
-  const [receiverPhone, setReceiverPhone] = useState('');
-  const [receiverAddress, setReceiverAddress] = useState('');
+  const [receiverName, setReceiverName] = useState(
+    () => initialName || ''
+  );
+  const [receiverPhone, setReceiverPhone] = useState(
+    () => initialPhone || ''
+  );
+  const [receiverAddress, setReceiverAddress] = useState(
+    () => initialAddress || ''
+  );
   const [receiverNote, setReceiverNote] = useState('');
 
   const [isSubmitting, setIsSubmitting] = useState(false);

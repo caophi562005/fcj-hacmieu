@@ -26,6 +26,7 @@ export class UserController {
     return this.userService.getManyUsers({
       ...queries,
       group: queries.group ?? [],
+      ids: queries.ids ?? [],
       processId,
     });
   }

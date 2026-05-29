@@ -151,11 +151,18 @@ export class CreditRepository {
       orderBy: { createdAt: 'asc' },
     });
 
+    const formatDateLocal = (d: Date) => {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    };
+
     const points = Array.from({ length: days }, (_, idx) => {
       const day = new Date(start);
       day.setDate(start.getDate() + idx);
       return {
-        date: day.toISOString().slice(0, 10),
+        date: formatDateLocal(day),
         amount: 0,
       };
     });
@@ -163,7 +170,7 @@ export class CreditRepository {
     const pointMap = new Map(points.map((p) => [p.date, p]));
 
     for (const tx of transactions) {
-      const date = new Date(tx.createdAt).toISOString().slice(0, 10);
+      const date = formatDateLocal(tx.createdAt);
       const point = pointMap.get(date);
       if (point) {
         point.amount += tx.amount;

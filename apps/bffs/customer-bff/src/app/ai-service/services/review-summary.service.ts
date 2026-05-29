@@ -25,8 +25,13 @@ export class ReviewSummaryService implements OnModuleInit {
   }
 
   async getReviewSummary(productId: string): Promise<ReviewSummaryResponse> {
-    return firstValueFrom(
+    const response = await firstValueFrom(
       this.reviewSummaryModule.getReviewSummary({ productId }),
     );
+    return {
+      ...response,
+      pros: response.pros ?? [],
+      cons: response.cons ?? [],
+    };
   }
 }

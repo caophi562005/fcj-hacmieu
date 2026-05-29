@@ -291,7 +291,7 @@ export class OrderRepository {
     });
 
     return this.prismaService.order.update({
-      where: { id: data.id, shopId: data.shopId },
+      where: { id: data.id, shopId: data.shopId ? data.shopId : undefined },
       data: {
         status: data.status,
         timeline: [

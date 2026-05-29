@@ -58,8 +58,8 @@ export class ReviewSummaryService implements OnModuleInit {
     );
     const reviews = reviewsResponse.reviews ?? [];
 
-    // 2. Check điều kiện: cần ít nhất 5 reviews
-    if (reviews.length < 5) {
+    // 2. Check điều kiện: cần ít nhất 3 reviews
+    if (reviews.length < 3) {
       this.logger.log(
         `Product ${productId}: chỉ có ${reviews.length} reviews, skip.`,
       );
@@ -87,7 +87,7 @@ export class ReviewSummaryService implements OnModuleInit {
 
     try {
       const { text } = await generateText({
-        model: groq('moonshotai/kimi-k2-instruct-0905'),
+        model: groq('llama-3.3-70b-versatile'),
         messages: [
           { role: 'system', content: REVIEW_ANALYSIS_PROMPT },
           { role: 'user', content: reviewsText },

@@ -1,3 +1,4 @@
+import { AppConfiguration } from '@common/configurations/app.config';
 import { SqsConfiguration } from '@common/configurations/sqs.config';
 import {
   CreditTransactionSourceValues,
@@ -37,6 +38,11 @@ import {
   PromotionModuleClient,
 } from '@common/interfaces/proto-types/promotion';
 import {
+  NOTIFICATION_SERVICE_NAME,
+  NotificationServiceClient,
+  UTILITY_SERVICE_PACKAGE_NAME,
+} from '@common/interfaces/proto-types/utility';
+import {
   WALLET_MODULE_SERVICE_NAME,
   WALLET_SERVICE_PACKAGE_NAME,
   WalletModuleClient,
@@ -62,6 +68,7 @@ export class OrderService implements OnModuleInit {
   private productModule!: ProductModuleClient;
   private promotionModule!: PromotionModuleClient;
   private walletModule!: WalletModuleClient;
+  private notificationModule!: NotificationServiceClient;
 
   constructor(
     @Inject(CATALOG_SERVICE_PACKAGE_NAME)
@@ -72,6 +79,9 @@ export class OrderService implements OnModuleInit {
 
     @Inject(WALLET_SERVICE_PACKAGE_NAME)
     private walletClient: ClientGrpc,
+
+    @Inject(UTILITY_SERVICE_PACKAGE_NAME)
+    private utilityClient: ClientGrpc,
 
     private readonly orderRepository: OrderRepository,
     private readonly cartItemService: CartItemService,
@@ -89,6 +99,9 @@ export class OrderService implements OnModuleInit {
       );
     this.walletModule = this.walletClient.getService<WalletModuleClient>(
       WALLET_MODULE_SERVICE_NAME,
+    );
+    this.notificationModule = this.utilityClient.getService<NotificationServiceClient>(
+      NOTIFICATION_SERVICE_NAME,
     );
   }
 
@@ -475,13 +488,18 @@ export class OrderService implements OnModuleInit {
       const order = await this.orderRepository.updateStatus(data);
 
       if (order.status === OrderStatusValues.COMPLETED) {
+        const commission = Math.floor(
+          (order.itemTotal * AppConfiguration.ORDER_SELLER_COMMISSION_PERCENT) /
+            100,
+        );
+
         const settlementPayload: AdjustShopCreditRequest = {
           processId,
           shopId: order.shopId,
           type: CreditTransactionTypeValues.CREDIT,
           source: CreditTransactionSourceValues.ORDER_REVENUE,
           referenceId: order.id,
-          amount: order.itemTotal,
+          amount: Math.max(0, order.itemTotal - commission),
           description: `Doanh thu đơn hàng ${order.code}`,
         };
 
@@ -489,7 +507,39 @@ export class OrderService implements OnModuleInit {
           SqsConfiguration.SETTLE_ORDER_REVENUE_QUEUE_NAME,
           settlementPayload,
         );
+
+        const rewardAmount = Math.floor(
+          (order.itemTotal * AppConfiguration.ORDER_USER_REWARD_PERCENT) / 100,
+        );
+
+        if (rewardAmount > 0) {
+          const rewardPayload: AdjustWalletRequest = {
+            processId,
+            userId: order.userId,
+            type: WalletTransactionTypeValues.CREDIT,
+            source: WalletTransactionSourceValues.ORDER_REWARD,
+            referenceId: order.id,
+            amount: rewardAmount,
+            description: `Thưởng V-Xu từ đơn hàng ${order.code}`,
+          };
+          await firstValueFrom(this.walletModule.adjustWallet(rewardPayload));
+        }
       }
+
+      try {
+        await firstValueFrom(
+          this.notificationModule.createNotification({
+            processId,
+            userId: order.userId,
+            type: 'ORDER_UPDATE',
+            title: 'Cập nhật đơn hàng',
+            description: `Đơn hàng ${order.code} của bạn đã chuyển sang trạng thái ${order.status}`,
+          }),
+        );
+      } catch (err) {
+        console.error('Lỗi khi gửi thông báo cập nhật đơn hàng:', err);
+      }
+
       return order;
     } catch (error) {
       if (error.code === PrismaErrorValues.RECORD_NOT_FOUND) {

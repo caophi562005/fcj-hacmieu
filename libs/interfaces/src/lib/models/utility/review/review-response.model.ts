@@ -10,9 +10,15 @@ export const ReviewResponseSchema = z.object({
   rating: z.number().int().min(1).max(5),
   content: z.string().optional(),
   mediaUrls: z.array(z.string().url()),
-  deletedAt: z.date().optional(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  deletedAt: z.any().optional(),
+  createdAt: z.any(),
+  updatedAt: z.any(),
+  user: z
+    .object({
+      username: z.string(),
+      avatar: z.string().optional(),
+    })
+    .optional(),
 });
 
 export const GetManyReviewsResponseSchema = z.object({

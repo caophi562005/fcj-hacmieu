@@ -1,5 +1,4 @@
 import {
-  AdminAddUserToGroupCommand,
   AdminUpdateUserAttributesCommand,
   CognitoIdentityProviderClient,
 } from '@aws-sdk/client-cognito-identity-provider';
@@ -7,7 +6,6 @@ import { AuthConfiguration } from '@common/configurations/auth.config';
 import { BaseConfiguration } from '@common/configurations/base.config';
 import { RedisConfiguration } from '@common/configurations/redis.config';
 import { PrismaErrorValues } from '@common/constants/prisma.constant';
-import { GroupValues } from '@common/constants/user.constant';
 import {
   CreateShopRequest,
   DeleteShopRequest,
@@ -17,6 +15,11 @@ import {
   ShopResponse,
   UpdateShopRequest,
 } from '@common/interfaces/models/shop';
+import {
+  IAM_SERVICE_PACKAGE_NAME,
+  USER_MODULE_SERVICE_NAME,
+  UserModuleClient,
+} from '@common/interfaces/proto-types/iam';
 import { generateShopByIdCacheKey } from '@common/utils/cache-key.util';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import {
@@ -25,8 +28,11 @@ import {
   Injectable,
   Logger,
   NotFoundException,
+  OnModuleInit,
 } from '@nestjs/common';
+import { ClientGrpc } from '@nestjs/microservices';
 import { Cache } from 'cache-manager';
+import { firstValueFrom } from 'rxjs';
 import ms, { StringValue } from 'ms';
 import { MerchantRepository } from '../../merchant/repositories/merchant.repository';
 import { ShopRepository } from '../repositories/shop.repository';
@@ -36,14 +42,22 @@ const cognitoClient = new CognitoIdentityProviderClient({
 });
 
 @Injectable()
-export class ShopService {
+export class ShopService implements OnModuleInit {
   private readonly logger = new Logger(ShopService.name);
+  private userModule!: UserModuleClient;
 
   constructor(
     private readonly shopRepository: ShopRepository,
     private readonly merchantRepository: MerchantRepository,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    @Inject(IAM_SERVICE_PACKAGE_NAME) private iamClient: ClientGrpc,
   ) {}
+
+  onModuleInit() {
+    this.userModule = this.iamClient.getService<UserModuleClient>(
+      USER_MODULE_SERVICE_NAME,
+    );
+  }
 
   async list(data: GetManyShopsRequest): Promise<GetManyShopsResponse> {
     const shops = await this.shopRepository.list(data);
@@ -88,34 +102,30 @@ export class ShopService {
 
       const createdShop = await this.shopRepository.create(data);
 
-      // Fire-and-forget: thêm user vào Cognito group SELLER + set custom:shop_id
+      // Fire-and-forget: set custom:shop_id
       if (merchant.userId) {
         const userId = merchant.userId;
         const userPoolId = AuthConfiguration.USER_POOL_ID;
 
-        Promise.all([
-          cognitoClient.send(
-            new AdminAddUserToGroupCommand({
-              UserPoolId: userPoolId,
-              Username: userId,
-              GroupName: GroupValues.SELLER,
-            }),
-          ),
-          cognitoClient.send(
-            new AdminUpdateUserAttributesCommand({
-              UserPoolId: userPoolId,
-              Username: userId,
-              UserAttributes: [
-                { Name: 'custom:shop_id', Value: createdShop.id },
-              ],
-            }),
-          ),
-        ]).catch((error) => {
-          this.logger.warn(
-            `Failed to update Cognito for user ${userId}:`,
-            error?.message,
-          );
-        });
+        firstValueFrom(this.userModule.getUser({ id: userId }))
+          .then((user) => {
+            const cognitoUsername = user.username || userId;
+            return cognitoClient.send(
+              new AdminUpdateUserAttributesCommand({
+                UserPoolId: userPoolId,
+                Username: cognitoUsername,
+                UserAttributes: [
+                  { Name: 'custom:shop_id', Value: createdShop.id },
+                ],
+              }),
+            );
+          })
+          .catch((error) => {
+            this.logger.warn(
+              `Failed to update Cognito for user ${userId}:`,
+              error?.message,
+            );
+          });
       }
 
       return createdShop;

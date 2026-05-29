@@ -14,6 +14,7 @@ export const GetManyUsersResponseSchema = PaginationQueryResponseSchema.extend({
       gender: true,
       status: true,
       group: true,
+      avatar: true,
     }),
   ),
 });

@@ -208,14 +208,14 @@ export default async function ProductDetail({
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={`https://i.pravatar.cc/40?img=${((rowIndex - 1) % 70) + 1}`}
-                      alt={`Avatar người dùng ${rowIndex}`}
+                      src={review.user?.avatar || `https://i.pravatar.cc/40?img=${((rowIndex - 1) % 70) + 1}`}
+                      alt={`Avatar ${review.user?.username || 'người dùng'}`}
                       className="w-10 h-10 rounded-full"
                     />
                     <div className="flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-medium text-sm">
-                          Người dùng {rowIndex}
+                          {review.user?.username || `Người dùng ẩn danh`}
                         </span>
                         <span className="flex items-center text-xs text-yellow-500">
                           {Array.from({ length: 5 }).map((_, k) => (

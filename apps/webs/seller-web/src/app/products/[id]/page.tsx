@@ -200,10 +200,19 @@ export default async function ProductDetailPage({
                     ))}
                   </div>
                 )}
-                <p className="text-xs text-ink-subtle">
-                  User ID:{' '}
-                  <span className="font-mono">{r.userId.slice(0, 8)}…</span>
-                </p>
+                <div className="flex items-center gap-2 mt-2">
+                  <img
+                    src={r.user?.avatar || `https://i.pravatar.cc/40?u=${r.userId}`}
+                    alt="avatar"
+                    className="w-6 h-6 rounded-full"
+                  />
+                  <p className="text-xs text-ink-subtle">
+                    {r.user?.username || 'Người dùng ẩn danh'}
+                    <span className="font-mono ml-2 opacity-50">
+                      ({r.userId.slice(0, 8)}…)
+                    </span>
+                  </p>
+                </div>
               </li>
             ))}
           </ul>

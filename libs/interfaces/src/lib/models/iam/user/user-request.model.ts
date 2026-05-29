@@ -24,6 +24,7 @@ export const GetManyUsersRequestSchema = UserSchema.pick({
     processId: z.string().optional(),
     page: PaginationQueryRequestSchema.shape.page,
     limit: PaginationQueryRequestSchema.shape.limit,
+    ids: z.array(z.string()).optional(),
   });
 
 export const CreateUserRequestSchema = UserSchema.pick({

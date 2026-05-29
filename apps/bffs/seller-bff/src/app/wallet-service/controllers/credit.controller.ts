@@ -8,7 +8,7 @@ import {
   GetShopRevenueSummaryRequestDto,
   GetShopRevenueSummaryResponseDto,
 } from '@common/interfaces/dtos/wallet';
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { CreditService } from '../services/credit.service';
 
@@ -23,6 +23,9 @@ export class CreditController {
     @ProcessId() processId: string,
     @UserData('shopId') shopId: string,
   ) {
+    if (!shopId) {
+      throw new BadRequestException('Shop ID is required');
+    }
     return this.creditService.getShopCredit({ shopId, processId });
   }
 
@@ -33,6 +36,7 @@ export class CreditController {
     @ProcessId() processId: string,
     @UserData('shopId') shopId: string,
   ) {
+    if (!shopId) throw new BadRequestException('Shop ID is required');
     return this.creditService.getShopCreditTransactions({
       ...query,
       shopId,
@@ -47,6 +51,7 @@ export class CreditController {
     @ProcessId() processId: string,
     @UserData('shopId') shopId: string,
   ) {
+    if (!shopId) throw new BadRequestException('Shop ID is required');
     return this.creditService.getShopRevenueSummary({
       ...query,
       shopId,
@@ -61,6 +66,7 @@ export class CreditController {
     @ProcessId() processId: string,
     @UserData('shopId') shopId: string,
   ) {
+    if (!shopId) throw new BadRequestException('Shop ID is required');
     return this.creditService.adjustShopCredit({
       ...body,
       shopId,
