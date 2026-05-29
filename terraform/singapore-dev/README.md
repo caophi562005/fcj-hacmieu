@@ -48,6 +48,8 @@ kubectl get ingress -n default
 - `deploy_platform_resources=true` enables Kubernetes ServiceAccounts and the AWS Load Balancer Controller.
 - Use `helm upgrade --install` instead of plain `helm upgrade` for the first deployment.
 
+helm repo update
+
 #===Step 2: Chạy lệnh sau để update file config trong thư mục ~/.kube/config (Đối với windows là: C:\Users\{username}\.kube\config)
 aws eks update-kubeconfig --region ap-southeast-1 --name fcj-hacmieu
 
