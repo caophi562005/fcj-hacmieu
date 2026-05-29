@@ -294,12 +294,49 @@ export function ProductInteractive(props: ProductInteractiveProps) {
             <ShoppingCart className="w-4 h-4" />
             {isPending ? 'Đang thêm...' : 'Thêm vào giỏ'}
           </button>
-          <Link
-            href="/payment"
-            className="btn-primary btn-md flex-1 min-w-[160px] cursor-pointer"
+          <button
+            type="button"
+            disabled={isPending}
+            onClick={() => {
+              if (variants.length > 0 && !matchedSku) {
+                toast.warn('Vui lòng chọn đầy đủ phân loại sản phẩm');
+                return;
+              }
+              if (!matchedSku) {
+                toast.error('Sản phẩm này chưa có phân loại khả dụng');
+                return;
+              }
+              if (stock != null && qty > stock) {
+                toast.warn(`Chỉ còn ${stock} sản phẩm trong kho`);
+                return;
+              }
+              const productImage =
+                matchedSku.image || allImages[0] || '/placeholder.png';
+              startTransition(async () => {
+                const result = await addCartItemAction({
+                  productId,
+                  productName: name,
+                  productImage,
+                  skuId: matchedSku.id,
+                  skuValue: matchedSku.value,
+                  shopId,
+                  quantity: qty,
+                });
+                if (result.ok) {
+                  if (result.cartItemId) {
+                    router.push(`/payment?items=${result.cartItemId}`);
+                  } else {
+                    toast.error('Có lỗi xảy ra (không lấy được cartItem)');
+                  }
+                } else {
+                  toast.error(result.message);
+                }
+              });
+            }}
+            className="btn-primary btn-md flex-1 min-w-[160px] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            Mua ngay
-          </Link>
+            {isPending ? 'Đang xử lý...' : 'Mua ngay'}
+          </button>
           <button
             type="button"
             className="btn-outline btn-md w-11 px-0 cursor-pointer"

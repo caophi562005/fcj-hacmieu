@@ -17,9 +17,13 @@ export default async function ChatPage({
   searchParams: Promise<SearchParams>;
 }) {
   const user = await getAuth();
-  if (!user) redirect('/login?next=/chat');
-
   const sp = (await searchParams) ?? {};
+  
+  if (!user) {
+    const qs = new URLSearchParams(sp as Record<string, string>).toString();
+    const nextUrl = qs ? `/chat?${qs}` : '/chat';
+    redirect(`/login?next=${encodeURIComponent(nextUrl)}`);
+  }
   const initialPeer: ChatPeer | null = sp.to
     ? {
         id: sp.to,

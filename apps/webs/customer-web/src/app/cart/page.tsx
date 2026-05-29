@@ -1,4 +1,6 @@
+import { redirect } from 'next/navigation';
 import { MainShell } from '../../components/MainShell';
+import { getAuth } from '../../lib/auth';
 import { getMyCart } from '../../lib/cart';
 import { getProductById } from '../../lib/catalog';
 import { getMyVouchers } from '../../lib/promotions';
@@ -14,6 +16,9 @@ export default async function CartPage({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
+  const user = await getAuth();
+  if (!user) redirect('/login?next=/cart');
+
   const sp = (await searchParams) ?? {};
   const page = Math.max(1, Number(sp.page) || 1);
   const limit = Math.max(1, Math.min(50, Number(sp.limit) || 20));

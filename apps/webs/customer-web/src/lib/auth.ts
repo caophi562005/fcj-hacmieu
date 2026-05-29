@@ -13,8 +13,6 @@ export type MockUser = {
   avatar: string;
   gender: GenderType;
   birthday: string;
-  vXu: number;
-  vouchers: number;
   provinceId?: number | null;
   provinceName?: string | null;
   districtId?: number | null;
@@ -66,8 +64,6 @@ export const getAuth = cache(async (): Promise<MockUser | null> => {
       : DEFAULT_AVATAR,
     gender: user.gender,
     birthday: formatBirthday(user.birthday),
-    vXu: 0,
-    vouchers: 0,
     provinceId: user.provinceId,
     provinceName: user.provinceName,
     districtId: user.districtId,

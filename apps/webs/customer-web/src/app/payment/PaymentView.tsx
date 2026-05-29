@@ -36,17 +36,18 @@ const SHIPPING_OPTIONS: Array<{
   eta: string;
   fee: number;
 }> = [
-  { id: 'fast', label: 'Giao nhanh 2h', eta: 'Hôm nay 14:00 - 16:00', fee: 0 },
-  { id: 'std', label: 'Giao tiêu chuẩn', eta: '2 - 3 ngày', fee: 25000 },
+  { id: 'fast', label: 'Giao nhanh 2h', eta: 'Hôm nay 14:00 - 16:00', fee: 25000 },
+  { id: 'std', label: 'Giao tiêu chuẩn', eta: '2 - 3 ngày', fee: 0 },
 ];
 
 const PAYMENT_OPTIONS: Array<{
   id: PaymentMethod;
   label: string;
   icon: typeof Wallet;
+  disabled?: boolean;
 }> = [
   { id: 'COD', label: 'Thanh toán khi nhận hàng', icon: Wallet },
-  { id: 'ONLINE', label: 'Thẻ tín dụng / ghi nợ', icon: CreditCard },
+  { id: 'ONLINE', label: 'Thẻ tín dụng / ghi nợ (sắp tới)', icon: CreditCard, disabled: true },
   { id: 'WALLET', label: 'Ví điện tử', icon: Wallet },
 ];
 
@@ -376,16 +377,21 @@ export function PaymentView({ groups, voucher, availableCoin, initialName, initi
             {PAYMENT_OPTIONS.map((method) => (
               <label
                 key={method.id}
-                className={`flex items-center gap-3 p-3 rounded border cursor-pointer transition-colors duration-200 ${
-                  paymentMethod === method.id
+                className={`flex items-center gap-3 p-3 rounded border transition-colors duration-200 ${
+                  method.disabled
+                    ? 'opacity-50 cursor-not-allowed bg-surface-muted'
+                    : 'cursor-pointer hover:border-primary'
+                } ${
+                  paymentMethod === method.id && !method.disabled
                     ? 'border-primary bg-primary-50/40'
-                    : 'border-border hover:border-primary'
+                    : 'border-border'
                 }`}
               >
                 <input
                   type="radio"
                   name="paymentMethod"
                   checked={paymentMethod === method.id}
+                  disabled={method.disabled}
                   onChange={() => setPaymentMethod(method.id)}
                   className="accent-primary"
                 />

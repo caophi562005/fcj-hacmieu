@@ -18,7 +18,7 @@ export type AddCartItemInput = {
 };
 
 export type AddCartItemResult =
-  | { ok: true; cartCount: number }
+  | { ok: true; cartCount: number; cartItemId?: string }
   | { ok: false; message: string };
 
 // Server Action: thêm item vào giỏ hàng. Gọi trực tiếp từ client component.
@@ -32,7 +32,8 @@ export async function addCartItemAction(
       input,
     );
     const cartCount = res.data?.data?.cartCount ?? 0;
-    return { ok: true, cartCount };
+    const cartItemId = res.data?.data?.cartItem?.id;
+    return { ok: true, cartCount, cartItemId };
   } catch (e: unknown) {
     const err = e as {
       response?: { data?: { message?: string }; status?: number };

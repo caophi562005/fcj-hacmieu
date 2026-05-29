@@ -53,18 +53,20 @@ export async function Header() {
           >
             <Film className="w-5 h-5" />
           </Link>
-          <Link
-            href="/cart"
-            className="relative inline-flex items-center justify-center w-10 h-10 rounded text-ink-muted hover:text-primary hover:bg-surface-muted transition-colors"
-            aria-label="Giỏ hàng"
-          >
-            <ShoppingCart className="w-5 h-5" />
-            {cartCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-white text-[10px] font-bold flex items-center justify-center">
-                {cartBadge}
-              </span>
-            )}
-          </Link>
+          {user && (
+            <Link
+              href="/cart"
+              className="relative inline-flex items-center justify-center w-10 h-10 rounded text-ink-muted hover:text-primary hover:bg-surface-muted transition-colors"
+              aria-label="Giỏ hàng"
+            >
+              <ShoppingCart className="w-5 h-5" />
+              {cartCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-white text-[10px] font-bold flex items-center justify-center">
+                  {cartBadge}
+                </span>
+              )}
+            </Link>
+          )}
           {user ? (
             <NotificationBell
               href="/profile/notifications"
@@ -79,13 +81,15 @@ export async function Header() {
               <span className="sr-only">Thông báo</span>
             </Link>
           )}
-          <Link
-            href="/chat"
-            className="inline-flex items-center justify-center w-10 h-10 rounded text-ink-muted hover:text-primary hover:bg-surface-muted transition-colors"
-            aria-label="Tin nhắn"
-          >
-            <MessageCircle className="w-5 h-5" />
-          </Link>
+          {user && (
+            <Link
+              href="/chat"
+              className="inline-flex items-center justify-center w-10 h-10 rounded text-ink-muted hover:text-primary hover:bg-surface-muted transition-colors"
+              aria-label="Tin nhắn"
+            >
+              <MessageCircle className="w-5 h-5" />
+            </Link>
+          )}
           {user ? (
             <Link
               href="/profile"
@@ -109,18 +113,20 @@ export async function Header() {
           )}
         </nav>
 
-        <Link
-          href="/cart"
-          className="md:hidden relative inline-flex items-center justify-center w-10 h-10 text-ink-muted"
-          aria-label="Giỏ hàng"
-        >
-          <ShoppingCart className="w-6 h-6" />
-          {cartCount > 0 && (
-            <span className="absolute top-0 right-0 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-white text-[10px] font-bold flex items-center justify-center">
-              {cartBadge}
-            </span>
-          )}
-        </Link>
+        {user && (
+          <Link
+            href="/cart"
+            className="md:hidden relative inline-flex items-center justify-center w-10 h-10 text-ink-muted"
+            aria-label="Giỏ hàng"
+          >
+            <ShoppingCart className="w-6 h-6" />
+            {cartCount > 0 && (
+              <span className="absolute top-0 right-0 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-white text-[10px] font-bold flex items-center justify-center">
+                {cartBadge}
+              </span>
+            )}
+          </Link>
+        )}
       </div>
     </header>
   );

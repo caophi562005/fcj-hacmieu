@@ -11,7 +11,7 @@ export type UploadAvatarState = {
   message: string;
 };
 
-const MAX_SIZE = 2 * 1024 * 1024; // 2MB
+const MAX_SIZE = 10 * 1024 * 1024; // 10MB
 
 export async function uploadAvatarAction(
   _prev: UploadAvatarState,
@@ -34,7 +34,7 @@ export async function uploadAvatarAction(
   }
 
   if (file.size > MAX_SIZE) {
-    return { ok: false, message: 'Ảnh vượt quá 2MB.' };
+    return { ok: false, message: 'Ảnh vượt quá 10MB.' };
   }
 
   const auth = await getAuth();

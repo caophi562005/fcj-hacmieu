@@ -8,6 +8,9 @@ import {
   type DistrictResponse,
   type WardResponse,
 } from '../../lib/location';
+import { getMyOrders } from '../../lib/order';
+import { getMyVouchers } from '../../lib/promotions';
+import { getMyWallet } from '../../lib/wallet';
 import { AvatarUploader } from './AvatarUploader';
 import { ProfileForm } from './ProfileForm';
 
@@ -25,6 +28,12 @@ export default async function ProfilePage() {
   if (user.districtId) {
     wards = await getWards(user.districtId);
   }
+
+  const [wallet, vouchersRes, ordersRes] = await Promise.all([
+    getMyWallet(),
+    getMyVouchers({ status: 'AVAILABLE', limit: 1 }),
+    getMyOrders({ limit: 1 }),
+  ]);
 
   return (
     <>
@@ -47,14 +56,18 @@ export default async function ProfilePage() {
           <Stat
             icon={Coins}
             label="V-Xu"
-            value={user.vXu.toLocaleString('vi-VN')}
+            value={wallet.balance.toLocaleString('vi-VN')}
           />
           <Stat
             icon={TicketPercent}
             label="Voucher"
-            value={String(user.vouchers)}
+            value={String(vouchersRes.totalItems ?? 0)}
           />
-          <Stat icon={Package} label="Đơn mua" value="12" />
+          <Stat
+            icon={Package}
+            label="Đơn mua"
+            value={String(ordersRes.totalItems ?? 0)}
+          />
         </div>
       </div>
 

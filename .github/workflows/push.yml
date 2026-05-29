@@ -190,3 +190,56 @@ jobs:
         run: |
           set -euo pipefail
           docker build -f "${{ matrix.dockerfile }}" -t "$IMAGE:pr" .
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [check, docker]
+    if: ${{ github.event_name != 'pull_request' && fromJson(needs.check.outputs.matrix).include[0] != null }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Update kubeconfig for EKS
+        run: aws eks update-kubeconfig --region ${{ secrets.AWS_REGION }} --name ${{ secrets.EKS_CLUSTER_NAME }}
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+
+      - name: Generate tag
+        id: tag
+        shell: bash
+        run: echo "TAG=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      - name: Upgrade Helm Release
+        env:
+          TAG: ${{ steps.tag.outputs.TAG }}
+          AFFECTED_APPS: ${{ needs.check.outputs.affected_apps }}
+        run: |
+          HELM_SETS=""
+          
+          # Lặp qua các ứng dụng bị thay đổi (từ job check)
+          for APP in $(echo "$AFFECTED_APPS" | jq -r '.[]'); do
+            HELM_SETS="$HELM_SETS --set $APP.image=public.ecr.aws/h5u5b6t3/hacmieu/$APP:$TAG"
+          done
+
+          echo "Applying Helm sets: $HELM_SETS"
+
+          # --namespace và tên release tuỳ chỉnh theo cấu hình EKS thực tế của bạn
+          helm upgrade hacmieu ./charts/hacmieu \
+            --namespace my-namespace \
+            $HELM_SETS \
+            --wait --timeout 5m
+
+      - name: Verify Deployments
+        env:
+          AFFECTED_APPS: ${{ needs.check.outputs.affected_apps }}
+        run: |
+          for APP in $(echo "$AFFECTED_APPS" | jq -r '.[]'); do
+            echo "Checking status for $APP..."
+            kubectl rollout status deployment/$APP -n my-namespace --timeout=3m
+          done

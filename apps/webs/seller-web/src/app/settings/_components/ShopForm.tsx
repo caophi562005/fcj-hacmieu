@@ -127,7 +127,7 @@ export function ShopForm({ mode, initial, merchantId }: Props) {
       return;
     }
     if (file.size > MAX_IMAGE_SIZE_BYTES) {
-      toast.error('Ảnh tối đa 5MB.');
+      toast.error('Ảnh tối đa 10MB.');
       return;
     }
 

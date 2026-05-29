@@ -69,7 +69,7 @@ export function AvatarUploader({ src, alt }: Props) {
         />
       </form>
       <p className="text-xs text-ink-subtle mt-3">
-        Ảnh JPG/JPEG/PNG/WEBP, tối đa 2MB.
+        Ảnh JPG/JPEG/PNG/WEBP, tối đa 10MB.
       </p>
       {state.message && (
         <p

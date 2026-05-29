@@ -413,7 +413,7 @@ export class ProductRepository {
     const categories = Array.isArray(data.categories)
       ? data.categories.filter((value) => typeof value === 'string' && value)
       : [];
-    const where = {
+    const where: any = {
       deletedAt: null,
       name: data.name
         ? { contains: data.name, mode: 'insensitive' as const }
@@ -434,11 +434,27 @@ export class ProductRepository {
           : undefined,
     };
 
+    if (data.minPrice !== undefined || data.maxPrice !== undefined) {
+      where.basePrice = {};
+      if (data.minPrice !== undefined) where.basePrice.gte = data.minPrice;
+      if (data.maxPrice !== undefined) where.basePrice.lte = data.maxPrice;
+    }
+
+    let orderByClause: any = {};
+    if (data.sortBy === 'price') {
+      orderByClause = { basePrice: data.orderBy || 'asc' };
+    } else if (data.sortBy === 'sale') {
+      orderByClause = { soldCount: data.orderBy || 'desc' };
+    } else {
+      orderByClause = { createdAt: data.orderBy || 'desc' };
+    }
+
     const [products, totalItems] = await Promise.all([
       this.prismaService.product.findMany({
         where,
         skip,
         take: limit,
+        orderBy: orderByClause,
         include: {
           ...this.productResponseInclude,
         },

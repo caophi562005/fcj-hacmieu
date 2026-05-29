@@ -12,6 +12,11 @@ const nextConfig = {
   nx: {},
   output: 'standalone',
   outputFileTracingRoot: require('path').join(__dirname, '../../../'),
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '15mb',
+    },
+  },
 };
 
 const plugins = [
