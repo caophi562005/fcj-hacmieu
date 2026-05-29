@@ -2,7 +2,7 @@ import z from 'zod';
 
 export const AppConfigurationSchema = z.object({
   CUSTOMER_BFF_PORT: z.coerce.number().default(3100),
-  SELLER_BFF_PORT: z.coerce.number(),
+  SELLER_BFF_PORT: z.coerce.number().default(3200),
   ADMIN_BFF_PORT: z.coerce.number().default(3300),
   CATALOG_SERVICE_PORT: z.coerce.number().default(3003),
   ORDER_SERVICE_PORT: z.coerce.number().default(3004),

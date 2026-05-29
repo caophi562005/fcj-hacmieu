@@ -207,39 +207,23 @@ jobs:
       - name: Update kubeconfig for EKS
         run: aws eks update-kubeconfig --region ${{ secrets.AWS_REGION }} --name ${{ secrets.EKS_CLUSTER_NAME }}
 
-      - name: Install Helm
-        uses: azure/setup-helm@v4
+      - name: Apply Kustomize Manifests
+        run: kubectl apply -k helm/manifests/
 
-      - name: Generate tag
-        id: tag
-        shell: bash
-        run: echo "TAG=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
-
-      - name: Upgrade Helm Release
+      - name: Restart Affected Deployments
         env:
-          TAG: ${{ steps.tag.outputs.TAG }}
           AFFECTED_APPS: ${{ needs.check.outputs.affected_apps }}
         run: |
-          HELM_SETS=""
-          
-          # Lặp qua các ứng dụng bị thay đổi (từ job check)
           for APP in $(echo "$AFFECTED_APPS" | jq -r '.[]'); do
-            HELM_SETS="$HELM_SETS --set $APP.image=public.ecr.aws/h5u5b6t3/hacmieu/$APP:$TAG"
+            echo "Restarting deployment/${APP}-deployment to pull new latest image..."
+            kubectl rollout restart deployment/${APP}-deployment
           done
-
-          echo "Applying Helm sets: $HELM_SETS"
-
-          # --namespace và tên release tuỳ chỉnh theo cấu hình EKS thực tế của bạn
-          helm upgrade hacmieu ./charts/hacmieu \
-            --namespace my-namespace \
-            $HELM_SETS \
-            --wait --timeout 5m
 
       - name: Verify Deployments
         env:
           AFFECTED_APPS: ${{ needs.check.outputs.affected_apps }}
         run: |
           for APP in $(echo "$AFFECTED_APPS" | jq -r '.[]'); do
-            echo "Checking status for $APP..."
-            kubectl rollout status deployment/$APP -n my-namespace --timeout=3m
+            echo "Checking status for ${APP}-deployment..."
+            kubectl rollout status deployment/${APP}-deployment --timeout=3m
           done
