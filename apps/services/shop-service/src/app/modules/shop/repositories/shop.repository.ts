@@ -60,13 +60,17 @@ export class ShopRepository {
         id: data.id,
         deletedAt: null,
       },
+      include: {
+        merchant: true,
+      },
     });
   }
 
-  create({ merchantId, ...data }: CreateShopRequest) {
+  create({ merchantId, userId, ...data }: CreateShopRequest & { userId: string }) {
     return this.prismaService.shop.create({
       data: {
         ...data,
+        userId,
         merchant: {
           connect: { id: merchantId },
         },

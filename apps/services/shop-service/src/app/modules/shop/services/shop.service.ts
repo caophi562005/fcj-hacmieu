@@ -77,6 +77,11 @@ export class ShopService implements OnModuleInit {
       throw new NotFoundException('Error.ShopNotFound');
     }
 
+    // Fix legacy data missing userId
+    if (!shop.userId && (shop as any).merchant) {
+      shop.userId = (shop as any).merchant.userId;
+    }
+
     this.cacheManager.set(
       cacheKey,
       shop,
@@ -100,7 +105,10 @@ export class ShopService implements OnModuleInit {
         throw new BadRequestException('Error.MerchantNotApproved');
       }
 
-      const createdShop = await this.shopRepository.create(data);
+      const createdShop = await this.shopRepository.create({
+        ...data,
+        userId: merchant.userId,
+      });
 
       // Fire-and-forget: set custom:shop_id
       if (merchant.userId) {
