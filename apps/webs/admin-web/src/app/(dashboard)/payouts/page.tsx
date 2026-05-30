@@ -20,6 +20,31 @@ function buildHref(query: { page?: number; status?: string; shopId?: string }) {
   return qs ? `/payouts?${qs}` : '/payouts';
 }
 
+function formatDate(dateString: string | undefined): string {
+  if (!dateString) return '';
+  const d = new Date(dateString);
+  if (Number.isNaN(d.getTime())) return '';
+  return d.toLocaleDateString('vi-VN', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+function translateStatus(status: string): string {
+  switch (status) {
+    case 'PENDING':
+      return 'Chờ xử lý';
+    case 'APPROVED':
+      return 'Đã duyệt';
+    case 'TRANSFERRED':
+      return 'Đã chuyển khoản';
+    case 'REJECTED':
+      return 'Từ chối';
+    default:
+      return status;
+  }
+}
+
 export default async function PayoutsPage({
   searchParams,
 }: {
@@ -83,6 +108,7 @@ export default async function PayoutsPage({
             <thead>
               <tr className="bg-surface-alt border-b border-slate-100 text-ink-muted">
                 <th className="py-3 px-4 text-left font-semibold">ID</th>
+                <th className="py-3 px-4 text-left font-semibold">Ngày tạo</th>
                 <th className="py-3 px-4 text-left font-semibold">Shop</th>
                 <th className="py-3 px-4 text-left font-semibold">Amount</th>
                 <th className="py-3 px-4 text-left font-semibold">Status</th>
@@ -92,7 +118,7 @@ export default async function PayoutsPage({
             <tbody className="divide-y divide-slate-100 text-ink">
               {payouts.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="py-10 text-center text-ink-muted">
+                  <td colSpan={6} className="py-10 text-center text-ink-muted">
                     Không có payout.
                   </td>
                 </tr>
@@ -110,11 +136,12 @@ export default async function PayoutsPage({
                       {p.id.slice(0, 8)}…
                     </Link>
                   </td>
+                  <td className="py-3 px-4">{formatDate(p.createdAt)}</td>
                   <td className="py-3 px-4">{p.shopId}</td>
                   <td className="py-3 px-4">
                     {(p.amount ?? 0).toLocaleString('vi-VN')}đ
                   </td>
-                  <td className="py-3 px-4">{p.status}</td>
+                  <td className="py-3 px-4">{translateStatus(p.status)}</td>
                   <td className="py-3 px-4">
                     <PayoutStatusButtons shopId={p.shopId} payoutId={p.id} />
                   </td>

@@ -8,8 +8,9 @@ type Props = {
 export function ReviewSummaryCard({ summary }: Props) {
   const hasPros = (summary?.pros?.length ?? 0) > 0;
   const hasCons = (summary?.cons?.length ?? 0) > 0;
+  const hasText = !!summary?.summary;
 
-  if (!hasPros && !hasCons) return null;
+  if (!hasPros && !hasCons && !hasText) return null;
 
   return (
     <div className="card p-5 mb-4">

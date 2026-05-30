@@ -6,11 +6,7 @@ function buildKey(a: string, b: string): string {
   return [a, b].sort().join(':');
 }
 
-/**
- * Lấy hoặc tạo cuộc trò chuyện 1-1 giữa `userId` và `peerId`.
- * Idempotent: gọi nhiều lần với cùng cặp luôn trả cùng `conversationId`.
- * Lưu snapshot tên + avatar 2 phía để inbox không cần JOIN ngoài.
- */
+// Lấy hoặc tạo cuộc trò chuyện 1-1 giữa `userId` và `peerId`.
 export const getOrCreate = mutation({
   args: {
     userId: v.string(),
@@ -99,10 +95,7 @@ export const getOrCreate = mutation({
   },
 });
 
-/**
- * Phân trang danh sách cuộc trò chuyện của `userId`, sắp xếp giảm dần theo
- * `lastMessageAt`. Trả về snapshot peer để render trực tiếp.
- */
+// Phân trang danh sách cuộc trò chuyện của `userId`
 export const list = query({
   args: {
     userId: v.string(),

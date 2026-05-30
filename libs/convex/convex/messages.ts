@@ -9,10 +9,7 @@ function buildPreview(kind: 'text' | 'image', body: string): string {
   return body.length > PREVIEW_MAX ? body.slice(0, PREVIEW_MAX) + '…' : body;
 }
 
-/**
- * Phân trang nội dung tin nhắn của một cuộc trò chuyện. Sắp xếp giảm dần theo
- * thời gian tạo để client load được tin mới trước, kéo lên load tin cũ hơn.
- */
+// Phân trang nội dung tin nhắn của một cuộc trò chuyện. Sắp xếp giảm dần theo thời gian tạo
 export const list = query({
   args: {
     conversationId: v.id('conversations'),
@@ -44,10 +41,8 @@ export const list = query({
   },
 });
 
-/**
- * Gửi 1 tin nhắn (text hoặc image-url). Cập nhật `lastMessage*` của
- * conversation và 2 conversationMembers trong cùng transaction.
- */
+// Gửi 1 tin nhắn (text hoặc image-url). Cập nhật `lastMessage*` của
+// conversation và 2 conversationMembers trong cùng transaction.
 export const send = mutation({
   args: {
     conversationId: v.id('conversations'),

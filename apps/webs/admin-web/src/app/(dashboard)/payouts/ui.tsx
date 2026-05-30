@@ -24,13 +24,13 @@ export function PayoutStatusButtons({
   return (
     <div className="flex gap-2">
       <button type="button" className="btn-outline btn-sm" disabled={isPending} onClick={() => updateStatus('PENDING')}>
-        PENDING
+        Chờ xử lý
       </button>
       <button type="button" className="btn-primary btn-sm" disabled={isPending} onClick={() => updateStatus('TRANSFERRED')}>
-        TRANSFERRED
+        Đã chuyển khoản
       </button>
       <button type="button" className="btn-outline btn-sm" disabled={isPending} onClick={() => updateStatus('REJECTED')}>
-        REJECTED
+        Từ chối
       </button>
     </div>
   );

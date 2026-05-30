@@ -17,6 +17,10 @@ export function MerchantApproveButtons({
     return <span className="text-xs text-ink-muted">Đã duyệt</span>;
   }
 
+  if (approvalStatus === 'REJECTED') {
+    return <span className="text-xs text-ink-muted">Đã từ chối</span>;
+  }
+
   const onApprove = () => {
     startTransition(async () => {
       const res = await updateMerchantApprovalAction({

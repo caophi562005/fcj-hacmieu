@@ -1,16 +1,6 @@
 import { defineSchema, defineTable } from 'convex/server';
 import { v } from 'convex/values';
 
-// Schema cho hệ thống chat 1-1.
-// - `conversations`: bản ghi 1-1 giữa 2 user. `participantsKey` là 2 userId
-//   sort lexicographic và join `:` để lookup nhanh và đảm bảo duy nhất 1 cuộc
-//   trò chuyện cho mỗi cặp.
-// - `conversationMembers`: join table. Một cuộc trò chuyện có 2 hàng (mỗi user
-//   1 hàng). Lưu snapshot tên + avatar của peer để render danh sách inbox mà
-//   không cần fetch IAM. Index theo `[userId, lastMessageAt]` để phân trang
-//   inbox theo thời gian.
-// - `messages`: nội dung hội thoại. `kind` = `text` | `image`. Với `image`,
-//   `body` là URL ảnh.
 export default defineSchema({
   conversations: defineTable({
     participantsKey: v.string(),
