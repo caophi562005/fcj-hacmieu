@@ -1,7 +1,7 @@
-import { groq } from '@ai-sdk/groq';
 import { generateText } from 'ai';
 import { ConvexError, v } from 'convex/values';
 import { action, mutation, query } from '../_generated/server';
+import { EXTRACT_MODEL } from './models';
 import rag from './rag';
 
 export const addFile = action({
@@ -30,7 +30,7 @@ export const addFile = action({
         });
 
       const result = await generateText({
-        model: groq('openai/gpt-oss-120b'),
+        model: EXTRACT_MODEL,
         messages: [
           {
             role: 'system',

@@ -30,6 +30,9 @@ export const send = action({
       {
         prompt: args.prompt,
         tools: { searchTool },
+        // gpt-oss là reasoning model: mặc định nó chèn cả chain-of-thought
+        // vào câu trả lời. 'hidden' để khách chỉ thấy phần trả lời cuối.
+        providerOptions: { groq: { reasoningFormat: 'hidden' } },
       },
     );
   },

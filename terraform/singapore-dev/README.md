@@ -64,6 +64,7 @@ kubectl apply -f helm/manifests/metrics-server.yaml
 kubectl apply -k helm/manifests/
 
 kubectl delete -k helm/manifests/
+kubectl delete -f helm/manifests/metrics-server.yaml
 
 aws eks create-access-entry \
  --region ap-southeast-1 \

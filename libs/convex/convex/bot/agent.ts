@@ -1,6 +1,6 @@
-import { groq } from '@ai-sdk/groq';
 import { Agent } from '@convex-dev/agent';
 import { components } from '../_generated/api';
+import { CHAT_MODEL } from './models';
 
 const SHOP_BOT_PROMPT = `
 # V-Shop AI Assistant
@@ -25,6 +25,6 @@ Bạn giúp khách hàng trả lời câu hỏi về sản phẩm, đơn hàng, 
 
 export const shopBot = new Agent(components.agent, {
   name: 'shopBot',
-  languageModel: groq('meta-llama/llama-4-scout-17b-16e-instruct'),
+  languageModel: CHAT_MODEL,
   instructions: SHOP_BOT_PROMPT,
 });

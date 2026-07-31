@@ -13,6 +13,7 @@ import type * as bot_cleanup from "../bot/cleanup.js";
 import type * as bot_conversations from "../bot/conversations.js";
 import type * as bot_files from "../bot/files.js";
 import type * as bot_messages from "../bot/messages.js";
+import type * as bot_models from "../bot/models.js";
 import type * as bot_rag from "../bot/rag.js";
 import type * as bot_tools_search from "../bot/tools/search.js";
 import type * as conversations from "../conversations.js";
@@ -31,6 +32,7 @@ declare const fullApi: ApiFromModules<{
   "bot/conversations": typeof bot_conversations;
   "bot/files": typeof bot_files;
   "bot/messages": typeof bot_messages;
+  "bot/models": typeof bot_models;
   "bot/rag": typeof bot_rag;
   "bot/tools/search": typeof bot_tools_search;
   conversations: typeof conversations;
