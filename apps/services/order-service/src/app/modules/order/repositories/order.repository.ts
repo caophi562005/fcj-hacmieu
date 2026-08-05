@@ -25,9 +25,10 @@ export class OrderRepository {
     const where = {
       deletedAt: null,
       code: data.code
-        ? {
+        ? // MySQL không có `mode: 'insensitive'`. Cột dùng collation
+          // utf8mb4_unicode_ci nên `contains` vốn đã không phân biệt hoa thường.
+          {
             contains: data.code,
-            mode: 'insensitive' as const,
           }
         : undefined,
       paymentId: data.paymentId || undefined,

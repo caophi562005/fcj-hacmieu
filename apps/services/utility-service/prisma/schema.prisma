@@ -10,7 +10,7 @@ generator json {
 }
 
 datasource db {
-    provider = "postgresql"
+    provider = "mysql"
 }
 
 enum NotificationType {
@@ -86,8 +86,10 @@ model Report {
     assigneeAdminId String?
     closedAt        DateTime?
 
-    media  String[] @default([])
-    action String?  @db.VarChar(1000)
+    // Trước đây là String[] @default([]). MySQL không nhận default hằng cho cột
+    // JSON, nên giá trị mặc định [] do tầng ứng dụng cấp.
+    media  Json
+    action String? @db.VarChar(1000)
 
     createdAt DateTime  @default(now())
     updatedAt DateTime  @updatedAt
@@ -101,15 +103,16 @@ model Report {
 }
 
 model Review {
-    id          String   @id @default(uuid())
+    id          String  @id @default(uuid())
     userId      String
     sellerId    String
     productId   String
     orderId     String
     orderItemId String
     rating      Int
-    content     String?  @db.VarChar(1000)
-    mediaUrls   String[] @default([])
+    content     String? @db.VarChar(1000)
+    // Trước đây là String[] @default([]). Xem ghi chú ở Report.media.
+    mediaUrls   Json
 
     reply ReviewReply?
 

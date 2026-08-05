@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-    provider = "postgresql"
+    provider = "mysql"
 }
 
 enum USER_STATUS {
@@ -31,15 +31,18 @@ model User {
     gender      GENDER?
     status      USER_STATUS @default(ACTIVE)
 
-    group GROUP[]
+    // Trước đây là GROUP[]. MySQL không có kiểu mảng nên lưu JSON array
+    // các giá trị enum GROUP, ví dụ ["ADMIN","SELLER"].
+    // Hệ quả: bộ lọc hasSome không dùng được, xem user.repository.ts.
+    group Json
 
     provinceId   Int?
-    provinceName String?
+    provinceName String? @db.VarChar(255)
     districtId   Int?
-    districtName String?
+    districtName String? @db.VarChar(255)
     wardId       Int?
-    wardName     String?
-    address      String?
+    wardName     String? @db.VarChar(255)
+    address      String? @db.VarChar(1000)
 
     updatedById String?
     deletedById String?
@@ -76,7 +79,10 @@ model Permission {
     id          String      @id @default(uuid())
     name        String      @db.VarChar(500)
     description String      @default("")
-    path        String      @db.VarChar(1000)
+    // VarChar(500) thay vì 1000: unique index [path, method, group] với utf8mb4
+    // tốn 4 byte/ký tự, 1000 ký tự = 4000 byte, vượt giới hạn 3072 byte của InnoDB.
+    // Path dài nhất trong dữ liệu thật là 46 ký tự.
+    path        String      @db.VarChar(500)
     method      HTTP_METHOD
     module      String      @default("") @db.VarChar(500)
     group       GROUP       @default(CUSTOMER)

@@ -10,7 +10,7 @@ generator json {
 }
 
 datasource db {
-    provider = "postgresql"
+    provider = "mysql"
 }
 
 enum OrderStatus {
@@ -46,13 +46,14 @@ model OrderItem {
     skuId     String
     shopId    String
 
-    productName String
-    skuValue    String
+    productName String @db.VarChar(500)
+    skuValue    String @db.VarChar(500)
     quantity    Int
     price       Float
     total       Float
 
-    productImage String
+    // URL S3 dài tới 206 ký tự trong dữ liệu thật, vượt VARCHAR(191) mặc định.
+    productImage String @db.VarChar(1000)
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -131,9 +132,10 @@ model CartItem {
     quantity Int    @default(1)
 
     // snapshot thông tin hiển thị (thumbnail, tên…)
-    productName  String
-    skuValue     String // “Đỏ - Size L”
-    productImage String
+    productName  String @db.VarChar(500)
+    skuValue     String @db.VarChar(500) // “Đỏ - Size L”
+    // URL S3 dài tới 206 ký tự trong dữ liệu thật, vượt VARCHAR(191) mặc định.
+    productImage String @db.VarChar(1000)
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt

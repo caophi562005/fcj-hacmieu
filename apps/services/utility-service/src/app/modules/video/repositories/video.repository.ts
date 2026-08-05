@@ -4,12 +4,16 @@ import {
   UpdateVideoRequest,
   UpdateVideoStatusRequest,
 } from '@common/interfaces/models/utility';
+import { shuffle } from '@common/utils/shuffle.util';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma-client/utility-service';
 import { PrismaService } from '../../../prisma/prisma.service';
 
 @Injectable()
 export class VideoRepository {
+  /** Chặn trên số bản ghi feed để một request không kéo cả bảng. */
+  private static readonly MAX_FEED_LIMIT = 50;
+
   constructor(private readonly prismaService: PrismaService) {}
 
   async list(data: GetManyVideosRequest) {
@@ -83,16 +87,48 @@ export class VideoRepository {
     });
   }
 
+  /**
+   * Feed video ngẫu nhiên.
+   *
+   * Trước đây dùng `$queryRawUnsafe` với cú pháp PostgreSQL (`"Video"`,
+   * `random()`, `$1`) và nội suy `excludeIds` trực tiếp vào chuỗi SQL — một ID
+   * chứa dấu nháy đơn là phá được câu truy vấn.
+   *
+   * Nay dùng Prisma có kiểu, không còn SQL viết tay: hết phụ thuộc dialect, hết
+   * lỗ injection, và `isHidden` trả về boolean thật thay vì 0/1 như raw query.
+   *
+   * Đánh đổi: hai lượt truy vấn và tải danh sách id đủ điều kiện vào bộ nhớ. Với
+   * lượng video hiện tại là chấp nhận được; khi bảng lớn cần đổi sang lấy mẫu
+   * theo dải khoá.
+   */
   async feed(data: { limit: number; excludeIds?: string[] }) {
-    const videos = await this.prismaService.$queryRawUnsafe<any[]>(
-      `SELECT * FROM "Video"
-       WHERE status = 'READY' AND "isHidden" = false AND "deletedAt" IS NULL
-       ${data.excludeIds?.length ? `AND id NOT IN (${data.excludeIds.map((id) => `'${id}'`).join(',')})` : ''}
-       ORDER BY random()
-       LIMIT $1`,
-      data.limit,
+    const limit = Math.min(
+      Math.max(Math.trunc(data.limit) || 1, 1),
+      VideoRepository.MAX_FEED_LIMIT,
     );
+    const excludeIds = data.excludeIds?.filter(Boolean) ?? [];
 
-    return videos;
+    const where: Prisma.VideoWhereInput = {
+      status: 'READY',
+      isHidden: false,
+      deletedAt: null,
+      ...(excludeIds.length > 0 && { id: { notIn: excludeIds } }),
+    };
+
+    const candidates = await this.prismaService.video.findMany({
+      where,
+      select: { id: true },
+    });
+
+    if (candidates.length === 0) return [];
+
+    const pickedIds = shuffle(candidates.map((c) => c.id)).slice(0, limit);
+
+    const videos = await this.prismaService.video.findMany({
+      where: { id: { in: pickedIds } },
+    });
+
+    // findMany không giữ thứ tự của `in`, nên xáo lại để feed thật sự ngẫu nhiên.
+    return shuffle(videos);
   }
 }

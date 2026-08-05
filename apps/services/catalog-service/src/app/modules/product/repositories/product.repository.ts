@@ -8,12 +8,31 @@ import {
   ValidateItemResult,
   ValidateProductsRequest,
 } from '@common/interfaces/models/catalog';
+import { readStringList } from '@common/utils/scalar-list.util';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 
 interface AttributeInputItem {
   name: string;
   value: string;
+}
+
+/**
+ * Đưa `images` từ cột JSON về `string[]` để hợp đồng gRPC không đổi.
+ *
+ * Trên PostgreSQL đây là `String[]`, nay là cột JSON vì MySQL không có kiểu mảng.
+ */
+function toProductRow<T extends { id: string; images: unknown }>(
+  row: T,
+): Omit<T, 'images'> & { images: string[] } {
+  return {
+    ...row,
+    images: readStringList(row.images, {
+      model: 'Product',
+      field: 'images',
+      key: row.id,
+    }),
+  };
 }
 
 @Injectable()
@@ -91,7 +110,7 @@ export class ProductRepository {
   async create(data: CreateProductRequest) {
     await this.validateAttributes(data.attributes);
     const { skus, categories, brandId, ...productData } = data;
-    return this.prismaService.product.create({
+    const created = await this.prismaService.product.create({
       data: {
         ...productData,
 
@@ -122,6 +141,8 @@ export class ProductRepository {
       },
       include: this.productResponseInclude,
     });
+
+    return toProductRow(created);
   }
 
   async update(request: UpdateProductRequest) {
@@ -225,7 +246,7 @@ export class ProductRepository {
       }),
     ]);
 
-    return product;
+    return toProductRow(product);
   }
 
   async delete(data: DeleteProductRequest, isHard?: boolean) {
@@ -416,7 +437,9 @@ export class ProductRepository {
     const where: any = {
       deletedAt: null,
       name: data.name
-        ? { contains: data.name, mode: 'insensitive' as const }
+        ? // MySQL không có `mode: 'insensitive'`. Cột dùng collation
+          // utf8mb4_unicode_ci nên `contains` vốn đã không phân biệt hoa thường.
+          { contains: data.name }
         : undefined,
       shopId: data.shopId || undefined,
       isApproved: data.isApproved,
@@ -471,12 +494,12 @@ export class ProductRepository {
       limit,
       totalItems,
       totalPages,
-      products,
+      products: products.map(toProductRow),
     };
   }
 
   async findById(data: any) {
-    return this.prismaService.product.findFirst({
+    const row = await this.prismaService.product.findFirst({
       where: {
         id: data.id,
         deletedAt: null,
@@ -485,5 +508,7 @@ export class ProductRepository {
         ...this.productResponseInclude,
       },
     });
+
+    return row ? toProductRow(row) : null;
   }
 }

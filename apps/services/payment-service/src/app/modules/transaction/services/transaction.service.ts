@@ -17,6 +17,7 @@ import {
   WALLET_SERVICE_PACKAGE_NAME,
   WalletModuleClient,
 } from '@common/interfaces/proto-types/wallet';
+import { readStringList } from '@common/utils/scalar-list.util';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
@@ -67,7 +68,14 @@ export class TransactionService implements OnModuleInit {
       return transaction;
     }
 
-    if ((payment.orderId?.length ?? 0) > 0) {
+    // `orderId` là cột JSON trên MySQL nên Prisma trả JsonValue, không có .length.
+    if (
+      readStringList(payment.orderId, {
+        model: 'Payment',
+        field: 'orderId',
+        key: payment.id,
+      }).length > 0
+    ) {
       await firstValueFrom(
         this.orderModule.paidOrderByPayment({
           paymentId: payment.id,

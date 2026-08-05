@@ -24,9 +24,10 @@ export class MerchantRepository {
       ...(data.userId ? { userId: data.userId } : {}),
       ...(data.legalName
         ? {
+            // MySQL không có `mode: 'insensitive'`. Cột dùng collation
+            // utf8mb4_unicode_ci nên `contains` vốn đã không phân biệt hoa thường.
             legalName: {
               contains: data.legalName,
-              mode: 'insensitive',
             },
           }
         : {}),

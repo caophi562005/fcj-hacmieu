@@ -24,9 +24,10 @@ export class ShopRepository {
       ...(data.merchantId ? { merchantId: data.merchantId } : {}),
       ...(data.name
         ? {
+            // MySQL không có `mode: 'insensitive'`. Cột dùng collation
+            // utf8mb4_unicode_ci nên `contains` vốn đã không phân biệt hoa thường.
             name: {
               contains: data.name,
-              mode: 'insensitive',
             },
           }
         : {}),
@@ -66,7 +67,11 @@ export class ShopRepository {
     });
   }
 
-  create({ merchantId, userId, ...data }: CreateShopRequest & { userId: string }) {
+  create({
+    merchantId,
+    userId,
+    ...data
+  }: CreateShopRequest & { userId: string }) {
     return this.prismaService.shop.create({
       data: {
         ...data,

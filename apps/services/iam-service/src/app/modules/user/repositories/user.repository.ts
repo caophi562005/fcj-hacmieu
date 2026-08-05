@@ -1,11 +1,32 @@
 import { PaginationConfiguration } from '@common/configurations/pagination.config';
+import { GroupType } from '@common/constants/user.constant';
 import {
   GetManyUsersRequest,
   GetUserRequest,
 } from '@common/interfaces/models/iam';
+import { readStringList } from '@common/utils/scalar-list.util';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma-client/iam-service';
 import { PrismaService } from '../../../prisma/prisma.service';
+
+/**
+ * Đưa `group` từ cột JSON về `GroupType[]` để hợp đồng gRPC và `UserSchema` không
+ * đổi.
+ *
+ * Trên PostgreSQL đây là `GROUP[]`, nay là cột JSON vì MySQL không có kiểu mảng.
+ */
+function toUserRow<T extends { id: string; group: unknown }>(
+  row: T,
+): Omit<T, 'group'> & { group: GroupType[] } {
+  return {
+    ...row,
+    group: readStringList(row.group, {
+      model: 'User',
+      field: 'group',
+      key: row.id,
+    }) as GroupType[],
+  };
+}
 
 @Injectable()
 export class UserRepository {
@@ -17,9 +38,8 @@ export class UserRepository {
       email: data?.email || undefined,
       username: data?.username || undefined,
     };
-    return this.prismaService.user.findUnique({
-      where,
-    });
+    const row = await this.prismaService.user.findUnique({ where });
+    return row ? toUserRow(row) : null;
   }
 
   async list(data: GetManyUsersRequest) {
@@ -38,11 +58,16 @@ export class UserRepository {
             in: data.ids,
           }
         : undefined,
-      group: data?.group?.length
+      // `hasSome` chỉ tồn tại cho scalar list của PostgreSQL. Trên cột JSON của
+      // MySQL, tương đương là "khớp ít nhất một giá trị", biểu diễn bằng OR của
+      // các `array_contains`. Vẫn có kiểu và không cần raw SQL.
+      ...(data?.group?.length
         ? {
-            hasSome: data.group,
+            OR: data.group.map((group) => ({
+              group: { array_contains: group },
+            })),
           }
-        : undefined,
+        : {}),
     };
 
     const [totalItems, users] = await Promise.all([
@@ -57,7 +82,7 @@ export class UserRepository {
       }),
     ]);
     return {
-      users,
+      users: users.map(toUserRow),
       totalItems,
       page: data.page,
       limit: data.limit,
@@ -65,16 +90,16 @@ export class UserRepository {
     };
   }
 
-  create(data: Prisma.UserCreateInput) {
-    return this.prismaService.user.create({
-      data,
-    });
+  async create(data: Prisma.UserCreateInput) {
+    return toUserRow(await this.prismaService.user.create({ data }));
   }
 
-  update(data: Prisma.UserUpdateInput) {
-    return this.prismaService.user.update({
-      where: { id: data.id as string },
-      data,
-    });
+  async update(data: Prisma.UserUpdateInput) {
+    return toUserRow(
+      await this.prismaService.user.update({
+        where: { id: data.id as string },
+        data,
+      }),
+    );
   }
 }

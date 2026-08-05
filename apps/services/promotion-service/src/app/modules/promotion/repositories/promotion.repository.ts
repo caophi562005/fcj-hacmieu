@@ -25,12 +25,10 @@ export class PromotionRepository {
 
     const whereClause: Prisma.PromotionWhereInput = {
       deletedAt: null,
-      code: data?.code
-        ? { contains: data.code, mode: 'insensitive' }
-        : undefined,
-      name: data?.name
-        ? { contains: data.name, mode: 'insensitive' }
-        : undefined,
+      // MySQL không có `mode: 'insensitive'`. Cột dùng collation
+      // utf8mb4_unicode_ci nên `contains` vốn đã không phân biệt hoa thường.
+      code: data?.code ? { contains: data.code } : undefined,
+      name: data?.name ? { contains: data.name } : undefined,
       status: data?.status || undefined,
       startsAt: data?.startsAt ? { lte: data.startsAt } : undefined,
       endsAt: data?.endsAt ? { gte: data.endsAt } : undefined,

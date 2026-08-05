@@ -6,15 +6,19 @@ generator client {
 }
 
 datasource db {
-    provider = "postgresql"
+    provider = "mysql"
 }
 
 model ReviewSummary {
-    id           String   @id @default(uuid())
-    productId    String   @unique
-    pros         String[]
-    cons         String[]
-    summary      String
+    id        String @id @default(uuid())
+    productId String @unique
+
+    // MySQL không có kiểu mảng. Lưu danh sách chuỗi dưới dạng JSON array,
+    // đọc/ghi qua helper để giữ nguyên thứ tự và phần tử trùng lặp.
+    pros Json
+    cons Json
+
+    summary      String   @db.VarChar(2000)
     reviewCount  Int
     lastReviewAt DateTime
     createdAt    DateTime @default(now())

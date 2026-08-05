@@ -4,9 +4,28 @@ import {
   GetManyPaymentsRequest,
   GetPaymentRequest,
 } from '@common/interfaces/models/payment';
+import { readStringList } from '@common/utils/scalar-list.util';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma-client/payment-service';
 import { PrismaService } from '../../../prisma/prisma.service';
+
+/**
+ * Đưa `orderId` từ cột JSON về `string[]` để hợp đồng gRPC không đổi.
+ *
+ * Trên PostgreSQL đây là `String[]`, nay là cột JSON vì MySQL không có kiểu mảng.
+ */
+function toPaymentRow<T extends { id: string; orderId: unknown }>(
+  row: T,
+): Omit<T, 'orderId'> & { orderId: string[] } {
+  return {
+    ...row,
+    orderId: readStringList(row.orderId, {
+      model: 'Payment',
+      field: 'orderId',
+      key: row.id,
+    }),
+  };
+}
 
 @Injectable()
 export class PaymentRepository {
@@ -23,9 +42,9 @@ export class PaymentRepository {
       method: data?.method || undefined,
       status: data?.status || undefined,
       amount: data?.amount || undefined,
-      code: data?.code
-        ? { contains: data.code, mode: 'insensitive' }
-        : undefined,
+      // MySQL không có `mode: 'insensitive'`. Cột dùng collation
+      // utf8mb4_unicode_ci nên `contains` vốn đã không phân biệt hoa thường.
+      code: data?.code ? { contains: data.code } : undefined,
       createdAt: data?.createdAt ? { lte: data.createdAt } : undefined,
     };
 
@@ -41,7 +60,7 @@ export class PaymentRepository {
       }),
     ]);
     return {
-      payments,
+      payments: payments.map(toPaymentRow),
       totalItems,
       page,
       limit,
@@ -49,41 +68,42 @@ export class PaymentRepository {
     };
   }
 
-  getOne(data: GetPaymentRequest) {
-    return this.prismaService.payment.findUnique({
+  async getOne(data: GetPaymentRequest) {
+    const row = await this.prismaService.payment.findUnique({
       where: {
         id: data.id,
         userId: data?.userId ?? undefined,
       },
     });
+    return row ? toPaymentRow(row) : null;
   }
 
-  create(data: Prisma.PaymentCreateInput) {
-    return this.prismaService.payment.create({
-      data,
-    });
+  async create(data: Prisma.PaymentCreateInput) {
+    return toPaymentRow(await this.prismaService.payment.create({ data }));
   }
 
-  update(data: Prisma.PaymentUpdateInput) {
-    return this.prismaService.payment.update({
-      where: {
-        id: data.id as string,
-      },
-      data: {
-        status: data.status,
-        updatedById: data.updatedById as string,
-      },
-    });
+  async update(data: Prisma.PaymentUpdateInput) {
+    return toPaymentRow(
+      await this.prismaService.payment.update({
+        where: {
+          id: data.id as string,
+        },
+        data: {
+          status: data.status,
+          updatedById: data.updatedById as string,
+        },
+      }),
+    );
   }
 
-  delete(data: Prisma.PaymentWhereInput, isHard?: boolean) {
-    return isHard
-      ? this.prismaService.payment.delete({
+  async delete(data: Prisma.PaymentWhereInput, isHard?: boolean) {
+    const row = isHard
+      ? await this.prismaService.payment.delete({
           where: {
             id: data.id as string,
           },
         })
-      : this.prismaService.payment.update({
+      : await this.prismaService.payment.update({
           where: {
             id: data.id as string,
             deletedAt: null,
@@ -94,5 +114,7 @@ export class PaymentRepository {
             deletedById: data.deletedById as string,
           },
         });
+
+    return toPaymentRow(row);
   }
 }

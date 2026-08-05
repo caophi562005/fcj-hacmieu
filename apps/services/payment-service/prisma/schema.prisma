@@ -10,7 +10,7 @@ generator json {
 }
 
 datasource db {
-    provider = "postgresql"
+    provider = "mysql"
 }
 
 enum PaymentStatus {
@@ -33,12 +33,15 @@ enum RefundStatus {
 }
 
 model Payment {
-    id      String        @id @default(uuid())
-    code    String        @unique
-    userId  String
-    orderId String[]
-    method  PaymentMethod
-    status  PaymentStatus @default(PENDING)
+    id     String @id @default(uuid())
+    code   String @unique
+    userId String
+
+    // Trước đây là String[]. MySQL không có kiểu mảng nên lưu JSON array.
+    orderId Json
+
+    method PaymentMethod
+    status PaymentStatus @default(PENDING)
 
     amount Int
 
@@ -52,7 +55,8 @@ model Payment {
 
     @@index([code])
     @@index([userId])
-    @@index([orderId])
+    // Bỏ @@index([orderId]): MySQL không index trực tiếp cột JSON.
+    // Không có truy vấn nào lọc Payment theo orderId nên index này không cần thiết.
     @@index([status])
 }
 

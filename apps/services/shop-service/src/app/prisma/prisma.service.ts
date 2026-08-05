@@ -1,14 +1,32 @@
 import { DatabaseConfiguration } from '@common/configurations/database.config';
-import { Injectable } from '@nestjs/common';
-import { PrismaPg } from '@prisma/adapter-pg';
+import {
+  buildMysqlAdapterConfig,
+  maskDatabaseError,
+} from '@common/utils/mysql-adapter.util';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { PrismaMariaDb } from '@prisma/adapter-mariadb';
 import { PrismaClient } from '../../generated/prisma-client/client';
 
 @Injectable()
-export class PrismaService extends PrismaClient {
+export class PrismaService extends PrismaClient implements OnModuleInit {
+  private readonly logger = new Logger(PrismaService.name);
+
   constructor() {
-    const adapter = new PrismaPg({
-      connectionString: DatabaseConfiguration.SHOP_SERVICE_DATABASE_URL,
+    super({
+      adapter: new PrismaMariaDb(
+        buildMysqlAdapterConfig(
+          DatabaseConfiguration.SHOP_SERVICE_MYSQL_DATABASE_URL,
+        ),
+      ),
     });
-    super({ adapter });
+  }
+
+  async onModuleInit(): Promise<void> {
+    try {
+      await this.$queryRaw`SELECT 1`;
+    } catch (error) {
+      this.logger.error(maskDatabaseError(error));
+      throw new Error('shop-service không kết nối được MySQL');
+    }
   }
 }

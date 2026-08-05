@@ -5,12 +5,32 @@ import {
   GetMyVouchersRequest,
 } from '@common/interfaces/models/promotion';
 import {
+  readStringList,
+  writeStringList,
+} from '@common/utils/scalar-list.util';
+import {
   BadRequestException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma } from '../../../../generated/prisma-client/client';
 import { PrismaService } from '../../../prisma/prisma.service';
+
+/**
+ * Đưa `orderIds` từ cột JSON về `string[]` để hợp đồng gRPC không đổi.
+ */
+function toRedemptionRow<T extends { id: string; orderIds: unknown }>(
+  row: T,
+): Omit<T, 'orderIds'> & { orderIds: string[] } {
+  return {
+    ...row,
+    orderIds: readStringList(row.orderIds, {
+      model: 'Redemption',
+      field: 'orderIds',
+      key: row.id,
+    }),
+  };
+}
 
 @Injectable()
 export class RedemptionRepository {
@@ -33,20 +53,30 @@ export class RedemptionRepository {
         },
       });
 
+      // `orderIds` là cột JSON trên MySQL nên Prisma trả JsonValue.
+      // Đọc về string[] trước khi so sánh tập hợp.
+      const existingOrderIds = readStringList(existing?.orderIds, {
+        model: 'Redemption',
+        field: 'orderIds',
+        key: existing?.id,
+      });
+
       if (existing?.usedAt) {
         const isSameOrderSet =
-          existing.orderIds.length === data.orderIds.length &&
-          data.orderIds.every((orderId) => existing.orderIds.includes(orderId));
+          existingOrderIds.length === data.orderIds.length &&
+          data.orderIds.every((orderId) => existingOrderIds.includes(orderId));
         if (isSameOrderSet) {
-          return existing;
+          return toRedemptionRow(existing);
         }
         throw new BadRequestException('Error.PromotionAlreadyUsing');
       }
 
       const now = new Date();
-      const mergedOrderIds = existing
-        ? Array.from(new Set([...existing.orderIds, ...data.orderIds]))
-        : data.orderIds;
+      const mergedOrderIds = writeStringList(
+        existing
+          ? Array.from(new Set([...existingOrderIds, ...data.orderIds]))
+          : data.orderIds,
+      );
 
       if (!existing) {
         if (
@@ -64,7 +94,7 @@ export class RedemptionRepository {
           },
         });
 
-        return tx.redemption.create({
+        const created = await tx.redemption.create({
           data: {
             promotionId: data.promotionId,
             userId: data.userId,
@@ -77,6 +107,8 @@ export class RedemptionRepository {
             usedAt: now,
           },
         });
+
+        return toRedemptionRow(created);
       }
 
       await tx.promotion.update({
@@ -88,7 +120,7 @@ export class RedemptionRepository {
         },
       });
 
-      return tx.redemption.update({
+      const updated = await tx.redemption.update({
         where: { id: existing.id },
         data: {
           orderIds: mergedOrderIds,
@@ -96,6 +128,8 @@ export class RedemptionRepository {
           cancelledAt: null,
         },
       });
+
+      return toRedemptionRow(updated);
     });
   }
 
@@ -124,11 +158,11 @@ export class RedemptionRepository {
       throw new BadRequestException('Error.PromotionOutOfStock');
     }
 
-    return this.prismaService.redemption.create({
+    const claimed = await this.prismaService.redemption.create({
       data: {
         promotionId: promotion.id,
         userId: data.userId,
-        orderIds: [],
+        orderIds: writeStringList([]),
         code: promotion.code,
         discountType: promotion.discountType,
         discountValue: promotion.discountValue,
@@ -136,6 +170,8 @@ export class RedemptionRepository {
         maxDiscount: promotion.maxDiscount,
       },
     });
+
+    return toRedemptionRow(claimed);
   }
 
   async listByUser(data: GetMyVouchersRequest) {
@@ -168,7 +204,7 @@ export class RedemptionRepository {
       limit,
       totalItems,
       totalPages: Math.ceil(totalItems / limit),
-      redemptions,
+      redemptions: redemptions.map(toRedemptionRow),
     };
   }
 }

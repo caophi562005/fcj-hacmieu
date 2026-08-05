@@ -79,3 +79,7 @@ out
 
 design_stitch
 .env.local
+
+tools
+
+sql

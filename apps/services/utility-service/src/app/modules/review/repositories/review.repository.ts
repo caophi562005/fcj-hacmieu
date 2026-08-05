@@ -1,8 +1,31 @@
 import { PaginationConfiguration } from '@common/configurations/pagination.config';
 import { GetReviewByOrderItemIdRequest } from '@common/interfaces/models/utility';
+import {
+  readStringList,
+  writeStringList,
+} from '@common/utils/scalar-list.util';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma-client/utility-service';
 import { PrismaService } from '../../../prisma/prisma.service';
+
+/**
+ * Đưa `mediaUrls` từ cột JSON về `string[]` để hợp đồng gRPC không đổi.
+ *
+ * Trên PostgreSQL đây là `String[] @default([])`, nay là cột JSON vì MySQL không
+ * có kiểu mảng và cũng không nhận default hằng cho JSON.
+ */
+function toReviewRow<T extends { id: string; mediaUrls: unknown }>(
+  row: T,
+): Omit<T, 'mediaUrls'> & { mediaUrls: string[] } {
+  return {
+    ...row,
+    mediaUrls: readStringList(row.mediaUrls, {
+      model: 'Review',
+      field: 'mediaUrls',
+      key: row.id,
+    }),
+  };
+}
 
 @Injectable()
 export class ReviewRepository {
@@ -47,21 +70,22 @@ export class ReviewRepository {
       limit,
       totalItems,
       totalPages: Math.ceil(totalItems / limit),
-      reviews,
+      reviews: reviews.map(toReviewRow),
     };
   }
 
-  findById(data: { id: string }) {
-    return this.prismaService.review.findUnique({
+  async findById(data: { id: string }) {
+    const row = await this.prismaService.review.findUnique({
       where: {
         id: data.id,
         deletedAt: null,
       },
     });
+    return row ? toReviewRow(row) : null;
   }
 
-  findByOrderItemId(data: GetReviewByOrderItemIdRequest) {
-    return this.prismaService.review.findUnique({
+  async findByOrderItemId(data: GetReviewByOrderItemIdRequest) {
+    const row = await this.prismaService.review.findUnique({
       where: {
         userId_orderItemId: {
           userId: data.userId,
@@ -70,41 +94,47 @@ export class ReviewRepository {
         deletedAt: null,
       },
     });
+    return row ? toReviewRow(row) : null;
   }
 
-  create(data: Prisma.ReviewCreateInput) {
-    return this.prismaService.review.create({
-      data,
-    });
+  async create(data: Prisma.ReviewCreateInput) {
+    return toReviewRow(await this.prismaService.review.create({ data }));
   }
 
-  update(data: {
+  async update(data: {
     id: string;
     userId: string;
     content?: string;
     rating?: number;
     mediaUrls?: string[];
   }) {
-    return this.prismaService.review.update({
-      where: { id: data.id },
-      data: {
-        content: data.content,
-        rating: data.rating,
-        mediaUrls: data.mediaUrls,
-      },
-    });
+    return toReviewRow(
+      await this.prismaService.review.update({
+        where: { id: data.id },
+        data: {
+          content: data.content,
+          rating: data.rating,
+          // Chỉ ghi khi caller cung cấp, để update một phần không xoá mất ảnh cũ.
+          mediaUrls:
+            data.mediaUrls === undefined
+              ? undefined
+              : writeStringList(data.mediaUrls),
+        },
+      }),
+    );
   }
 
-  delete(data: { id: string }, softDelete = true) {
-    if (softDelete) {
-      return this.prismaService.review.update({
-        where: { id: data.id },
-        data: { deletedAt: new Date() },
-      });
-    }
-    return this.prismaService.review.delete({
-      where: { id: data.id },
-    });
+  async delete(data: { id: string }, softDelete = true) {
+    const row = softDelete
+      ? await this.prismaService.review.update({
+          where: { id: data.id },
+          data: { deletedAt: new Date() },
+        })
+      : await this.prismaService.review.delete({
+          where: { id: data.id },
+        });
+
+    return toReviewRow(row);
   }
 
   async recalculateRatingAggregate(productId: string) {

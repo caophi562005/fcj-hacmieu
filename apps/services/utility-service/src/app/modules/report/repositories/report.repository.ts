@@ -4,9 +4,29 @@ import {
   GetReportRequest,
   ResolveReportRequest,
 } from '@common/interfaces/models/utility';
+import { readStringList } from '@common/utils/scalar-list.util';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma-client/utility-service';
 import { PrismaService } from '../../../prisma/prisma.service';
+
+/**
+ * Đưa `media` từ cột JSON về `string[]` để hợp đồng gRPC không đổi.
+ *
+ * Trên PostgreSQL đây là `String[] @default([])`, nay là cột JSON vì MySQL không
+ * có kiểu mảng và cũng không nhận default hằng cho JSON.
+ */
+function toReportRow<T extends { id: string; media: unknown }>(
+  row: T,
+): Omit<T, 'media'> & { media: string[] } {
+  return {
+    ...row,
+    media: readStringList(row.media, {
+      model: 'Report',
+      field: 'media',
+      key: row.id,
+    }),
+  };
+}
 
 @Injectable()
 export class ReportRepository {
@@ -43,61 +63,65 @@ export class ReportRepository {
       limit,
       totalItems,
       totalPages: Math.ceil(totalItems / limit),
-      reports,
+      reports: reports.map(toReportRow),
     };
   }
 
-  findById(data: GetReportRequest) {
-    return this.prismaService.report.findFirst({
+  async findById(data: GetReportRequest) {
+    const row = await this.prismaService.report.findFirst({
       where: {
         id: data.id,
         deletedAt: null,
       },
     });
+    return row ? toReportRow(row) : null;
   }
 
-  create(data: Prisma.ReportCreateInput) {
-    return this.prismaService.report.create({
-      data,
-    });
+  async create(data: Prisma.ReportCreateInput) {
+    return toReportRow(await this.prismaService.report.create({ data }));
   }
 
-  update(data: {
+  async update(data: {
     id: string;
     status: string;
     assigneeAdminId?: string;
     action?: string;
   }) {
-    return this.prismaService.report.update({
-      where: { id: data.id },
-      data: {
-        status: data.status as any,
-        assigneeAdminId: data.assigneeAdminId,
-        action: data.action,
-      },
-    });
-  }
-
-  resolve(data: ResolveReportRequest) {
-    return this.prismaService.report.update({
-      where: { id: data.id },
-      data: {
-        status: 'RESOLVED' as any,
-        closedAt: new Date(),
-        action: data.action,
-      },
-    });
-  }
-
-  delete(data: { id: string }, softDelete = true) {
-    if (softDelete) {
-      return this.prismaService.report.update({
+    return toReportRow(
+      await this.prismaService.report.update({
         where: { id: data.id },
-        data: { deletedAt: new Date() },
-      });
-    }
-    return this.prismaService.report.delete({
-      where: { id: data.id },
-    });
+        data: {
+          status: data.status as any,
+          assigneeAdminId: data.assigneeAdminId,
+          action: data.action,
+        },
+      }),
+    );
+  }
+
+  async resolve(data: ResolveReportRequest) {
+    return toReportRow(
+      await this.prismaService.report.update({
+        where: { id: data.id },
+        data: {
+          status: 'RESOLVED' as any,
+          closedAt: new Date(),
+          action: data.action,
+        },
+      }),
+    );
+  }
+
+  async delete(data: { id: string }, softDelete = true) {
+    const row = softDelete
+      ? await this.prismaService.report.update({
+          where: { id: data.id },
+          data: { deletedAt: new Date() },
+        })
+      : await this.prismaService.report.delete({
+          where: { id: data.id },
+        });
+
+    return toReportRow(row);
   }
 }
