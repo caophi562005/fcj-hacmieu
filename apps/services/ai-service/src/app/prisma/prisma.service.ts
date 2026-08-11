@@ -1,10 +1,9 @@
 import { DatabaseConfiguration } from '@common/configurations/database.config';
 import {
-  buildMysqlAdapterConfig,
+  createPrismaMariaDbAdapter,
   maskDatabaseError,
 } from '@common/utils/mysql-adapter.util';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { PrismaMariaDb } from '@prisma/adapter-mariadb';
 import { PrismaClient } from '../../generated/prisma-client/client';
 
 @Injectable()
@@ -13,10 +12,8 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
 
   constructor() {
     super({
-      adapter: new PrismaMariaDb(
-        buildMysqlAdapterConfig(
-          DatabaseConfiguration.AI_SERVICE_MYSQL_DATABASE_URL,
-        ),
+      adapter: createPrismaMariaDbAdapter(
+        DatabaseConfiguration.AI_SERVICE_MYSQL_DATABASE_URL,
       ),
     });
   }
@@ -27,7 +24,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
    */
   async onModuleInit(): Promise<void> {
     try {
-      await this.$queryRaw`SELECT 1`;
+      await this.$connect();
     } catch (error) {
       this.logger.error(maskDatabaseError(error));
       throw new Error('ai-service không kết nối được MySQL');
