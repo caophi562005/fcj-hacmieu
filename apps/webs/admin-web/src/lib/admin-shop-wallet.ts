@@ -242,3 +242,94 @@ export async function updatePayoutStatus(payload: {
   if (!data?.data) throw new Error('Cập nhật payout thất bại.');
   return data.data;
 }
+
+export interface PlatformRevenueSummaryResponse {
+  totalGMV: number;
+  totalCommission: number;
+  totalTaxWithheld: number;
+  totalNetSellerAmount: number;
+  totalPendingPayouts: number;
+}
+
+export interface PlatformLedgerItem {
+  id: string;
+  orderId: string;
+  shopId: string;
+  grossAmount: number;
+  commissionRate: number;
+  commissionFee: number;
+  taxRate: number;
+  taxWithheld: number;
+  netSellerAmount: number;
+  createdAt: string;
+}
+
+export interface GetPlatformLedgerListResponse {
+  page: number;
+  limit: number;
+  totalItems: number;
+  totalPages: number;
+  items: PlatformLedgerItem[];
+}
+
+export async function getPlatformRevenueSummary(query: {
+  shopId?: string;
+  startDate?: string;
+  endDate?: string;
+} = {}): Promise<PlatformRevenueSummaryResponse> {
+  const api = await createServerApi();
+  const res = await api.get<ApiResponse<PlatformRevenueSummaryResponse>>(
+    '/admin/revenue/summary',
+    {
+      params: query,
+      validateStatus: (s) => (s >= 200 && s < 300) || s === 404,
+    },
+  );
+  return (
+    res.data?.data ?? {
+      totalGMV: 0,
+      totalCommission: 0,
+      totalTaxWithheld: 0,
+      totalNetSellerAmount: 0,
+      totalPendingPayouts: 0,
+    }
+  );
+}
+
+export async function getPlatformLedgerList(query: {
+  page?: number;
+  limit?: number;
+  shopId?: string;
+  startDate?: string;
+  endDate?: string;
+  sortBy?: 'createdAt' | 'grossAmount' | 'commissionFee';
+  sortOrder?: 'asc' | 'desc';
+} = {}): Promise<GetPlatformLedgerListResponse> {
+  const api = await createServerApi();
+  const res = await api.get<ApiResponse<GetPlatformLedgerListResponse>>(
+    '/admin/revenue/ledger',
+    {
+      params: {
+        page: query.page ?? 1,
+        limit: query.limit ?? 10,
+        ...(query.shopId ? { shopId: query.shopId } : {}),
+        ...(query.startDate ? { startDate: query.startDate } : {}),
+        ...(query.endDate ? { endDate: query.endDate } : {}),
+        ...(query.sortBy ? { sortBy: query.sortBy } : {}),
+        ...(query.sortOrder ? { sortOrder: query.sortOrder } : {}),
+      },
+      validateStatus: (s) => (s >= 200 && s < 300) || s === 404,
+    },
+  );
+
+  return (
+    res.data?.data ?? {
+      page: query.page ?? 1,
+      limit: query.limit ?? 10,
+      totalItems: 0,
+      totalPages: 0,
+      items: [],
+    }
+  );
+}
+

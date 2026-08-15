@@ -21,8 +21,9 @@ export const AppConfigurationSchema = z.object({
   ADMIN_BFF_URL: z.string(),
   ADMIN_WEB_URL: z.string(),
 
-  ORDER_SELLER_COMMISSION_PERCENT: z.coerce.number().default(20),
+  ORDER_SELLER_COMMISSION_PERCENT: z.coerce.number().default(5),
   ORDER_USER_REWARD_PERCENT: z.coerce.number().default(10),
+  ORDER_SELLER_TAX_PERCENT: z.coerce.number().default(1.5),
 });
 
 const configServer = AppConfigurationSchema.safeParse(process.env);

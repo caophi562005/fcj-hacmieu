@@ -77,7 +77,7 @@ message AdjustShopCreditRequest {
   optional string processId = 1;
   string shopId = 2;
   string type = 3; // CREDIT | DEBIT
-  string source = 4; // ORDER_REVENUE | WITHDRAWAL | REFUND | SYSTEM | OTHER
+  string source = 4; // ORDER_REVENUE | PLATFORM_FEE | TAX_WITHHOLDING | WITHDRAWAL | REFUND | SYSTEM | OTHER
   optional string referenceId = 5;
   int32 amount = 6;
   string description = 7;
@@ -206,4 +206,69 @@ message GetShopPayoutsResponse {
   int32 totalItems = 3;
   int32 totalPages = 4;
   repeated ShopPayoutResponse payouts = 5;
+}
+
+service PlatformLedgerModule {
+  rpc RecordPlatformLedger(RecordPlatformLedgerRequest) returns (PlatformLedgerResponse);
+  rpc GetPlatformRevenueSummary(GetPlatformRevenueSummaryRequest) returns (GetPlatformRevenueSummaryResponse);
+  rpc GetPlatformLedgerList(GetPlatformLedgerListRequest) returns (GetPlatformLedgerListResponse);
+}
+
+message RecordPlatformLedgerRequest {
+  optional string processId = 1;
+  string orderId = 2;
+  string shopId = 3;
+  int32 grossAmount = 4;
+  float commissionRate = 5;
+  int32 commissionFee = 6;
+  float taxRate = 7;
+  int32 taxWithheld = 8;
+  int32 netSellerAmount = 9;
+}
+
+message PlatformLedgerResponse {
+  string id = 1;
+  string orderId = 2;
+  string shopId = 3;
+  int32 grossAmount = 4;
+  float commissionRate = 5;
+  int32 commissionFee = 6;
+  float taxRate = 7;
+  int32 taxWithheld = 8;
+  int32 netSellerAmount = 9;
+  string createdAt = 10;
+}
+
+message GetPlatformRevenueSummaryRequest {
+  optional string processId = 1;
+  optional string startDate = 2;
+  optional string endDate = 3;
+  optional string shopId = 4;
+}
+
+message GetPlatformRevenueSummaryResponse {
+  int32 totalGMV = 1;
+  int32 totalCommission = 2;
+  int32 totalTaxWithheld = 3;
+  int32 totalNetSellerAmount = 4;
+  int32 totalPendingPayouts = 5;
+}
+
+message GetPlatformLedgerListRequest {
+  optional string processId = 1;
+  int32 page = 2;
+  int32 limit = 3;
+  optional string shopId = 4;
+  optional string startDate = 5;
+  optional string endDate = 6;
+  optional string sortBy = 7;
+  optional string sortOrder = 8;
+}
+
+message GetPlatformLedgerListResponse {
+  int32 page = 1;
+  int32 limit = 2;
+  int32 totalItems = 3;
+  int32 totalPages = 4;
+  repeated PlatformLedgerResponse items = 5;
 }

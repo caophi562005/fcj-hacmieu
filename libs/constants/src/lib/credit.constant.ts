@@ -14,6 +14,8 @@ export type CreditTransactionType = z.infer<typeof CreditTransactionTypeEnums>;
 
 export const CreditTransactionSourceValues = {
   ORDER_REVENUE: 'ORDER_REVENUE',
+  PLATFORM_FEE: 'PLATFORM_FEE',
+  TAX_WITHHOLDING: 'TAX_WITHHOLDING',
   WITHDRAWAL: 'WITHDRAWAL',
   REFUND: 'REFUND',
   SYSTEM: 'SYSTEM',
@@ -22,6 +24,8 @@ export const CreditTransactionSourceValues = {
 
 export const CreditTransactionSourceEnums = z.enum([
   CreditTransactionSourceValues.ORDER_REVENUE,
+  CreditTransactionSourceValues.PLATFORM_FEE,
+  CreditTransactionSourceValues.TAX_WITHHOLDING,
   CreditTransactionSourceValues.WITHDRAWAL,
   CreditTransactionSourceValues.REFUND,
   CreditTransactionSourceValues.SYSTEM,

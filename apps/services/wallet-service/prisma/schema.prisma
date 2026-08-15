@@ -33,6 +33,8 @@ enum CreditTransactionType {
 
 enum CreditTransactionSource {
     ORDER_REVENUE
+    PLATFORM_FEE
+    TAX_WITHHOLDING
     WITHDRAWAL
     REFUND
     SYSTEM
@@ -126,4 +128,20 @@ model PayoutRequest {
     @@index([shopId, createdAt])
     @@index([creditId, createdAt])
     @@index([shopId, status, createdAt])
+}
+
+model PlatformLedger {
+    id              String   @id @default(uuid())
+    orderId         String   @unique
+    shopId          String
+    grossAmount     Int      // Doanh thu gộp đơn hàng
+    commissionRate  Float    @default(5.0) // Phí hoa hồng sàn (%)
+    commissionFee   Int      // Phí hoa hồng thực thu
+    taxRate         Float    @default(1.5) // Thuế nộp thay (%)
+    taxWithheld     Int      @default(0)   // Thuế thực trừ
+    netSellerAmount Int      // Số tiền thực nhận ví Seller
+    createdAt       DateTime @default(now())
+
+    @@index([shopId, createdAt])
+    @@index([createdAt])
 }

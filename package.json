@@ -4,7 +4,7 @@
   "packageManager": "pnpm@10.25.0",
   "license": "MIT",
   "scripts": {
-    "dev": "pnpm nx reset && pnpm nx run-many -t serve --projects=iam-service,shop-service,catalog-service,order-service,utility-service,wallet-service,promotion-service,payment-service,ai-service,customer-bff,customer-web",
+    "dev": "pnpm nx reset && pnpm nx run-many -t serve --projects=iam-service,shop-service,catalog-service,order-service,utility-service,wallet-service,promotion-service,payment-service,ai-service,admin-bff,admin-web",
     "build": "pnpm nx reset && pnpm nx run-many -t build --projects=iam-service,catalog-service,order-service,payment-service,utility-service,promotion-service,customer-bff",
     "generate-ts-proto": "pnpm nx generate-ts-proto interfaces"
   },

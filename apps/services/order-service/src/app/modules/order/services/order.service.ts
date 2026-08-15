@@ -43,6 +43,8 @@ import {
   UTILITY_SERVICE_PACKAGE_NAME,
 } from '@common/interfaces/proto-types/utility';
 import {
+  PLATFORM_LEDGER_MODULE_SERVICE_NAME,
+  PlatformLedgerModuleClient,
   WALLET_MODULE_SERVICE_NAME,
   WALLET_SERVICE_PACKAGE_NAME,
   WalletModuleClient,
@@ -68,6 +70,7 @@ export class OrderService implements OnModuleInit {
   private productModule!: ProductModuleClient;
   private promotionModule!: PromotionModuleClient;
   private walletModule!: WalletModuleClient;
+  private platformLedgerModule!: PlatformLedgerModuleClient;
   private notificationModule!: NotificationServiceClient;
 
   constructor(
@@ -100,6 +103,10 @@ export class OrderService implements OnModuleInit {
     this.walletModule = this.walletClient.getService<WalletModuleClient>(
       WALLET_MODULE_SERVICE_NAME,
     );
+    this.platformLedgerModule =
+      this.walletClient.getService<PlatformLedgerModuleClient>(
+        PLATFORM_LEDGER_MODULE_SERVICE_NAME,
+      );
     this.notificationModule = this.utilityClient.getService<NotificationServiceClient>(
       NOTIFICATION_SERVICE_NAME,
     );
@@ -488,25 +495,85 @@ export class OrderService implements OnModuleInit {
       const order = await this.orderRepository.updateStatus(data);
 
       if (order.status === OrderStatusValues.COMPLETED) {
-        const commission = Math.floor(
-          (order.itemTotal * AppConfiguration.ORDER_SELLER_COMMISSION_PERCENT) /
-            100,
+        const grossAmount = order.itemTotal;
+        const commissionFee = Math.floor(
+          (grossAmount * AppConfiguration.ORDER_SELLER_COMMISSION_PERCENT) / 100,
+        );
+        const taxWithheld = Math.floor(
+          (grossAmount * AppConfiguration.ORDER_SELLER_TAX_PERCENT) / 100,
+        );
+        const netSellerAmount = Math.max(
+          0,
+          grossAmount - commissionFee - taxWithheld,
         );
 
-        const settlementPayload: AdjustShopCreditRequest = {
+        // 1. Transaction Cộng doanh thu gộp (ORDER_REVENUE)
+        const grossPayload: AdjustShopCreditRequest = {
           processId,
           shopId: order.shopId,
           type: CreditTransactionTypeValues.CREDIT,
           source: CreditTransactionSourceValues.ORDER_REVENUE,
           referenceId: order.id,
-          amount: Math.max(0, order.itemTotal - commission),
-          description: `Doanh thu đơn hàng ${order.code}`,
+          amount: grossAmount,
+          description: `Doanh thu gộp đơn hàng ${order.code}`,
         };
-
         await this.sendQueueMessage(
           SqsConfiguration.SETTLE_ORDER_REVENUE_QUEUE_NAME,
-          settlementPayload,
+          grossPayload,
         );
+
+        // 2. Transaction Trừ phí hoa hồng sàn (PLATFORM_FEE - 5%)
+        if (commissionFee > 0) {
+          const commissionPayload: AdjustShopCreditRequest = {
+            processId,
+            shopId: order.shopId,
+            type: CreditTransactionTypeValues.DEBIT,
+            source: CreditTransactionSourceValues.PLATFORM_FEE,
+            referenceId: `${order.id}-FEE`,
+            amount: commissionFee,
+            description: `Trừ phí dịch vụ sàn (${AppConfiguration.ORDER_SELLER_COMMISSION_PERCENT}%) đơn hàng ${order.code}`,
+          };
+          await this.sendQueueMessage(
+            SqsConfiguration.SETTLE_ORDER_REVENUE_QUEUE_NAME,
+            commissionPayload,
+          );
+        }
+
+        // 3. Transaction Trừ thuế nộp thay (TAX_WITHHOLDING - 1.5%)
+        if (taxWithheld > 0) {
+          const taxPayload: AdjustShopCreditRequest = {
+            processId,
+            shopId: order.shopId,
+            type: CreditTransactionTypeValues.DEBIT,
+            source: CreditTransactionSourceValues.TAX_WITHHOLDING,
+            referenceId: `${order.id}-TAX`,
+            amount: taxWithheld,
+            description: `Trừ thuế GTGT & TNCN nộp thay (${AppConfiguration.ORDER_SELLER_TAX_PERCENT}%) đơn hàng ${order.code}`,
+          };
+          await this.sendQueueMessage(
+            SqsConfiguration.SETTLE_ORDER_REVENUE_QUEUE_NAME,
+            taxPayload,
+          );
+        }
+
+        // Ghi bản ghi Sổ cái Doanh thu Sàn (PlatformLedger)
+        try {
+          await firstValueFrom(
+            this.platformLedgerModule.recordPlatformLedger({
+              processId,
+              orderId: order.id,
+              shopId: order.shopId,
+              grossAmount,
+              commissionRate: AppConfiguration.ORDER_SELLER_COMMISSION_PERCENT,
+              commissionFee,
+              taxRate: AppConfiguration.ORDER_SELLER_TAX_PERCENT,
+              taxWithheld,
+              netSellerAmount,
+            }),
+          );
+        } catch (ledgerErr) {
+          console.error('Lỗi khi ghi nhận Sổ cái Doanh thu Sàn:', ledgerErr);
+        }
 
         const rewardAmount = Math.floor(
           (order.itemTotal * AppConfiguration.ORDER_USER_REWARD_PERCENT) / 100,
