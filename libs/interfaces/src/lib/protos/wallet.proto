@@ -138,6 +138,147 @@ message GetShopRevenueSummaryResponse {
   repeated ShopRevenueDayPoint points = 3;
 }
 
+service SellerSettlementModule {
+  rpc GetSellerSettlementSummary(GetSellerSettlementSummaryRequest) returns (GetSellerSettlementSummaryResponse);
+  rpc GetSellerSettlements(GetSellerSettlementsRequest) returns (GetSellerSettlementsResponse);
+  rpc GetSellerSettlementById(GetSellerSettlementByIdRequest) returns (SellerSettlementDetailResponse);
+  rpc UpdateSellerSettlementStatus(UpdateSellerSettlementStatusRequest) returns (SellerSettlementDetailResponse);
+}
+
+message GetSellerSettlementSummaryRequest {
+  optional string processId = 1;
+  optional string shopId = 2;
+}
+
+message GetSellerSettlementsRequest {
+  optional string processId = 1;
+  optional string shopId = 2;
+  int32 page = 3;
+  int32 limit = 4;
+  optional string settlementId = 5;
+  optional string orderId = 6;
+  optional string status = 7;
+  optional string completedFrom = 8;
+  optional string completedTo = 9;
+  optional string availableFrom = 10;
+  optional string availableTo = 11;
+  optional int32 minAmount = 12;
+  optional int32 maxAmount = 13;
+  optional string sortBy = 14;
+  optional string sortOrder = 15;
+}
+
+message GetSellerSettlementByIdRequest {
+  optional string processId = 1;
+  string settlementId = 2;
+  optional string shopId = 3;
+}
+
+message UpdateSellerSettlementStatusRequest {
+  optional string processId = 1;
+  string settlementId = 2;
+  string action = 3;
+  optional string reason = 4;
+  string actorId = 5;
+}
+
+message SellerSettlementResponse {
+  string id = 1;
+  string orderId = 2;
+  string shopId = 3;
+  optional string creditId = 4;
+  int32 grossAmount = 5;
+  float commissionRate = 6;
+  int32 commissionFee = 7;
+  float taxRate = 8;
+  int32 taxWithheld = 9;
+  int32 netSellerAmount = 10;
+  string status = 11;
+  string completedAt = 12;
+  string availableAt = 13;
+  optional string processingStartedAt = 14;
+  optional string settledAt = 15;
+  optional string heldAt = 16;
+  optional string heldBy = 17;
+  optional string holdReason = 18;
+  optional string releasedAt = 19;
+  optional string releasedBy = 20;
+  optional string cancelledAt = 21;
+  optional string cancelledBy = 22;
+  optional string cancelReason = 23;
+  int32 attemptCount = 24;
+  optional string lastError = 25;
+  int32 version = 26;
+  string createdAt = 27;
+  string updatedAt = 28;
+}
+
+message SellerSettlementHistoryResponse {
+  string id = 1;
+  string settlementId = 2;
+  string action = 3;
+  string fromStatus = 4;
+  string toStatus = 5;
+  optional string reason = 6;
+  string actorId = 7;
+  string createdAt = 8;
+}
+
+message SellerSettlementDetailResponse {
+  string id = 1;
+  string orderId = 2;
+  string shopId = 3;
+  optional string creditId = 4;
+  int32 grossAmount = 5;
+  float commissionRate = 6;
+  int32 commissionFee = 7;
+  float taxRate = 8;
+  int32 taxWithheld = 9;
+  int32 netSellerAmount = 10;
+  string status = 11;
+  string completedAt = 12;
+  string availableAt = 13;
+  optional string processingStartedAt = 14;
+  optional string settledAt = 15;
+  optional string heldAt = 16;
+  optional string heldBy = 17;
+  optional string holdReason = 18;
+  optional string releasedAt = 19;
+  optional string releasedBy = 20;
+  optional string cancelledAt = 21;
+  optional string cancelledBy = 22;
+  optional string cancelReason = 23;
+  int32 attemptCount = 24;
+  optional string lastError = 25;
+  int32 version = 26;
+  string createdAt = 27;
+  string updatedAt = 28;
+  repeated SellerSettlementHistoryResponse histories = 29;
+}
+
+message GetSellerSettlementsResponse {
+  int32 page = 1;
+  int32 limit = 2;
+  int32 totalItems = 3;
+  int32 totalPages = 4;
+  repeated SellerSettlementResponse settlements = 5;
+}
+
+message GetSellerSettlementSummaryResponse {
+  int32 pendingAmount = 1;
+  int32 pendingCount = 2;
+  int32 dueWithin24HoursAmount = 3;
+  int32 dueWithin24HoursCount = 4;
+  int32 heldAmount = 5;
+  int32 heldCount = 6;
+  int32 failedAmount = 7;
+  int32 failedCount = 8;
+  int32 settledAmount = 9;
+  int32 settledCount = 10;
+  optional string nextAvailableAt = 11;
+  int32 nextAvailableAmount = 12;
+}
+
 service PayoutModule {
   rpc CreateShopPayout(CreateShopPayoutRequest) returns (ShopPayoutResponse);
   rpc GetShopPayoutById(GetShopPayoutByIdRequest) returns (ShopPayoutResponse);

@@ -1,14 +1,13 @@
 import { ProcessId } from '@common/decorators/process-id.decorator';
 import { UserData } from '@common/decorators/user-data.decorator';
 import {
-  AdjustShopCreditRequestDto,
   CreditResponseDto,
   GetShopCreditTransactionsRequestDto,
   GetShopCreditTransactionsResponseDto,
   GetShopRevenueSummaryRequestDto,
   GetShopRevenueSummaryResponseDto,
 } from '@common/interfaces/dtos/wallet';
-import { BadRequestException, Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { BadRequestException, Controller, Get, Query } from '@nestjs/common';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { CreditService } from '../services/credit.service';
 
@@ -59,18 +58,4 @@ export class CreditController {
     });
   }
 
-  @Post('adjust')
-  @ApiOkResponse({ type: CreditResponseDto })
-  async adjustShopCredit(
-    @Body() body: AdjustShopCreditRequestDto,
-    @ProcessId() processId: string,
-    @UserData('shopId') shopId: string,
-  ) {
-    if (!shopId) throw new BadRequestException('Shop ID is required');
-    return this.creditService.adjustShopCredit({
-      ...body,
-      shopId,
-      processId,
-    });
-  }
 }

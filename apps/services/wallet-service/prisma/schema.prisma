@@ -47,6 +47,21 @@ enum PayoutStatus {
     REJECTED
 }
 
+enum SellerSettlementStatus {
+    PENDING
+    PROCESSING
+    SETTLED
+    HELD
+    CANCELLED
+    FAILED
+}
+
+enum SellerSettlementAction {
+    HOLD
+    RELEASE
+    CANCEL
+}
+
 model Wallet {
     id        String   @id @default(uuid())
     userId    String   @unique
@@ -86,8 +101,64 @@ model Credit {
 
     transactions CreditTransaction[]
     payouts      PayoutRequest[]
+    settlements  SellerSettlement[]
 
     @@index([shopId])
+}
+
+model SellerSettlement {
+    id                  String                 @id @default(uuid())
+    orderId             String                 @unique
+    shopId              String
+    creditId            String?
+    credit              Credit?                @relation(fields: [creditId], references: [id], onDelete: SetNull)
+    grossAmount         Int
+    commissionRate      Float
+    commissionFee       Int
+    taxRate             Float
+    taxWithheld         Int
+    netSellerAmount     Int
+    status              SellerSettlementStatus @default(PENDING)
+    completedAt         DateTime
+    availableAt         DateTime
+    processingStartedAt DateTime?
+    settledAt           DateTime?
+    heldAt              DateTime?
+    heldBy              String?
+    holdReason          String?
+    releasedAt          DateTime?
+    releasedBy          String?
+    cancelledAt         DateTime?
+    cancelledBy         String?
+    cancelReason        String?
+    attemptCount        Int                    @default(0)
+    lastError           String?
+    version             Int                    @default(0)
+    createdAt           DateTime               @default(now())
+    updatedAt           DateTime               @updatedAt
+
+    histories SellerSettlementHistory[]
+
+    @@index([status, availableAt])
+    @@index([shopId, status, availableAt])
+    @@index([processingStartedAt])
+    @@index([completedAt])
+    @@index([settledAt])
+}
+
+model SellerSettlementHistory {
+    id           String                 @id @default(uuid())
+    settlementId String
+    settlement   SellerSettlement       @relation(fields: [settlementId], references: [id], onDelete: Cascade)
+    action       SellerSettlementAction
+    fromStatus   SellerSettlementStatus
+    toStatus     SellerSettlementStatus
+    reason       String?
+    actorId      String
+    createdAt    DateTime               @default(now())
+
+    @@index([settlementId, createdAt])
+    @@index([actorId, createdAt])
 }
 
 model CreditTransaction {

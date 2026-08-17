@@ -1,5 +1,13 @@
 import { IsPublic } from '@common/decorators/auth.decorator';
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { GetVideoFeedRequestSchema } from '@common/interfaces/models/utility';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { VideoService } from '../services/video.service';
 
@@ -10,10 +18,19 @@ export class VideoController {
 
   @IsPublic()
   @Post('feed')
-  async getVideoFeed(@Body() body: { limit?: number; excludeIds?: string[] }) {
+  async getVideoFeed(@Body() body: unknown) {
+    const result = GetVideoFeedRequestSchema.omit({
+      processId: true,
+    }).safeParse(body);
+    if (!result.success) {
+      throw new BadRequestException(
+        result.error.issues.map((issue) => issue.message),
+      );
+    }
+
     return this.videoService.getVideoFeed({
-      limit: body.limit || 10,
-      excludeIds: body.excludeIds || [],
+      limit: result.data.limit,
+      excludeIds: result.data.excludeIds,
     });
   }
 

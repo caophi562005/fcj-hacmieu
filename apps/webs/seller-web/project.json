@@ -9,7 +9,7 @@
     "serve": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "pnpm nx dev seller-web"
+        "command": "pnpm nx dev seller-web --port 4000"
       }
     }
   }

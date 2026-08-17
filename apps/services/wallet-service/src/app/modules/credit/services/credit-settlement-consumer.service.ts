@@ -1,11 +1,11 @@
+import { SqsConfiguration } from '@common/configurations/sqs.config';
 import {
-  AdjustShopCreditRequest,
-  AdjustShopCreditRequestSchema,
+  CreateSellerSettlementRequest,
+  CreateSellerSettlementRequestSchema,
 } from '@common/interfaces/models/wallet';
 import { Injectable, Logger } from '@nestjs/common';
 import { SqsMessageHandler } from '@ssut/nestjs-sqs';
-import { SqsConfiguration } from '@common/configurations/sqs.config';
-import { CreditService } from './credit.service';
+import { SellerSettlementService } from './seller-settlement.service';
 
 type SqsMessage = {
   MessageId?: string;
@@ -16,7 +16,7 @@ type SqsMessage = {
 export class CreditSettlementConsumerService {
   private readonly logger = new Logger(CreditSettlementConsumerService.name);
 
-  constructor(private readonly creditService: CreditService) {}
+  constructor(private readonly settlementService: SellerSettlementService) {}
 
   @SqsMessageHandler(SqsConfiguration.SETTLE_ORDER_REVENUE_QUEUE_NAME, false)
   async handleSettlementMessage(message: SqsMessage) {
@@ -27,11 +27,11 @@ export class CreditSettlementConsumerService {
       return;
     }
 
-    const body = AdjustShopCreditRequestSchema.parse(
+    const body = CreateSellerSettlementRequestSchema.parse(
       JSON.parse(message.Body),
-    ) as AdjustShopCreditRequest;
+    ) as CreateSellerSettlementRequest;
 
-    await this.creditService.adjustShopCredit(body);
+    await this.settlementService.create(body);
 
     this.logger.log(
       `Received message from ${SqsConfiguration.SETTLE_ORDER_REVENUE_QUEUE_NAME}: ${message.MessageId ?? 'unknown-id'}`,

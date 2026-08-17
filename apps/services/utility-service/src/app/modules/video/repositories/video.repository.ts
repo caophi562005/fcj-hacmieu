@@ -5,7 +5,11 @@ import {
   UpdateVideoStatusRequest,
 } from '@common/interfaces/models/utility';
 import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma-client/utility-service';
+import {
+  Prisma,
+  type Video,
+  VideoStatus as PrismaVideoStatus,
+} from '../../../../generated/prisma-client/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 
 @Injectable()
@@ -21,7 +25,7 @@ export class VideoRepository {
     const where: Prisma.VideoWhereInput = {
       ...(data.shopId && { shopId: data.shopId }),
       ...(data.productId && { productId: data.productId }),
-      ...(data.status && { status: data.status as any }),
+      ...(data.status && { status: data.status as PrismaVideoStatus }),
       deletedAt: null,
     };
 
@@ -58,7 +62,7 @@ export class VideoRepository {
     return this.prismaService.video.update({
       where: { id: data.id },
       data: {
-        status: data.status as any,
+        status: data.status as PrismaVideoStatus,
         ...(data.duration !== undefined && { duration: data.duration }),
         ...(data.width !== undefined && { width: data.width }),
         ...(data.height !== undefined && { height: data.height }),
@@ -84,14 +88,19 @@ export class VideoRepository {
   }
 
   async feed(data: { limit: number; excludeIds?: string[] }) {
-    const videos = await this.prismaService.$queryRawUnsafe<any[]>(
-      `SELECT * FROM "Video"
-       WHERE status = 'READY' AND "isHidden" = false AND "deletedAt" IS NULL
-       ${data.excludeIds?.length ? `AND id NOT IN (${data.excludeIds.map((id) => `'${id}'`).join(',')})` : ''}
-       ORDER BY random()
-       LIMIT $1`,
-      data.limit,
-    );
+    const excluded = data.excludeIds?.length
+      ? Prisma.sql`AND id NOT IN (${Prisma.join(data.excludeIds)})`
+      : Prisma.empty;
+
+    const videos = await this.prismaService.$queryRaw<Video[]>(Prisma.sql`
+      SELECT * FROM "Video"
+      WHERE status = 'READY'
+        AND "isHidden" = false
+        AND "deletedAt" IS NULL
+        ${excluded}
+      ORDER BY random()
+      LIMIT ${data.limit}
+    `);
 
     return videos;
   }

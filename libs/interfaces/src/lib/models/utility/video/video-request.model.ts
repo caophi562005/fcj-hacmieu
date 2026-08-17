@@ -27,8 +27,8 @@ export const CreateVideoRequestSchema = z.object({
 
 export const GetManyVideosRequestSchema = z.object({
   processId: z.string().optional(),
-  page: z.number().int().positive(),
-  limit: z.number().int().positive(),
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(100).default(10),
   shopId: z.uuid().optional(),
   productId: z.uuid().optional(),
   status: VideoStatusEnums.optional(),
@@ -62,8 +62,8 @@ export const UpdateVideoRequestSchema = z.object({
 
 export const GetVideoFeedRequestSchema = z.object({
   processId: z.string().optional(),
-  limit: z.number().int().positive().default(10),
-  excludeIds: z.array(z.string()).default([]),
+  limit: z.coerce.number().int().positive().max(50).default(10),
+  excludeIds: z.array(z.uuid()).max(100).default([]),
 });
 
 export type CreateVideoRequest = z.infer<typeof CreateVideoRequestSchema>;

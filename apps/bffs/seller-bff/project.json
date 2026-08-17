@@ -52,7 +52,8 @@
       "dependsOn": ["build"],
       "options": {
         "buildTarget": "seller-bff:build",
-        "runBuildTargetDependencies": false
+        "runBuildTargetDependencies": false,
+        "port": 0
       },
       "configurations": {
         "development": {

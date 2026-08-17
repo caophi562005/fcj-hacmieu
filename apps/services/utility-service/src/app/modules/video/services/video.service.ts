@@ -3,12 +3,15 @@ import {
   CreateVideoRequest,
   DeleteVideoRequest,
   GetManyVideosRequest,
+  GetManyVideosRequestSchema,
   GetVideoFeedRequest,
+  GetVideoFeedRequestSchema,
   GetVideoRequest,
   UpdateVideoRequest,
   UpdateVideoStatusRequest,
 } from '@common/interfaces/models/utility';
 import { Injectable, NotFoundException } from '@nestjs/common';
+import type { Video } from '../../../../generated/prisma-client/client';
 import { S3Service } from '../../media/services/s3.service';
 import { VideoRepository } from '../repositories/video.repository';
 
@@ -39,7 +42,8 @@ export class VideoService {
   }
 
   async list(data: GetManyVideosRequest) {
-    const result = await this.videoRepository.list(data);
+    const validated = GetManyVideosRequestSchema.parse(data);
+    const result = await this.videoRepository.list(validated);
 
     return {
       ...result,
@@ -74,17 +78,18 @@ export class VideoService {
   }
 
   async feed(data: GetVideoFeedRequest) {
+    const validated = GetVideoFeedRequestSchema.parse(data);
     const videos = await this.videoRepository.feed({
-      limit: data.limit,
-      excludeIds: data.excludeIds,
+      limit: validated.limit,
+      excludeIds: validated.excludeIds,
     });
 
     return {
       page: 1,
-      limit: data.limit,
+      limit: validated.limit,
       totalItems: videos.length,
       totalPages: 1,
-      videos: videos.map((v: any) => this.toResponse(v)),
+      videos: videos.map((v) => this.toResponse(v)),
     };
   }
 
@@ -93,7 +98,7 @@ export class VideoService {
     return this.toResponse(video);
   }
 
-  private toResponse(video: any) {
+  private toResponse(video: Video) {
     const endpoint = S3Configuration.S3_ENDPOINT;
     const hlsUrl =
       video.status === 'READY'

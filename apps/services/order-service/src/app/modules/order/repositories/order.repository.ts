@@ -9,7 +9,11 @@ import {
 } from '@common/interfaces/models/order';
 import { generateCode } from '@common/utils/order-code.util';
 import { Injectable } from '@nestjs/common';
-import { OrderStatus } from '@prisma-client/order-service';
+import {
+  OrderStatus,
+  OutboxEventStatus,
+  Prisma,
+} from '../../../../generated/prisma-client/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 
 @Injectable()
@@ -284,20 +288,125 @@ export class OrderRepository {
     );
   }
 
-  async updateStatus(data: UpdateStatusOrderRequest) {
-    const order = await this.prismaService.order.findUnique({
-      where: { id: data.id },
-      select: { timeline: true },
+  async updateStatus(
+    data: UpdateStatusOrderRequest,
+    settlementPolicy: { commissionRate: number; taxRate: number },
+  ) {
+    return this.prismaService.$transaction(async (tx) => {
+      const order = await tx.order.findUniqueOrThrow({ where: { id: data.id } });
+      const updated = await tx.order.update({
+        where: { id: data.id, shopId: data.shopId ? data.shopId : undefined },
+        data: {
+          status: data.status,
+          timeline: [
+            ...(Array.isArray(order.timeline) ? order.timeline : []),
+            { status: data.status, at: new Date() },
+          ],
+        },
+      });
+
+      if (updated.status === OrderStatus.COMPLETED) {
+        const commissionFee = Math.floor(
+          (updated.itemTotal * settlementPolicy.commissionRate) / 100,
+        );
+        const taxWithheld = Math.floor(
+          (updated.itemTotal * settlementPolicy.taxRate) / 100,
+        );
+        const payload = {
+          orderId: updated.id,
+          shopId: updated.shopId,
+          grossAmount: updated.itemTotal,
+          commissionRate: settlementPolicy.commissionRate,
+          commissionFee,
+          taxRate: settlementPolicy.taxRate,
+          taxWithheld,
+          netSellerAmount: Math.max(0, updated.itemTotal - commissionFee - taxWithheld),
+          completedAt: updated.updatedAt.toISOString(),
+        } satisfies Prisma.InputJsonObject;
+
+        await tx.outboxEvent.upsert({
+          where: {
+            eventType_aggregateId: {
+              eventType: 'ORDER_COMPLETED',
+              aggregateId: updated.id,
+            },
+          },
+          update: {},
+          create: {
+            eventType: 'ORDER_COMPLETED',
+            aggregateId: updated.id,
+            payload,
+          },
+        });
+      }
+
+      return updated;
+    });
+  }
+
+  async claimOutboxEvents(batchSize: number) {
+    const now = new Date();
+    const leaseExpiredAt = new Date(now.getTime() - 5 * 60 * 1000);
+    await this.prismaService.outboxEvent.updateMany({
+      where: {
+        status: OutboxEventStatus.PROCESSING,
+        processingStartedAt: { lt: leaseExpiredAt },
+      },
+      data: {
+        status: OutboxEventStatus.PENDING,
+        processingStartedAt: null,
+        lastError: 'Publishing lease expired; event queued for retry.',
+      },
     });
 
-    return this.prismaService.order.update({
-      where: { id: data.id, shopId: data.shopId ? data.shopId : undefined },
+    const candidates = await this.prismaService.outboxEvent.findMany({
+      where: { status: OutboxEventStatus.PENDING },
+      orderBy: { createdAt: 'asc' },
+      take: batchSize,
+      select: { id: true },
+    });
+
+    const claimed = [];
+    for (const candidate of candidates) {
+      const result = await this.prismaService.outboxEvent.updateMany({
+        where: { id: candidate.id, status: OutboxEventStatus.PENDING },
+        data: {
+          status: OutboxEventStatus.PROCESSING,
+          processingStartedAt: now,
+          attemptCount: { increment: 1 },
+          lastError: null,
+        },
+      });
+      if (result.count === 1) {
+        const event = await this.prismaService.outboxEvent.findUnique({
+          where: { id: candidate.id },
+        });
+        if (event) claimed.push(event);
+      }
+    }
+    return claimed;
+  }
+
+  markOutboxPublished(id: string) {
+    return this.prismaService.outboxEvent.update({
+      where: { id },
       data: {
-        status: data.status,
-        timeline: [
-          ...(Array.isArray(order.timeline) ? order.timeline : []),
-          { status: data.status, at: new Date() },
-        ],
+        status: OutboxEventStatus.PUBLISHED,
+        publishedAt: new Date(),
+        processingStartedAt: null,
+        lastError: null,
+      },
+    });
+  }
+
+  markOutboxFailed(id: string, error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    return this.prismaService.outboxEvent.updateMany({
+      where: { id, status: OutboxEventStatus.PROCESSING },
+      data: {
+        status: OutboxEventStatus.PENDING,
+        processingStartedAt: null,
+        lastError: message.slice(0, 1000),
       },
     });
   }

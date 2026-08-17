@@ -1,6 +1,7 @@
 import { CopyButton, Pagination } from '@common/web-ui/index';
 import {
   Building2,
+  Clock3,
   DollarSign,
   Download,
   Filter,
@@ -13,6 +14,7 @@ import {
   getPlatformLedgerList,
   getPlatformRevenueSummary,
 } from '../../../lib/admin-shop-wallet';
+import { getAdminSettlementSummary } from '../../../lib/admin-settlement';
 
 type SearchParams = {
   page?: string;
@@ -78,7 +80,7 @@ export default async function RevenuePage({
   const sortBy = sp.sortBy || 'createdAt';
   const sortOrder = sp.sortOrder || 'desc';
 
-  const [summary, ledgerRes] = await Promise.all([
+  const [summary, ledgerRes, settlementSummary] = await Promise.all([
     getPlatformRevenueSummary({
       shopId: shopId || undefined,
       startDate: startDate || undefined,
@@ -93,6 +95,7 @@ export default async function RevenuePage({
       sortBy,
       sortOrder,
     }),
+    getAdminSettlementSummary(shopId || undefined),
   ]);
 
   const items = ledgerRes.items || [];
@@ -132,7 +135,7 @@ export default async function RevenuePage({
       </div>
 
       {/* KPI Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-4">
         <KpiCard
           title="Tổng GMV"
           subtitle="Tổng doanh số bán lẻ"
@@ -168,6 +171,15 @@ export default async function RevenuePage({
           icon={Receipt}
           tone="bg-rose-500/10 text-rose-600"
         />
+        <Link href={shopId ? `/settlements?shopId=${shopId}` : '/settlements'}>
+          <KpiCard
+            title="Chờ ghi có Seller"
+            subtitle={`${settlementSummary.pendingCount} khoản đang chờ`}
+            value={formatVND(settlementSummary.pendingAmount)}
+            icon={Clock3}
+            tone="bg-orange-500/10 text-orange-600"
+          />
+        </Link>
       </div>
 
       {/* Filter and Control Bar */}

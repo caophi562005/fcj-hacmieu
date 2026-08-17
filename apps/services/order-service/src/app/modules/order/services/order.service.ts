@@ -1,9 +1,5 @@
 import { AppConfiguration } from '@common/configurations/app.config';
 import { SqsConfiguration } from '@common/configurations/sqs.config';
-import {
-  CreditTransactionSourceValues,
-  CreditTransactionTypeValues,
-} from '@common/constants/credit.constant';
 import { OrderStatusValues } from '@common/constants/order.constant';
 import { PaymentStatusValues } from '@common/constants/payment.constant';
 import { PrismaErrorValues } from '@common/constants/prisma.constant';
@@ -24,7 +20,6 @@ import {
 } from '@common/interfaces/models/order';
 import { CreatePromotionRedemptionRequest } from '@common/interfaces/models/promotion';
 import {
-  AdjustShopCreditRequest,
   AdjustWalletRequest,
 } from '@common/interfaces/models/wallet';
 import {
@@ -434,19 +429,6 @@ export class OrderService implements OnModuleInit {
 
     const cancelledOrders = await this.orderRepository.cancel(orderIds, userId);
 
-    // await Promise.all(
-    //   cancelledOrders.map((order) =>
-    //     this.kafkaService.emit(QueueTopics.ORDER.CANCEL_ORDER, {
-    //       items: order.items.map((item) => ({
-    //         skuId: item.skuId,
-    //         quantity: item.quantity,
-    //         productId: item.productId,
-    //       })),
-    //       orderId: order.id,
-    //     }),
-    //   ),
-    // );
-
     return { orders: cancelledOrders };
   }
 
@@ -459,40 +441,26 @@ export class OrderService implements OnModuleInit {
       userId,
       shopId,
     );
-
-    // await Promise.all(
-    //   cancelledOrders.map((order) =>
-    //     this.kafkaService.emit(QueueTopics.ORDER.CANCEL_ORDER, {
-    //       items: order.items.map((item) => ({
-    //         skuId: item.skuId,
-    //         quantity: item.quantity,
-    //         productId: item.productId,
-    //       })),
-    //       orderId: order.id,
-    //     }),
-    //   ),
-    // );
-
+    
     return { orders: cancelledOrders };
   }
 
   async paid(data: { paymentId: string }) {
-    try {
-      const orders = await this.orderRepository.paid(data);
-      // await Promise.all(
-      //   orders.map((order) =>
-      //     this.kafkaService.emit(QueueTopics.ORDER.UPDATE_ORDER, order),
-      //   ),
-      // );
-      return { orders };
-    } catch (error) {
-      throw error;
-    }
+    const orders = await this.orderRepository.paid(data);
+    // await Promise.all(
+    //   orders.map((order) =>
+    //     this.kafkaService.emit(QueueTopics.ORDER.UPDATE_ORDER, order),
+    //   ),
+    // );
+    return { orders };
   }
 
   async updateStatus({ processId, ...data }: UpdateStatusOrderRequest) {
     try {
-      const order = await this.orderRepository.updateStatus(data);
+      const order = await this.orderRepository.updateStatus(data, {
+        commissionRate: AppConfiguration.ORDER_SELLER_COMMISSION_PERCENT,
+        taxRate: AppConfiguration.ORDER_SELLER_TAX_PERCENT,
+      });
 
       if (order.status === OrderStatusValues.COMPLETED) {
         const grossAmount = order.itemTotal;
@@ -506,55 +474,6 @@ export class OrderService implements OnModuleInit {
           0,
           grossAmount - commissionFee - taxWithheld,
         );
-
-        // 1. Transaction Cộng doanh thu gộp (ORDER_REVENUE)
-        const grossPayload: AdjustShopCreditRequest = {
-          processId,
-          shopId: order.shopId,
-          type: CreditTransactionTypeValues.CREDIT,
-          source: CreditTransactionSourceValues.ORDER_REVENUE,
-          referenceId: order.id,
-          amount: grossAmount,
-          description: `Doanh thu gộp đơn hàng ${order.code}`,
-        };
-        await this.sendQueueMessage(
-          SqsConfiguration.SETTLE_ORDER_REVENUE_QUEUE_NAME,
-          grossPayload,
-        );
-
-        // 2. Transaction Trừ phí hoa hồng sàn (PLATFORM_FEE - 5%)
-        if (commissionFee > 0) {
-          const commissionPayload: AdjustShopCreditRequest = {
-            processId,
-            shopId: order.shopId,
-            type: CreditTransactionTypeValues.DEBIT,
-            source: CreditTransactionSourceValues.PLATFORM_FEE,
-            referenceId: `${order.id}-FEE`,
-            amount: commissionFee,
-            description: `Trừ phí dịch vụ sàn (${AppConfiguration.ORDER_SELLER_COMMISSION_PERCENT}%) đơn hàng ${order.code}`,
-          };
-          await this.sendQueueMessage(
-            SqsConfiguration.SETTLE_ORDER_REVENUE_QUEUE_NAME,
-            commissionPayload,
-          );
-        }
-
-        // 3. Transaction Trừ thuế nộp thay (TAX_WITHHOLDING - 1.5%)
-        if (taxWithheld > 0) {
-          const taxPayload: AdjustShopCreditRequest = {
-            processId,
-            shopId: order.shopId,
-            type: CreditTransactionTypeValues.DEBIT,
-            source: CreditTransactionSourceValues.TAX_WITHHOLDING,
-            referenceId: `${order.id}-TAX`,
-            amount: taxWithheld,
-            description: `Trừ thuế GTGT & TNCN nộp thay (${AppConfiguration.ORDER_SELLER_TAX_PERCENT}%) đơn hàng ${order.code}`,
-          };
-          await this.sendQueueMessage(
-            SqsConfiguration.SETTLE_ORDER_REVENUE_QUEUE_NAME,
-            taxPayload,
-          );
-        }
 
         // Ghi bản ghi Sổ cái Doanh thu Sàn (PlatformLedger)
         try {

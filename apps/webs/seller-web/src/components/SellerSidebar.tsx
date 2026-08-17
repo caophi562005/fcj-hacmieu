@@ -9,6 +9,7 @@ import {
   ShoppingCart,
   Video,
   Wallet,
+  Clock3,
 } from 'lucide-react';
 
 const ITEMS: NavItem[] = [
@@ -22,7 +23,13 @@ const ITEMS: NavItem[] = [
   { href: '/videos', label: 'Quản lý Video', icon: Video },
   { href: '/orders', label: 'Quản lý Đơn hàng', icon: ShoppingCart },
   { href: '/chat', label: 'Quản lý Tin nhắn', icon: MessageSquare },
-  { href: '/finance', label: 'Tài chính', icon: Wallet },
+  {
+    href: '/finance',
+    label: 'Tài chính',
+    icon: Wallet,
+    match: (p) => p === '/finance' || p.startsWith('/finance/payouts'),
+  },
+  { href: '/finance/settlements', label: 'Khoản tiền sắp nhận', icon: Clock3 },
   { href: '/settings', label: 'Thiết lập Shop', icon: Settings },
 ];
 

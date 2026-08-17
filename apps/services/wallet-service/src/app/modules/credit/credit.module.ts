@@ -3,9 +3,12 @@ import { SqsConfiguration } from '@common/configurations/sqs.config';
 import { Global, Module } from '@nestjs/common';
 import { SqsModule } from '@ssut/nestjs-sqs';
 import { CreditGrpcController } from './controllers/credit-grpc.controller';
+import { SellerSettlementGrpcController } from './controllers/seller-settlement-grpc.controller';
 import { CreditRepository } from './repositories/credit.repository';
+import { SellerSettlementRepository } from './repositories/seller-settlement.repository';
 import { CreditSettlementConsumerService } from './services/credit-settlement-consumer.service';
 import { CreditService } from './services/credit.service';
+import { SellerSettlementService } from './services/seller-settlement.service';
 
 @Global()
 @Module({
@@ -20,8 +23,14 @@ import { CreditService } from './services/credit.service';
       ],
     }),
   ],
-  controllers: [CreditGrpcController],
-  providers: [CreditRepository, CreditService, CreditSettlementConsumerService],
+  controllers: [CreditGrpcController, SellerSettlementGrpcController],
+  providers: [
+    CreditRepository,
+    SellerSettlementRepository,
+    CreditService,
+    SellerSettlementService,
+    CreditSettlementConsumerService,
+  ],
   exports: [CreditService],
 })
 export class CreditModule {}

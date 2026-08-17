@@ -9,6 +9,7 @@ import { CartModule } from '../cart/cart.module';
 import { OrderGrpcController } from './controllers/order-grpc.controller';
 import { OrderRepository } from './repositories/order.repository';
 import { OrderService } from './services/order.service';
+import { OrderOutboxPublisherService } from './services/order-outbox-publisher.service';
 
 @Module({
   imports: [
@@ -45,6 +46,6 @@ import { OrderService } from './services/order.service';
     }),
   ],
   controllers: [OrderGrpcController],
-  providers: [OrderRepository, OrderService],
+  providers: [OrderRepository, OrderService, OrderOutboxPublisherService],
 })
 export class OrderModule {}

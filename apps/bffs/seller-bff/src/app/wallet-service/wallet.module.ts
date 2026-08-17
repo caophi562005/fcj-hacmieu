@@ -4,14 +4,16 @@ import { Module } from '@nestjs/common';
 import { ClientsModule } from '@nestjs/microservices';
 import { CreditController } from './controllers/credit.controller';
 import { PayoutController } from './controllers/payout.controller';
+import { SettlementController } from './controllers/settlement.controller';
 import { CreditService } from './services/credit.service';
 import { PayoutService } from './services/payout.service';
+import { SettlementService } from './services/settlement.service';
 
 @Module({
   imports: [
     ClientsModule.register([GrpcClientProvider(GrpcService.WALLET_SERVICE)]),
   ],
-  controllers: [CreditController, PayoutController],
-  providers: [CreditService, PayoutService],
+  controllers: [CreditController, PayoutController, SettlementController],
+  providers: [CreditService, PayoutService, SettlementService],
 })
 export class WalletModule {}

@@ -137,6 +137,140 @@ export interface GetShopRevenueSummaryResponse {
   points: ShopRevenueDayPoint[];
 }
 
+export interface GetSellerSettlementSummaryRequest {
+  processId?: string | undefined;
+  shopId?: string | undefined;
+}
+
+export interface GetSellerSettlementsRequest {
+  processId?: string | undefined;
+  shopId?: string | undefined;
+  page: number;
+  limit: number;
+  settlementId?: string | undefined;
+  orderId?: string | undefined;
+  status?: string | undefined;
+  completedFrom?: string | undefined;
+  completedTo?: string | undefined;
+  availableFrom?: string | undefined;
+  availableTo?: string | undefined;
+  minAmount?: number | undefined;
+  maxAmount?: number | undefined;
+  sortBy?: string | undefined;
+  sortOrder?: string | undefined;
+}
+
+export interface GetSellerSettlementByIdRequest {
+  processId?: string | undefined;
+  settlementId: string;
+  shopId?: string | undefined;
+}
+
+export interface UpdateSellerSettlementStatusRequest {
+  processId?: string | undefined;
+  settlementId: string;
+  action: string;
+  reason?: string | undefined;
+  actorId: string;
+}
+
+export interface SellerSettlementResponse {
+  id: string;
+  orderId: string;
+  shopId: string;
+  creditId?: string | undefined;
+  grossAmount: number;
+  commissionRate: number;
+  commissionFee: number;
+  taxRate: number;
+  taxWithheld: number;
+  netSellerAmount: number;
+  status: string;
+  completedAt: string;
+  availableAt: string;
+  processingStartedAt?: string | undefined;
+  settledAt?: string | undefined;
+  heldAt?: string | undefined;
+  heldBy?: string | undefined;
+  holdReason?: string | undefined;
+  releasedAt?: string | undefined;
+  releasedBy?: string | undefined;
+  cancelledAt?: string | undefined;
+  cancelledBy?: string | undefined;
+  cancelReason?: string | undefined;
+  attemptCount: number;
+  lastError?: string | undefined;
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SellerSettlementHistoryResponse {
+  id: string;
+  settlementId: string;
+  action: string;
+  fromStatus: string;
+  toStatus: string;
+  reason?: string | undefined;
+  actorId: string;
+  createdAt: string;
+}
+
+export interface SellerSettlementDetailResponse {
+  id: string;
+  orderId: string;
+  shopId: string;
+  creditId?: string | undefined;
+  grossAmount: number;
+  commissionRate: number;
+  commissionFee: number;
+  taxRate: number;
+  taxWithheld: number;
+  netSellerAmount: number;
+  status: string;
+  completedAt: string;
+  availableAt: string;
+  processingStartedAt?: string | undefined;
+  settledAt?: string | undefined;
+  heldAt?: string | undefined;
+  heldBy?: string | undefined;
+  holdReason?: string | undefined;
+  releasedAt?: string | undefined;
+  releasedBy?: string | undefined;
+  cancelledAt?: string | undefined;
+  cancelledBy?: string | undefined;
+  cancelReason?: string | undefined;
+  attemptCount: number;
+  lastError?: string | undefined;
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+  histories: SellerSettlementHistoryResponse[];
+}
+
+export interface GetSellerSettlementsResponse {
+  page: number;
+  limit: number;
+  totalItems: number;
+  totalPages: number;
+  settlements: SellerSettlementResponse[];
+}
+
+export interface GetSellerSettlementSummaryResponse {
+  pendingAmount: number;
+  pendingCount: number;
+  dueWithin24HoursAmount: number;
+  dueWithin24HoursCount: number;
+  heldAmount: number;
+  heldCount: number;
+  failedAmount: number;
+  failedCount: number;
+  settledAmount: number;
+  settledCount: number;
+  nextAvailableAt?: string | undefined;
+  nextAvailableAmount: number;
+}
+
 export interface CreateShopPayoutRequest {
   processId?: string | undefined;
   shopId: string;
@@ -345,6 +479,69 @@ export function CreditModuleControllerMethods() {
 }
 
 export const CREDIT_MODULE_SERVICE_NAME = "CreditModule";
+
+export interface SellerSettlementModuleClient {
+  getSellerSettlementSummary(
+    request: GetSellerSettlementSummaryRequest,
+  ): Observable<GetSellerSettlementSummaryResponse>;
+
+  getSellerSettlements(request: GetSellerSettlementsRequest): Observable<GetSellerSettlementsResponse>;
+
+  getSellerSettlementById(request: GetSellerSettlementByIdRequest): Observable<SellerSettlementDetailResponse>;
+
+  updateSellerSettlementStatus(
+    request: UpdateSellerSettlementStatusRequest,
+  ): Observable<SellerSettlementDetailResponse>;
+}
+
+export interface SellerSettlementModuleController {
+  getSellerSettlementSummary(
+    request: GetSellerSettlementSummaryRequest,
+  ):
+    | Promise<GetSellerSettlementSummaryResponse>
+    | Observable<GetSellerSettlementSummaryResponse>
+    | GetSellerSettlementSummaryResponse;
+
+  getSellerSettlements(
+    request: GetSellerSettlementsRequest,
+  ): Promise<GetSellerSettlementsResponse> | Observable<GetSellerSettlementsResponse> | GetSellerSettlementsResponse;
+
+  getSellerSettlementById(
+    request: GetSellerSettlementByIdRequest,
+  ):
+    | Promise<SellerSettlementDetailResponse>
+    | Observable<SellerSettlementDetailResponse>
+    | SellerSettlementDetailResponse;
+
+  updateSellerSettlementStatus(
+    request: UpdateSellerSettlementStatusRequest,
+  ):
+    | Promise<SellerSettlementDetailResponse>
+    | Observable<SellerSettlementDetailResponse>
+    | SellerSettlementDetailResponse;
+}
+
+export function SellerSettlementModuleControllerMethods() {
+  return function (constructor: Function) {
+    const grpcMethods: string[] = [
+      "getSellerSettlementSummary",
+      "getSellerSettlements",
+      "getSellerSettlementById",
+      "updateSellerSettlementStatus",
+    ];
+    for (const method of grpcMethods) {
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcMethod("SellerSettlementModule", method)(constructor.prototype[method], method, descriptor);
+    }
+    const grpcStreamMethods: string[] = [];
+    for (const method of grpcStreamMethods) {
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcStreamMethod("SellerSettlementModule", method)(constructor.prototype[method], method, descriptor);
+    }
+  };
+}
+
+export const SELLER_SETTLEMENT_MODULE_SERVICE_NAME = "SellerSettlementModule";
 
 export interface PayoutModuleClient {
   createShopPayout(request: CreateShopPayoutRequest): Observable<ShopPayoutResponse>;
