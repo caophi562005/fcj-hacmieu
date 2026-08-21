@@ -2,7 +2,7 @@ import { IsPublic } from '@common/decorators/auth.decorator';
 import { ProcessId } from '@common/decorators/process-id.decorator';
 import {
   GetManyShopsRequestDto,
-  GetManyShopsResponseDto,
+  GetManyPublicShopsResponseDto,
   GetShopRequestDto,
   GetShopResponseByUserDto,
 } from '@common/interfaces/dtos/shop';
@@ -18,7 +18,7 @@ export class ShopController {
 
   @Get()
   @ApiOkResponse({
-    type: GetManyShopsResponseDto,
+    type: GetManyPublicShopsResponseDto,
   })
   async getManyShops(
     @Query() queries: GetManyShopsRequestDto,
@@ -26,6 +26,7 @@ export class ShopController {
   ) {
     return this.shopService.getManyShops({
       ...queries,
+      status: 'ACTIVE',
       processId,
     });
   }

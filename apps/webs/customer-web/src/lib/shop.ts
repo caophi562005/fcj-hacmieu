@@ -1,13 +1,13 @@
 import type { Response as ApiResponse } from '@common/interfaces/models/common/response.model';
-import type { MerchantResponse, ShopResponse } from '@common/interfaces/models/shop';
+import type {
+  MerchantResponse,
+  PublicShopResponse,
+} from '@common/interfaces/models/shop';
 import { cache } from 'react';
 import { createServerApi } from './api';
 
 // Public-facing shop info (BFF strips merchantId / credit / status).
-export type ShopPublic = Omit<
-  ShopResponse,
-  'merchantId' | 'credit' | 'status'
->;
+export type ShopPublic = PublicShopResponse;
 
 // Lấy chi tiết 1 shop theo id. Trả về null nếu BFF trả 404.
 export const getShopById = cache(

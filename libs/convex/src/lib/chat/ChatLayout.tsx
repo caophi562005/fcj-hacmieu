@@ -36,7 +36,7 @@ export function ChatLayout({ viewer, initialPeer }: Props) {
 
   const conversations = usePaginatedQuery(
     api.conversations.list,
-    { userId: viewer.id },
+    {},
     { initialNumItems: LOAD_SIZE },
   );
 
@@ -49,7 +49,6 @@ export function ChatLayout({ viewer, initialPeer }: Props) {
     (async () => {
       try {
         const id = await getOrCreate({
-          userId: viewer.id,
           userName: viewer.name,
           userAvatar: viewer.avatar,
           peerId: initialPeer.id,
@@ -215,7 +214,7 @@ function ChatThread({
 }) {
   const messages = usePaginatedQuery(
     api.messages.list,
-    { conversationId, userId: viewer.id },
+    { conversationId },
     { initialNumItems: LOAD_SIZE },
   );
 
@@ -255,7 +254,6 @@ function ChatThread({
     try {
       await sendMessage({
         conversationId,
-        userId: viewer.id,
         kind: isImage ? 'image' : 'text',
         body: text,
       });
@@ -321,7 +319,6 @@ function ChatThread({
       try {
         await sendMessage({
           conversationId,
-          userId: viewer.id,
           kind: 'image',
           body: base64,
         });

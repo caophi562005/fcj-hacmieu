@@ -1,5 +1,6 @@
 import { RedisConfiguration } from '@common/configurations/redis.config';
 import { PrismaErrorValues } from '@common/constants/prisma.constant';
+import { OrderStatusValues } from '@common/constants/order.constant';
 import {
   CreateReviewRequest,
   DeleteReviewRequest,
@@ -16,6 +17,11 @@ import {
   ReviewSummaryModuleClient,
 } from '@common/interfaces/proto-types/ai';
 import {
+  ORDER_MODULE_SERVICE_NAME,
+  ORDER_SERVICE_PACKAGE_NAME,
+  OrderModuleClient,
+} from '@common/interfaces/proto-types/order';
+import {
   generateReviewByIdCacheKey,
   generateReviewListCacheKey,
 } from '@common/utils/cache-key.util';
@@ -24,6 +30,7 @@ import {
   Inject,
   Injectable,
   Logger,
+  BadRequestException,
   NotFoundException,
   OnModuleInit,
 } from '@nestjs/common';
@@ -37,11 +44,14 @@ import { ReviewRepository } from '../repositories/review.repository';
 export class ReviewService implements OnModuleInit {
   private readonly logger = new Logger(ReviewService.name);
   private reviewSummaryModule!: ReviewSummaryModuleClient;
+  private orderModule!: OrderModuleClient;
 
   constructor(
     private readonly reviewRepository: ReviewRepository,
     @Inject(AI_SERVICE_PACKAGE_NAME)
     private readonly aiClient: ClientGrpc,
+    @Inject(ORDER_SERVICE_PACKAGE_NAME)
+    private readonly orderClient: ClientGrpc,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
@@ -50,6 +60,9 @@ export class ReviewService implements OnModuleInit {
       this.aiClient.getService<ReviewSummaryModuleClient>(
         REVIEW_SUMMARY_MODULE_SERVICE_NAME,
       );
+    this.orderModule = this.orderClient.getService<OrderModuleClient>(
+      ORDER_MODULE_SERVICE_NAME,
+    );
   }
 
   private async getReviewListCacheVersion(productId?: string): Promise<number> {
@@ -121,6 +134,25 @@ export class ReviewService implements OnModuleInit {
     processId,
     ...data
   }: CreateReviewRequest): Promise<ReviewResponse> {
+    const order = await firstValueFrom(
+      this.orderModule.getOrder({
+        processId,
+        orderId: data.orderId,
+        userId: data.userId,
+      }),
+    );
+    const orderItem = order.itemsSnapshot.find(
+      (item) => item.id === data.orderItemId,
+    );
+    if (
+      order.status !== OrderStatusValues.COMPLETED ||
+      order.shopId !== data.sellerId ||
+      !orderItem ||
+      orderItem.productId !== data.productId
+    ) {
+      throw new BadRequestException('Error.ReviewNotEligible');
+    }
+
     const review = await this.reviewRepository.create(data);
     await this.reviewRepository.recalculateRatingAggregate(review.productId);
     await this.invalidateReviewListCache(review.productId);

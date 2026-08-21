@@ -1,4 +1,5 @@
 import { PaymentMethodEnums } from '@common/constants/payment.constant';
+import { ShippingMethodEnums } from '@common/constants/order.constant';
 import { ValidateItemResultSchema } from '@common/interfaces/models/catalog/product/product-response.model';
 import { OrderSchema, ReceiverSchema } from '@common/schemas/order';
 import z from 'zod';
@@ -7,7 +8,7 @@ import { PaginationQueryRequestSchema } from '../common/pagination.model';
 export const CreateOrderRequestSchema = z
   .object({
     processId: z.uuid().optional(),
-    shippingFee: z.number(),
+    shippingMethod: ShippingMethodEnums,
     discountCode: z.string().optional(),
     coin: z.number().int().nonnegative().optional(),
     paymentMethod: PaymentMethodEnums,
@@ -24,7 +25,7 @@ export const CreateOrderRequestSchema = z
 
 export const CreateOrderRepositorySchema = z.object({
   userId: z.uuid(),
-  shippingFee: z.number(),
+  shippingFee: z.number().int().nonnegative(),
   paymentMethod: PaymentMethodEnums,
   receiver: ReceiverSchema,
   paymentId: z.uuid(),

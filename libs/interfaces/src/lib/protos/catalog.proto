@@ -25,6 +25,7 @@ message GetManyProductsRequest {
   optional int32 maxPrice = 10;
   optional string sortBy = 11;
   optional string orderBy = 12;
+  optional bool publicOnly = 13;
 }
 
 //==================== GetManyProductsResponse ====================//
@@ -41,6 +42,7 @@ message GetProductRequest {
   optional string processId = 1;
   string id = 2;
   optional string shopId = 3;
+  optional bool publicOnly = 4;
 }
 
 message CreateProductRequest {

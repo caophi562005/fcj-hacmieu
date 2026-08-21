@@ -144,7 +144,7 @@ export function PaymentView({
 
     setIsSubmitting(true);
     const res = await createOrderAction({
-      shippingFee,
+      shippingMethod,
       discountCode: voucher?.code,
       coin: appliedCoin,
       paymentMethod,

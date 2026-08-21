@@ -37,6 +37,6 @@ export class VideoController {
   @IsPublic()
   @Get(':id')
   async getVideo(@Param('id') id: string) {
-    return this.videoService.getVideo({ id });
+    return this.videoService.getVideo({ id, publicOnly: true });
   }
 }

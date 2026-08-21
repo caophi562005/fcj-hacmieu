@@ -99,10 +99,12 @@ export class ReviewController {
   async deleteReview(
     @Param() params: DeleteReviewRequestDto,
     @ProcessId() processId: string,
+    @UserData('userId') userId: string,
   ) {
     return this.reviewService.deleteReview({
       ...params,
       processId,
+      userId,
     });
   }
 }

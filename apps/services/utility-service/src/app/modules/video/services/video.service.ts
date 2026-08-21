@@ -52,7 +52,7 @@ export class VideoService {
   }
 
   async findById(data: GetVideoRequest) {
-    const video = await this.videoRepository.findById(data.id);
+    const video = await this.videoRepository.findById(data);
     if (!video) throw new NotFoundException('Video not found');
     return this.toResponse(video);
   }
@@ -73,6 +73,7 @@ export class VideoService {
       id: data.id,
       productId: data.productId,
       isHidden: data.isHidden,
+      shopId: data.shopId,
     });
     return this.toResponse(video);
   }
@@ -94,7 +95,7 @@ export class VideoService {
   }
 
   async delete(data: DeleteVideoRequest) {
-    const video = await this.videoRepository.delete(data.id);
+    const video = await this.videoRepository.delete(data);
     return this.toResponse(video);
   }
 

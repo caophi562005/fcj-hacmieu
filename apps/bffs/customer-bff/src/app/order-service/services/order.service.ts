@@ -17,7 +17,6 @@ import {
   ORDER_SERVICE_PACKAGE_NAME,
   OrderModuleClient,
   UpdateCartItemRequest,
-  UpdateStatusOrderRequest,
   ValidateCartItemsRequest,
   ValidateCartItemsResponse,
 } from '@common/interfaces/proto-types/order';
@@ -72,10 +71,6 @@ export class OrderService implements OnModuleInit {
 
   async createOrder(data: CreateOrderRequest): Promise<CreateOrderResponse> {
     return firstValueFrom(this.orderModule.createOrder(data));
-  }
-
-  async updateStatusOrder(data: UpdateStatusOrderRequest) {
-    return firstValueFrom(this.orderModule.updateStatusOrder(data));
   }
 
   async cancelOrder(data: CancelOrderRequest) {

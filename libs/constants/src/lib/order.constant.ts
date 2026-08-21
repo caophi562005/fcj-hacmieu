@@ -35,3 +35,22 @@ export const OrderPaymentStatusEnums = z.enum([
 ]);
 
 export type OrderStatus = z.infer<typeof OrderStatusEnums>;
+
+export const ShippingMethodValues = {
+  FAST: 'fast',
+  STANDARD: 'std',
+} as const;
+
+export const ShippingMethodEnums = z.enum([
+  ShippingMethodValues.FAST,
+  ShippingMethodValues.STANDARD,
+]);
+
+// The client sends only this method identifier. These authoritative prices
+// are applied by order-service and are never accepted from the browser.
+export const ShippingMethodFees = {
+  [ShippingMethodValues.FAST]: 25_000,
+  [ShippingMethodValues.STANDARD]: 0,
+} as const;
+
+export type ShippingMethod = z.infer<typeof ShippingMethodEnums>;

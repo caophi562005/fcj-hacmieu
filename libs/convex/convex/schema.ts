@@ -40,11 +40,17 @@ export default defineSchema({
   botConversations: defineTable({
     sessionId: v.string(),
     threadId: v.string(),
+    // Recorded when available for auditing; guests are authorized by their
+    // high-entropy session token instead.
+    ownerId: v.optional(v.string()),
     status: v.union(v.literal('active'), v.literal('resolved')),
     createdAt: v.number(),
     expiresAt: v.number(),
+    rateWindowStartedAt: v.optional(v.number()),
+    rateCount: v.optional(v.number()),
   })
     .index('by_session', ['sessionId'])
+    .index('by_owner', ['ownerId'])
     .index('by_expires_at', ['expiresAt']),
 
   botKnowledgeBase: defineTable({

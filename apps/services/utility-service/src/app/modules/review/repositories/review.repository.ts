@@ -80,13 +80,17 @@ export class ReviewRepository {
 
   update(data: {
     id: string;
-    userId: string;
+    userId?: string;
     content?: string;
     rating?: number;
     mediaUrls?: string[];
   }) {
     return this.prismaService.review.update({
-      where: { id: data.id },
+      where: {
+        id: data.id,
+        ...(data.userId && { userId: data.userId }),
+        deletedAt: null,
+      },
       data: {
         content: data.content,
         rating: data.rating,
@@ -95,15 +99,23 @@ export class ReviewRepository {
     });
   }
 
-  delete(data: { id: string }, softDelete = true) {
+  delete(data: { id: string; userId?: string }, softDelete = true) {
     if (softDelete) {
       return this.prismaService.review.update({
-        where: { id: data.id },
+        where: {
+          id: data.id,
+          ...(data.userId && { userId: data.userId }),
+          deletedAt: null,
+        },
         data: { deletedAt: new Date() },
       });
     }
     return this.prismaService.review.delete({
-      where: { id: data.id },
+      where: {
+        id: data.id,
+        ...(data.userId && { userId: data.userId }),
+        deletedAt: null,
+      },
     });
   }
 

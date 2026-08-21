@@ -1,6 +1,7 @@
 import { paginationOptsValidator } from 'convex/server';
 import { ConvexError, v } from 'convex/values';
 import { mutation, query } from './_generated/server';
+import { requireUserId } from './auth';
 
 const PREVIEW_MAX = 80;
 
@@ -13,10 +14,10 @@ function buildPreview(kind: 'text' | 'image', body: string): string {
 export const list = query({
   args: {
     conversationId: v.id('conversations'),
-    userId: v.string(),
     paginationOpts: paginationOptsValidator,
   },
   handler: async (ctx, args) => {
+    const userId = await requireUserId(ctx);
     const conversation = await ctx.db.get(args.conversationId);
     if (!conversation) {
       throw new ConvexError({
@@ -24,7 +25,7 @@ export const list = query({
         message: 'Không tìm thấy cuộc trò chuyện',
       });
     }
-    if (!conversation.participants.includes(args.userId)) {
+    if (!conversation.participants.includes(userId)) {
       throw new ConvexError({
         code: 'UNAUTHORIZED',
         message: 'Bạn không phải thành viên cuộc trò chuyện này',
@@ -46,11 +47,11 @@ export const list = query({
 export const send = mutation({
   args: {
     conversationId: v.id('conversations'),
-    userId: v.string(),
     kind: v.union(v.literal('text'), v.literal('image')),
     body: v.string(),
   },
   handler: async (ctx, args) => {
+    const userId = await requireUserId(ctx);
     const trimmed = args.body.trim();
     if (!trimmed) {
       throw new ConvexError({
@@ -66,7 +67,7 @@ export const send = mutation({
         message: 'Không tìm thấy cuộc trò chuyện',
       });
     }
-    if (!conversation.participants.includes(args.userId)) {
+    if (!conversation.participants.includes(userId)) {
       throw new ConvexError({
         code: 'UNAUTHORIZED',
         message: 'Bạn không phải thành viên cuộc trò chuyện này',
@@ -75,7 +76,7 @@ export const send = mutation({
 
     const messageId = await ctx.db.insert('messages', {
       conversationId: args.conversationId,
-      senderId: args.userId,
+      senderId: userId,
       kind: args.kind,
       body: trimmed,
     });
@@ -86,7 +87,7 @@ export const send = mutation({
     await ctx.db.patch(args.conversationId, {
       lastMessage: {
         body: trimmed,
-        senderId: args.userId,
+        senderId: userId,
         kind: args.kind,
         createdAt: now,
       },

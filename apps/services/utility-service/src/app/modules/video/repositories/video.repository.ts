@@ -1,6 +1,8 @@
 import { PaginationConfiguration } from '@common/configurations/pagination.config';
 import {
+  DeleteVideoRequest,
   GetManyVideosRequest,
+  GetVideoRequest,
   UpdateVideoRequest,
   UpdateVideoStatusRequest,
 } from '@common/interfaces/models/utility';
@@ -48,9 +50,17 @@ export class VideoRepository {
     };
   }
 
-  findById(id: string) {
-    return this.prismaService.video.findUnique({
-      where: { id, deletedAt: null },
+  findById(data: GetVideoRequest) {
+    return this.prismaService.video.findFirst({
+      where: {
+        id: data.id,
+        deletedAt: null,
+        ...(data.shopId && { shopId: data.shopId }),
+        ...(data.publicOnly && {
+          status: PrismaVideoStatus.READY,
+          isHidden: false,
+        }),
+      },
     });
   }
 
@@ -72,7 +82,11 @@ export class VideoRepository {
 
   update(data: UpdateVideoRequest) {
     return this.prismaService.video.update({
-      where: { id: data.id },
+      where: {
+        id: data.id,
+        ...(data.shopId && { shopId: data.shopId }),
+        deletedAt: null,
+      },
       data: {
         ...(data.productId !== undefined && { productId: data.productId }),
         ...(data.isHidden !== undefined && { isHidden: data.isHidden }),
@@ -80,9 +94,13 @@ export class VideoRepository {
     });
   }
 
-  delete(id: string) {
+  delete(data: DeleteVideoRequest) {
     return this.prismaService.video.update({
-      where: { id },
+      where: {
+        id: data.id,
+        ...(data.shopId && { shopId: data.shopId }),
+        deletedAt: null,
+      },
       data: { deletedAt: new Date() },
     });
   }

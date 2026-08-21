@@ -1,6 +1,7 @@
 import { paginationOptsValidator } from 'convex/server';
 import { ConvexError, v } from 'convex/values';
 import { mutation, query } from './_generated/server';
+import { requireUserId } from './auth';
 
 function buildKey(a: string, b: string): string {
   return [a, b].sort().join(':');
@@ -9,7 +10,6 @@ function buildKey(a: string, b: string): string {
 // Lấy hoặc tạo cuộc trò chuyện 1-1 giữa `userId` và `peerId`.
 export const getOrCreate = mutation({
   args: {
-    userId: v.string(),
     userName: v.string(),
     userAvatar: v.string(),
     peerId: v.string(),
@@ -17,7 +17,8 @@ export const getOrCreate = mutation({
     peerAvatar: v.string(),
   },
   handler: async (ctx, args) => {
-    if (args.userId === args.peerId) {
+    const userId = await requireUserId(ctx);
+    if (userId === args.peerId) {
       throw new ConvexError({
         code: 'BAD_REQUEST',
         message: 'Không thể tự chat với chính mình',
@@ -28,7 +29,7 @@ export const getOrCreate = mutation({
     const existingMember = await ctx.db
       .query('conversationMembers')
       .withIndex('by_user_peer', (q) =>
-        q.eq('userId', args.userId).eq('peerId', args.peerId),
+        q.eq('userId', userId).eq('peerId', args.peerId),
       )
       .unique();
 
@@ -48,7 +49,7 @@ export const getOrCreate = mutation({
       const reverseMember = await ctx.db
         .query('conversationMembers')
         .withIndex('by_user_peer', (q) =>
-          q.eq('userId', args.peerId).eq('peerId', args.userId),
+          q.eq('userId', args.peerId).eq('peerId', userId),
         )
         .unique();
 
@@ -68,14 +69,14 @@ export const getOrCreate = mutation({
 
     const now = Date.now();
     const conversationId = await ctx.db.insert('conversations', {
-      participantsKey: buildKey(args.userId, args.peerId),
-      participants: [args.userId, args.peerId],
+      participantsKey: buildKey(userId, args.peerId),
+      participants: [userId, args.peerId],
       lastMessageAt: now,
     });
 
     await ctx.db.insert('conversationMembers', {
       conversationId,
-      userId: args.userId,
+      userId,
       peerId: args.peerId,
       peerName: args.peerName,
       peerAvatar: args.peerAvatar,
@@ -85,7 +86,7 @@ export const getOrCreate = mutation({
     await ctx.db.insert('conversationMembers', {
       conversationId,
       userId: args.peerId,
-      peerId: args.userId,
+      peerId: userId,
       peerName: args.userName,
       peerAvatar: args.userAvatar,
       lastMessageAt: now,
@@ -98,13 +99,13 @@ export const getOrCreate = mutation({
 // Phân trang danh sách cuộc trò chuyện của `userId`
 export const list = query({
   args: {
-    userId: v.string(),
     paginationOpts: paginationOptsValidator,
   },
   handler: async (ctx, args) => {
+    const userId = await requireUserId(ctx);
     const result = await ctx.db
       .query('conversationMembers')
-      .withIndex('by_user_lastMessageAt', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user_lastMessageAt', (q) => q.eq('userId', userId))
       .order('desc')
       .paginate(args.paginationOpts);
 
@@ -129,9 +130,9 @@ export const list = query({
 export const getOne = query({
   args: {
     conversationId: v.id('conversations'),
-    userId: v.string(),
   },
   handler: async (ctx, args) => {
+    const userId = await requireUserId(ctx);
     const conversation = await ctx.db.get(args.conversationId);
     if (!conversation) {
       throw new ConvexError({
@@ -139,7 +140,7 @@ export const getOne = query({
         message: 'Không tìm thấy cuộc trò chuyện',
       });
     }
-    if (!conversation.participants.includes(args.userId)) {
+    if (!conversation.participants.includes(userId)) {
       throw new ConvexError({
         code: 'UNAUTHORIZED',
         message: 'Bạn không phải thành viên cuộc trò chuyện này',
@@ -150,10 +151,10 @@ export const getOne = query({
       .query('conversationMembers')
       .withIndex('by_user_peer', (q) =>
         q
-          .eq('userId', args.userId)
+          .eq('userId', userId)
           .eq(
             'peerId',
-            conversation.participants.find((p) => p !== args.userId) ?? '',
+            conversation.participants.find((p) => p !== userId) ?? '',
           ),
       )
       .unique();

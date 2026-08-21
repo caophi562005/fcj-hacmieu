@@ -68,7 +68,7 @@ export function ChatBotPanel({ onClose }: Props) {
       {/* Messages */}
       <div className="flex-1 min-h-0 px-4 py-3">
         {threadId ? (
-          <ChatBotMessages threadId={threadId} />
+          <ChatBotMessages threadId={threadId} sessionId={sessionId} />
         ) : (
           <div className="flex items-center justify-center h-full text-sm text-ink-muted">
             Đang kết nối...

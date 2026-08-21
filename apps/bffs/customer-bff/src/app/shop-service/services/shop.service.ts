@@ -6,7 +6,12 @@ import {
   SHOP_SERVICE_PACKAGE_NAME,
   ShopModuleClient,
 } from '@common/interfaces/proto-types/shop';
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  NotFoundException,
+  OnModuleInit,
+} from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 
@@ -26,11 +31,22 @@ export class ShopService implements OnModuleInit {
   }
 
   async getManyShops(data: GetManyShopsRequest): Promise<GetManyShopsResponse> {
-    return firstValueFrom(this.shopModule.getManyShops(data));
+    const response = await firstValueFrom(this.shopModule.getManyShops(data));
+    return {
+      ...response,
+      shops: response.shops.map((shop) => this.toPublicShop(shop)),
+    } as GetManyShopsResponse;
   }
 
   async getShop(data: GetShopRequest) {
     const response = await firstValueFrom(this.shopModule.getShop(data));
+    if (response.status !== 'ACTIVE') {
+      throw new NotFoundException('Error.ShopNotFound');
+    }
+    return this.toPublicShop(response);
+  }
+
+  private toPublicShop(response: GetManyShopsResponse['shops'][number]) {
     return {
       id: response.id,
       name: response.name,
@@ -39,8 +55,6 @@ export class ShopService implements OnModuleInit {
       logo: response.logo,
       banner: response.banner,
       phone: response.phone,
-      pickupAddress: response.pickupAddress,
-      returnAddress: response.returnAddress,
       createdAt: response.createdAt,
     };
   }

@@ -56,6 +56,7 @@ export const GetManyProductsRequestSchema = z
     shopId: z.uuid(),
     provinceId: z.number().int(),
     isApproved: z.coerce.boolean(),
+    publicOnly: z.coerce.boolean(),
   })
   .partial()
   .extend({
@@ -72,6 +73,7 @@ export const GetProductRequestSchema = z.object({
   isHidden: z.boolean().optional(),
   processId: z.uuid().optional(),
   shopId: z.uuid().optional(),
+  publicOnly: z.boolean().optional(),
 });
 
 export const UpsertSKUBodySchema = SKUSchema.pick({

@@ -33,7 +33,11 @@ export class AuthenticationGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    if (this.excludedPaths.some((path) => request.url.includes(path))) {
+    // `request.url` includes the query string. A substring check here would
+    // let a protected URL such as `/orders?next=/health` bypass auth.
+    const requestPath =
+      request.path ?? new URL(request.url, 'http://local').pathname;
+    if (this.excludedPaths.includes(requestPath)) {
       return true;
     }
 

@@ -37,6 +37,8 @@ export const GetManyVideosRequestSchema = z.object({
 export const GetVideoRequestSchema = z.object({
   processId: z.string().optional(),
   id: z.uuid(),
+  shopId: z.uuid().optional(),
+  publicOnly: z.boolean().optional(),
 });
 
 export const UpdateVideoStatusRequestSchema = z.object({
@@ -51,6 +53,7 @@ export const UpdateVideoStatusRequestSchema = z.object({
 export const DeleteVideoRequestSchema = z.object({
   processId: z.string().optional(),
   id: z.uuid(),
+  shopId: z.uuid().optional(),
 });
 
 export const UpdateVideoRequestSchema = z.object({
@@ -58,6 +61,7 @@ export const UpdateVideoRequestSchema = z.object({
   id: z.uuid(),
   productId: z.uuid().nullable().optional(),
   isHidden: z.boolean().optional(),
+  shopId: z.uuid().optional(),
 });
 
 export const GetVideoFeedRequestSchema = z.object({

@@ -1,22 +1,15 @@
 import { ProcessId } from '@common/decorators/process-id.decorator';
 import { UserData } from '@common/decorators/user-data.decorator';
 import {
-  CreateReviewRequestDto,
-  DeleteReviewRequestDto,
   GetManyReviewsRequestDto,
   GetManyReviewsResponseDto,
   GetReviewByOrderItemIdRequestDto,
   ReviewResponseDto,
-  UpdateReviewRequestDto,
 } from '@common/interfaces/dtos/utility';
 import {
-  Body,
   Controller,
-  Delete,
   Get,
   Param,
-  Post,
-  Put,
   Query,
 } from '@nestjs/common';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
@@ -57,50 +50,4 @@ export class ReviewController {
     });
   }
 
-  @Post()
-  @ApiOkResponse({
-    type: ReviewResponseDto,
-  })
-  async createReview(
-    @Body() body: CreateReviewRequestDto,
-    @ProcessId() processId: string,
-    @UserData('userId') userId: string,
-  ) {
-    return this.reviewService.createReview({
-      ...body,
-      userId,
-      processId,
-    });
-  }
-
-  @Put()
-  @ApiOkResponse({
-    type: ReviewResponseDto,
-  })
-  async updateReview(
-    @Body() body: UpdateReviewRequestDto,
-    @ProcessId() processId: string,
-    @UserData('userId') userId: string,
-  ) {
-    return this.reviewService.updateReview({
-      ...body,
-      userId,
-      processId,
-      mediaUrls: body.mediaUrls || [],
-    });
-  }
-
-  @Delete(':id')
-  @ApiOkResponse({
-    type: ReviewResponseDto,
-  })
-  async deleteReview(
-    @Param() params: DeleteReviewRequestDto,
-    @ProcessId() processId: string,
-  ) {
-    return this.reviewService.deleteReview({
-      ...params,
-      processId,
-    });
-  }
 }

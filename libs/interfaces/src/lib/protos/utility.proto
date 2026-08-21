@@ -136,6 +136,8 @@ message GetManyVideosResponse {
 message GetVideoRequest {
   optional string processId = 1;
   string id = 2;
+  optional string shopId = 3;
+  optional bool publicOnly = 4;
 }
 
 message GetVideoFeedRequest {
@@ -158,11 +160,13 @@ message UpdateVideoRequest {
   string id = 2;
   optional string productId = 3;
   optional bool isHidden = 4;
+  optional string shopId = 5;
 }
 
 message DeleteVideoRequest {
   optional string processId = 1;
   string id = 2;
+  optional string shopId = 3;
 }
 
 message VideoResponse {
@@ -316,7 +320,7 @@ message CreateReviewRequest {
 message UpdateReviewRequest {
   optional string processId = 1;
   string id = 2;
-  string userId = 3;
+  optional string userId = 3;
   optional string content = 4;
   optional int32 rating = 5;
   repeated string mediaUrls = 6;
@@ -325,7 +329,7 @@ message UpdateReviewRequest {
 message DeleteReviewRequest {
   optional string processId = 1;
   string id = 2;
-  string userId = 3;
+  optional string userId = 3;
 }
 
 message ReviewResponse {

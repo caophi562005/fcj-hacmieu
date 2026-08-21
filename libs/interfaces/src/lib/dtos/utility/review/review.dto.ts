@@ -24,15 +24,15 @@ export class GetReviewByOrderItemIdRequestDto extends createZodDto(
 ) {}
 
 export class CreateReviewRequestDto extends createZodDto(
-  CreateReviewRequestSchema.omit({ processId: true }),
+  CreateReviewRequestSchema.omit({ processId: true, userId: true }),
 ) {}
 
 export class UpdateReviewRequestDto extends createZodDto(
-  UpdateReviewRequestSchema.omit({ processId: true }),
+  UpdateReviewRequestSchema.omit({ processId: true, userId: true }),
 ) {}
 
 export class DeleteReviewRequestDto extends createZodDto(
-  DeleteReviewRequestSchema.omit({ processId: true }),
+  DeleteReviewRequestSchema.omit({ processId: true, userId: true }),
 ) {}
 
 // ====================================================================================================

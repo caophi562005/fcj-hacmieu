@@ -42,12 +42,14 @@ message GetOrderRequest {
 message CreateOrderRequest {
   optional string processId = 1;
   string userId = 2;
-  int32 shippingFee = 3;
+  reserved 3;
+  reserved "shippingFee";
   optional string discountCode = 4;
   string paymentMethod = 5;
   Receiver receiver = 6;
   repeated OrderGroup orders = 7;
   optional int32 coin = 8;
+  string shippingMethod = 9;
 }
 
 message Receiver {

@@ -57,8 +57,11 @@ export class VideoController {
 
   @Get(':id')
   @ApiOkResponse({ type: VideoResponseDto })
-  async getVideo(@Param() params: GetVideoRequestDto) {
-    return this.videoService.getVideo(params);
+  async getVideo(
+    @Param() params: GetVideoRequestDto,
+    @UserData('shopId') shopId: string,
+  ) {
+    return this.videoService.getVideo({ ...params, shopId });
   }
 
   @Patch(':id')
@@ -67,12 +70,14 @@ export class VideoController {
     @Param('id') id: string,
     @Body() body: UpdateVideoRequestDto,
     @ProcessId() processId: string,
+    @UserData('shopId') shopId: string,
   ) {
     return this.videoService.updateVideo({
       processId,
       id,
       productId: body.productId,
       isHidden: body.isHidden,
+      shopId,
     });
   }
 
@@ -81,7 +86,8 @@ export class VideoController {
   async deleteVideo(
     @Param() params: DeleteVideoRequestDto,
     @ProcessId() processId: string,
+    @UserData('shopId') shopId: string,
   ) {
-    return this.videoService.deleteVideo({ ...params, processId });
+    return this.videoService.deleteVideo({ ...params, processId, shopId });
   }
 }

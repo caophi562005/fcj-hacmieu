@@ -134,6 +134,7 @@ export class ProductRepository {
     const existingSkus = await this.prismaService.sKU.findMany({
       where: {
         productId: request.id,
+        product: { shopId: request.shopId, deletedAt: null },
         deletedAt: null,
       },
     });
@@ -175,6 +176,7 @@ export class ProductRepository {
       this.prismaService.product.update({
         where: {
           id: request.id,
+          shopId: request.shopId,
           deletedAt: null,
         },
         data: {
@@ -425,8 +427,9 @@ export class ProductRepository {
         ? { contains: data.name, mode: 'insensitive' as const }
         : undefined,
       shopId: data.shopId || undefined,
-      isApproved: data.isApproved,
-      status: data.status || undefined,
+      isApproved: data.publicOnly ? true : data.isApproved,
+      isHidden: data.publicOnly ? false : undefined,
+      status: data.publicOnly ? ProductStatusValues.ACTIVE : data.status || undefined,
       categories:
         categories.length > 0
           ? {
@@ -486,6 +489,12 @@ export class ProductRepository {
       where: {
         id: data.id,
         deletedAt: null,
+        ...(data.shopId && { shopId: data.shopId }),
+        ...(data.publicOnly && {
+          status: ProductStatusValues.ACTIVE,
+          isApproved: true,
+          isHidden: false,
+        }),
       },
       include: {
         ...this.productResponseInclude,

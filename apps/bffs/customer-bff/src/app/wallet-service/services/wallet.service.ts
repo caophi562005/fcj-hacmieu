@@ -1,5 +1,4 @@
 import {
-  AdjustWalletRequest,
   GetMyTransactionsRequest,
   GetMyTransactionsResponse,
   GetMyWalletRequest,
@@ -29,10 +28,6 @@ export class WalletService implements OnModuleInit {
 
   async getMyWallet(data: GetMyWalletRequest): Promise<WalletResponse> {
     return firstValueFrom(this.walletModule.getMyWallet(data));
-  }
-
-  async adjustWallet(data: AdjustWalletRequest): Promise<WalletResponse> {
-    return firstValueFrom(this.walletModule.adjustWallet(data));
   }
 
   async getMyTransactions(

@@ -8,7 +8,10 @@ import { ReviewService } from './services/review.service';
 
 @Module({
   imports: [
-    ClientsModule.register([GrpcClientProvider(GrpcService.AI_SERVICE)]),
+    ClientsModule.register([
+      GrpcClientProvider(GrpcService.AI_SERVICE),
+      GrpcClientProvider(GrpcService.ORDER_SERVICE),
+    ]),
   ],
   controllers: [ReviewGrpcController],
   providers: [ReviewRepository, ReviewService],

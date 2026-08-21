@@ -49,7 +49,7 @@ export const CreateReviewRequestSchema = z
 export const UpdateReviewRequestSchema = z
   .object({
     id: z.uuid(),
-    userId: z.uuid(),
+    userId: z.uuid().optional(),
     content: z.string().max(1000).optional(),
     rating: z.number().int().min(1).max(5).optional(),
     mediaUrls: z.array(z.string().url()).optional(),
@@ -62,7 +62,7 @@ export const UpdateReviewRequestSchema = z
 export const DeleteReviewRequestSchema = z
   .object({
     id: z.uuid(),
-    userId: z.uuid(),
+    userId: z.uuid().optional(),
   })
   .extend({
     processId: z.uuid().optional(),

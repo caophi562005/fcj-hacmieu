@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as auth from "../auth.js";
 import type * as bot_agent from "../bot/agent.js";
 import type * as bot_cleanup from "../bot/cleanup.js";
 import type * as bot_conversations from "../bot/conversations.js";
@@ -15,6 +16,7 @@ import type * as bot_files from "../bot/files.js";
 import type * as bot_messages from "../bot/messages.js";
 import type * as bot_models from "../bot/models.js";
 import type * as bot_rag from "../bot/rag.js";
+import type * as bot_session from "../bot/session.js";
 import type * as bot_tools_search from "../bot/tools/search.js";
 import type * as conversations from "../conversations.js";
 import type * as crons from "../crons.js";
@@ -27,6 +29,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  auth: typeof auth;
   "bot/agent": typeof bot_agent;
   "bot/cleanup": typeof bot_cleanup;
   "bot/conversations": typeof bot_conversations;
@@ -34,6 +37,7 @@ declare const fullApi: ApiFromModules<{
   "bot/messages": typeof bot_messages;
   "bot/models": typeof bot_models;
   "bot/rag": typeof bot_rag;
+  "bot/session": typeof bot_session;
   "bot/tools/search": typeof bot_tools_search;
   conversations: typeof conversations;
   crons: typeof crons;

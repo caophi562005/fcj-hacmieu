@@ -8,7 +8,6 @@ import {
   GetManyOrdersResponseDto,
   GetOrderRequestDto,
   GetOrderResponseDto,
-  UpdateOrderStatusRequestDto,
 } from '@common/interfaces/dtos/order';
 import {
   Body,
@@ -17,7 +16,6 @@ import {
   Get,
   Param,
   Post,
-  Put,
   Query,
 } from '@nestjs/common';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
@@ -73,17 +71,6 @@ export class OrderController {
       ...body,
       processId,
       userId,
-    });
-  }
-
-  @Put('status')
-  async updateStatusOrder(
-    @Body() body: UpdateOrderStatusRequestDto,
-    @ProcessId() processId: string,
-  ) {
-    return this.orderService.updateStatusOrder({
-      ...body,
-      processId,
     });
   }
 

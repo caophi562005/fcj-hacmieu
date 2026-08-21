@@ -96,6 +96,7 @@ model WalletTransaction {
     @@index([userId, createdAt])
     @@index([walletId, createdAt])
     @@index([userId, source])
+    @@unique([userId, source, referenceId])
 }
 
 model Credit {

@@ -1,6 +1,9 @@
 import { AppConfiguration } from '@common/configurations/app.config';
 import { SqsConfiguration } from '@common/configurations/sqs.config';
-import { OrderStatusValues } from '@common/constants/order.constant';
+import {
+  OrderStatusValues,
+  ShippingMethodFees,
+} from '@common/constants/order.constant';
 import { PaymentStatusValues } from '@common/constants/payment.constant';
 import { PrismaErrorValues } from '@common/constants/prisma.constant';
 import { DiscountTypeValues } from '@common/constants/promotion.constant';
@@ -147,6 +150,10 @@ export class OrderService implements OnModuleInit {
     userId,
     ...data
   }: CreateOrderRequest): Promise<CreateOrderResponse> {
+    const shippingFee = ShippingMethodFees[data.shippingMethod];
+    if (shippingFee === undefined) {
+      throw new BadRequestException('Error.InvalidShippingMethod');
+    }
     const requestedCoin = Math.max(0, Math.floor(data.coin ?? 0));
     if (requestedCoin > 0) {
       const wallet = await firstValueFrom(
@@ -265,7 +272,7 @@ export class OrderService implements OnModuleInit {
       let remainingDiscount = discountAmount;
 
       sortedOrders.forEach((order) => {
-        const orderTotal = order.itemTotal + data.shippingFee;
+        const orderTotal = order.itemTotal + shippingFee;
         if (remainingDiscount >= orderTotal) {
           // Giảm hết order này
           order.discount = -orderTotal;
@@ -308,7 +315,7 @@ export class OrderService implements OnModuleInit {
 
         const orderPayableAfterDiscount = Math.max(
           0,
-          order.itemTotal + data.shippingFee + order.discount,
+          order.itemTotal + shippingFee + order.discount,
         );
 
         if (orderPayableAfterDiscount <= 0) return;
@@ -334,7 +341,7 @@ export class OrderService implements OnModuleInit {
     const mergedData = {
       userId,
       receiver: data.receiver,
-      shippingFee: data.shippingFee,
+      shippingFee,
       paymentMethod: data.paymentMethod,
       paymentId,
       orders: ordersWithTotal,

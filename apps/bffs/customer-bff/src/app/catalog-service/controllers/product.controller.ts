@@ -47,6 +47,7 @@ export class ProductController {
     return this.productService.getManyProducts({
       ...queries,
       categories: normalizeStringArrayQuery(queries.categories),
+      publicOnly: true,
       processId,
     });
   }
@@ -57,6 +58,10 @@ export class ProductController {
     @Param() params: GetProductRequestDto,
     @ProcessId() processId: string,
   ) {
-    return this.productService.getProduct({ ...params, processId });
+    return this.productService.getProduct({
+      ...params,
+      publicOnly: true,
+      processId,
+    });
   }
 }

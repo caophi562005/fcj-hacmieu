@@ -20,6 +20,8 @@ export class GetManyVideosRequestDto extends createZodDto(
 export class GetVideoRequestDto extends createZodDto(
   GetVideoRequestSchema.omit({
     processId: true,
+    shopId: true,
+    publicOnly: true,
   }),
 ) {}
 
@@ -32,11 +34,11 @@ export class CreateVideoRequestDto extends createZodDto(
 ) {}
 
 export class UpdateVideoRequestDto extends createZodDto(
-  UpdateVideoRequestSchema.omit({ processId: true, id: true }),
+  UpdateVideoRequestSchema.omit({ processId: true, id: true, shopId: true }),
 ) {}
 
 export class DeleteVideoRequestDto extends createZodDto(
-  DeleteVideoRequestSchema.omit({ processId: true }),
+  DeleteVideoRequestSchema.omit({ processId: true, shopId: true }),
 ) {}
 
 //=================================================================================================

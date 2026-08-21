@@ -1,12 +1,11 @@
 import { ProcessId } from '@common/decorators/process-id.decorator';
 import { UserData } from '@common/decorators/user-data.decorator';
 import {
-  AdjustWalletRequestDto,
   GetMyTransactionsRequestDto,
   GetMyTransactionsResponseDto,
   WalletResponseDto,
 } from '@common/interfaces/dtos/wallet';
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { WalletService } from '../services/wallet.service';
 
@@ -38,17 +37,4 @@ export class WalletController {
     });
   }
 
-  @Post('adjust')
-  @ApiOkResponse({ type: WalletResponseDto })
-  async adjustWallet(
-    @Body() body: AdjustWalletRequestDto,
-    @ProcessId() processId: string,
-    @UserData('userId') userId: string,
-  ) {
-    return this.walletService.adjustWallet({
-      ...body,
-      userId,
-      processId,
-    });
-  }
 }

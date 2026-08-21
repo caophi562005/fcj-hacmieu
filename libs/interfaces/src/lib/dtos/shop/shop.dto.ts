@@ -4,8 +4,10 @@ import {
   DeleteShopRequestSchema,
   GetManyShopsRequestSchema,
   GetManyShopsResponseSchema,
+  GetManyPublicShopsResponseSchema,
   GetShopRequestSchema,
   ShopResponseSchema,
+  PublicShopResponseSchema,
   UpdateShopRequestSchema,
 } from '@common/interfaces/models/shop';
 import { createZodDto } from 'nestjs-zod';
@@ -48,10 +50,9 @@ export class GetShopResponseDto extends createZodDto(
 ) {}
 
 export class GetShopResponseByUserDto extends createZodDto(
-  ResponseSchema(
-    ShopResponseSchema.omit({
-      merchantId: true,
-      status: true,
-    }),
-  ),
+  ResponseSchema(PublicShopResponseSchema),
+) {}
+
+export class GetManyPublicShopsResponseDto extends createZodDto(
+  ResponseSchema(GetManyPublicShopsResponseSchema),
 ) {}

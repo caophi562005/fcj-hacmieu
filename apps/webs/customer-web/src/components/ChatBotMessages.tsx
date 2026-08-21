@@ -5,12 +5,12 @@ import { toUIMessages, useThreadMessages } from '@convex-dev/agent/react';
 import { Bot } from 'lucide-react';
 import { StickToBottom } from 'use-stick-to-bottom';
 
-type Props = { threadId: string };
+type Props = { threadId: string; sessionId: string };
 
-export function ChatBotMessages({ threadId }: Props) {
+export function ChatBotMessages({ threadId, sessionId }: Props) {
   const messages = useThreadMessages(
     api.bot.messages.list,
-    { threadId },
+    { threadId, sessionId },
     { initialNumItems: 20 },
   );
 
