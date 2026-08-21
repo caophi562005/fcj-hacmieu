@@ -24,6 +24,12 @@ export const AppConfigurationSchema = z.object({
   ORDER_SELLER_COMMISSION_PERCENT: z.coerce.number().default(5),
   ORDER_USER_REWARD_PERCENT: z.coerce.number().default(10),
   ORDER_SELLER_TAX_PERCENT: z.coerce.number().default(1.5),
+  HOME_PLACEMENT_MAX_ACTIVE: z.coerce.number().int().positive().default(20),
+  HOME_PLACEMENT_PRICE_PER_DAY: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(10000),
 });
 
 const configServer = AppConfigurationSchema.safeParse(process.env);

@@ -94,6 +94,8 @@ export class ProductRepository {
     return this.prismaService.product.create({
       data: {
         ...productData,
+        isApproved: productData.status === ProductStatusValues.ACTIVE,
+        isHidden: false,
 
         provinceId: 1,
         provinceName: 'test provinceName',
@@ -177,6 +179,10 @@ export class ProductRepository {
         },
         data: {
           ...productData,
+          isApproved:
+            productData.status === ProductStatusValues.ACTIVE
+              ? true
+              : productData.isApproved,
           updatedById: request.updatedById,
           brand: brandId
             ? {

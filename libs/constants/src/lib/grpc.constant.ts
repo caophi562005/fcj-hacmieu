@@ -61,6 +61,7 @@ export const GrpcModuleName = {
     PAYOUT: 'PayoutModule',
     PLATFORM_LEDGER: 'PlatformLedgerModule',
     SETTLEMENT: 'SellerSettlementModule',
+    PRODUCT_PLACEMENT: 'ProductPlacementModule',
   },
 
   AI: {

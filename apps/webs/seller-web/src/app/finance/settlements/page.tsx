@@ -3,6 +3,8 @@ import { Pagination } from '@common/web-ui/index';
 import { Clock3, LockKeyhole, WalletCards } from 'lucide-react';
 import { getSettlements, getSettlementSummary } from '../../../lib/settlement';
 
+export const dynamic = 'force-dynamic';
+
 type SearchParams = {
   page?: string;
   orderId?: string;
@@ -14,12 +16,12 @@ type SearchParams = {
 };
 
 const STATUS_LABEL: Record<string, string> = {
-  PENDING: 'Đang chờ',
-  PROCESSING: 'Đang ghi có',
-  SETTLED: 'Đã ghi có',
-  HELD: 'Tạm khóa',
+  PENDING: 'Chờ nhận tiền',
+  PROCESSING: 'Đang chuyển vào số dư',
+  SETTLED: 'Đã nhận tiền',
+  HELD: 'Đang tạm giữ',
   CANCELLED: 'Đã hủy',
-  FAILED: 'Chờ thử lại',
+  FAILED: 'Chuyển tiền chưa thành công',
 };
 
 function pageNumber(raw?: string) {
@@ -36,7 +38,7 @@ function href(sp: SearchParams, page: number) {
   return query ? `/finance/settlements?${query}` : '/finance/settlements';
 }
 
-export const metadata = { title: 'Khoản tiền sắp nhận — V-Shop Seller' };
+export const metadata = { title: 'Lịch giải ngân — V-Shop Seller' };
 
 export default async function SellerSettlementsPage({
   searchParams,
@@ -53,16 +55,16 @@ export default async function SellerSettlementsPage({
   return (
     <div className="max-w-7xl mx-auto space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-ink">Khoản tiền sắp nhận</h1>
+        <h1 className="text-3xl font-bold text-ink">Lịch giải ngân</h1>
         <p className="text-ink-muted mt-1">
-          Doanh thu được ghi có vào số dư sau 3 ngày kể từ khi đơn giao thành
-          công.
+          Doanh thu thực nhận được chuyển vào số dư tài chính sau 3 ngày kể từ
+          khi đơn giao thành công.
         </p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <SummaryCard
           icon={<WalletCards />}
-          label="Đang chờ ghi có"
+          label="Chờ nhận tiền"
           amount={summary.pendingAmount}
           note={`${summary.pendingCount} khoản`}
         />
@@ -154,7 +156,7 @@ export default async function SellerSettlementsPage({
               <tr className="bg-surface-alt text-ink-muted border-b">
                 <th className="p-4">Đơn hàng</th>
                 <th className="p-4">Hoàn thành</th>
-                <th className="p-4">Dự kiến ghi có</th>
+                <th className="p-4">Dự kiến nhận</th>
                 <th className="p-4 text-right">Thực nhận</th>
                 <th className="p-4">Trạng thái</th>
               </tr>
@@ -189,7 +191,7 @@ export default async function SellerSettlementsPage({
               {!data.settlements.length && (
                 <tr>
                   <td colSpan={5} className="p-10 text-center text-ink-muted">
-                    Chưa có khoản tiền chờ ghi có.
+                    Chưa có dữ liệu giải ngân.
                   </td>
                 </tr>
               )}

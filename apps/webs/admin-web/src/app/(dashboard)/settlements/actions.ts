@@ -10,7 +10,7 @@ function message(error: unknown) {
   if (typeof value === 'string') return value;
   return error instanceof Error
     ? error.message
-    : 'Cập nhật khoản ghi có thất bại.';
+    : 'Cập nhật trạng thái giải ngân thất bại.';
 }
 
 export async function updateSettlementAction(input: {

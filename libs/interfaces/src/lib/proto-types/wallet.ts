@@ -75,7 +75,7 @@ export interface AdjustShopCreditRequest {
   shopId: string;
   /** CREDIT | DEBIT */
   type: string;
-  /** ORDER_REVENUE | PLATFORM_FEE | TAX_WITHHOLDING | WITHDRAWAL | REFUND | SYSTEM | OTHER */
+  /** ORDER_REVENUE | PLATFORM_FEE | TAX_WITHHOLDING | WITHDRAWAL | REFUND | SYSTEM | PRODUCT_PLACEMENT | OTHER */
   source: string;
   referenceId?: string | undefined;
   amount: number;
@@ -392,6 +392,70 @@ export interface GetPlatformLedgerListResponse {
   items: PlatformLedgerResponse[];
 }
 
+export interface GetProductPlacementConfigRequest {
+  processId?: string | undefined;
+}
+
+export interface CreateProductPlacementRequest {
+  processId?: string | undefined;
+  shopId: string;
+  productId: string;
+  durationDays: number;
+  idempotencyKey: string;
+}
+
+export interface GetProductPlacementsRequest {
+  processId?: string | undefined;
+  shopId?: string | undefined;
+  page: number;
+  limit: number;
+  status?: string | undefined;
+}
+
+export interface GetActiveProductPlacementsRequest {
+  processId?: string | undefined;
+}
+
+export interface CancelProductPlacementRequest {
+  processId?: string | undefined;
+  placementId: string;
+  actorId: string;
+  reason: string;
+}
+
+export interface ProductPlacementResponse {
+  id: string;
+  shopId: string;
+  productId: string;
+  position: number;
+  amount: number;
+  durationDays: number;
+  startsAt: string;
+  endsAt: string;
+  status: string;
+  cancelledAt?: string | undefined;
+  cancelledBy?: string | undefined;
+  cancelReason?: string | undefined;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProductPlacementConfigResponse {
+  maxActiveSlots: number;
+  occupiedSlots: number;
+  availableSlots: number;
+  pricePerDay: number;
+  allowedDurations: number[];
+}
+
+export interface GetProductPlacementsResponse {
+  page: number;
+  limit: number;
+  totalItems: number;
+  totalPages: number;
+  placements: ProductPlacementResponse[];
+}
+
 export const WALLET_SERVICE_PACKAGE_NAME = "WALLET_SERVICE";
 
 export interface WalletModuleClient {
@@ -641,3 +705,63 @@ export function PlatformLedgerModuleControllerMethods() {
 }
 
 export const PLATFORM_LEDGER_MODULE_SERVICE_NAME = "PlatformLedgerModule";
+
+export interface ProductPlacementModuleClient {
+  getProductPlacementConfig(request: GetProductPlacementConfigRequest): Observable<ProductPlacementConfigResponse>;
+
+  createProductPlacement(request: CreateProductPlacementRequest): Observable<ProductPlacementResponse>;
+
+  getProductPlacements(request: GetProductPlacementsRequest): Observable<GetProductPlacementsResponse>;
+
+  getActiveProductPlacements(request: GetActiveProductPlacementsRequest): Observable<GetProductPlacementsResponse>;
+
+  cancelProductPlacement(request: CancelProductPlacementRequest): Observable<ProductPlacementResponse>;
+}
+
+export interface ProductPlacementModuleController {
+  getProductPlacementConfig(
+    request: GetProductPlacementConfigRequest,
+  ):
+    | Promise<ProductPlacementConfigResponse>
+    | Observable<ProductPlacementConfigResponse>
+    | ProductPlacementConfigResponse;
+
+  createProductPlacement(
+    request: CreateProductPlacementRequest,
+  ): Promise<ProductPlacementResponse> | Observable<ProductPlacementResponse> | ProductPlacementResponse;
+
+  getProductPlacements(
+    request: GetProductPlacementsRequest,
+  ): Promise<GetProductPlacementsResponse> | Observable<GetProductPlacementsResponse> | GetProductPlacementsResponse;
+
+  getActiveProductPlacements(
+    request: GetActiveProductPlacementsRequest,
+  ): Promise<GetProductPlacementsResponse> | Observable<GetProductPlacementsResponse> | GetProductPlacementsResponse;
+
+  cancelProductPlacement(
+    request: CancelProductPlacementRequest,
+  ): Promise<ProductPlacementResponse> | Observable<ProductPlacementResponse> | ProductPlacementResponse;
+}
+
+export function ProductPlacementModuleControllerMethods() {
+  return function (constructor: Function) {
+    const grpcMethods: string[] = [
+      "getProductPlacementConfig",
+      "createProductPlacement",
+      "getProductPlacements",
+      "getActiveProductPlacements",
+      "cancelProductPlacement",
+    ];
+    for (const method of grpcMethods) {
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcMethod("ProductPlacementModule", method)(constructor.prototype[method], method, descriptor);
+    }
+    const grpcStreamMethods: string[] = [];
+    for (const method of grpcStreamMethods) {
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcStreamMethod("ProductPlacementModule", method)(constructor.prototype[method], method, descriptor);
+    }
+  };
+}
+
+export const PRODUCT_PLACEMENT_MODULE_SERVICE_NAME = "ProductPlacementModule";

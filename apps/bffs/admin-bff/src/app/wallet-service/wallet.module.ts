@@ -12,6 +12,8 @@ import { PayoutService } from './services/payout.service';
 import { PlatformLedgerService } from './services/platform-ledger.service';
 import { WalletService } from './services/wallet.service';
 import { SettlementService } from './services/settlement.service';
+import { ProductPlacementController } from './controllers/product-placement.controller';
+import { ProductPlacementService } from './services/product-placement.service';
 
 @Module({
   imports: [
@@ -23,6 +25,7 @@ import { SettlementService } from './services/settlement.service';
     PayoutController,
     PlatformLedgerController,
     SettlementController,
+    ProductPlacementController,
   ],
   providers: [
     WalletService,
@@ -30,6 +33,7 @@ import { SettlementService } from './services/settlement.service';
     PayoutService,
     PlatformLedgerService,
     SettlementService,
+    ProductPlacementService,
   ],
 })
 export class WalletModule {}

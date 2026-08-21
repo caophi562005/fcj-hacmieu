@@ -38,7 +38,13 @@ enum CreditTransactionSource {
     WITHDRAWAL
     REFUND
     SYSTEM
+    PRODUCT_PLACEMENT
     OTHER
+}
+
+enum ProductPlacementStatus {
+    ACTIVE
+    CANCELLED
 }
 
 enum PayoutStatus {
@@ -102,8 +108,34 @@ model Credit {
     transactions CreditTransaction[]
     payouts      PayoutRequest[]
     settlements  SellerSettlement[]
+    placements   ProductPlacement[]
 
     @@index([shopId])
+}
+
+model ProductPlacement {
+    id             String                 @id @default(uuid())
+    idempotencyKey String                 @unique
+    creditId       String
+    credit         Credit                 @relation(fields: [creditId], references: [id], onDelete: Cascade)
+    shopId         String
+    productId      String
+    position       Int
+    amount         Int
+    durationDays   Int
+    startsAt       DateTime               @default(now())
+    endsAt         DateTime
+    status         ProductPlacementStatus @default(ACTIVE)
+    cancelledAt    DateTime?
+    cancelledBy    String?
+    cancelReason   String?
+    createdAt      DateTime               @default(now())
+    updatedAt      DateTime               @updatedAt
+
+    @@index([status, endsAt])
+    @@index([position, status, endsAt])
+    @@index([shopId, status, endsAt])
+    @@index([productId, status, endsAt])
 }
 
 model SellerSettlement {

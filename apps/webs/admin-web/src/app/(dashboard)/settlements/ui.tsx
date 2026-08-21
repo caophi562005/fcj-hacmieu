@@ -20,7 +20,7 @@ export function SettlementActions({
         .prompt(
           action === 'HOLD'
             ? 'Nhập lý do tạm khóa giải ngân:'
-            : 'Nhập lý do hủy khoản ghi có:',
+            : 'Nhập lý do hủy khoản giải ngân:',
         )
         ?.trim();
       if (!reason) return;
@@ -31,7 +31,7 @@ export function SettlementActions({
         action,
         reason,
       });
-      if (result.ok) toast.success('Cập nhật khoản ghi có thành công.');
+      if (result.ok) toast.success('Cập nhật trạng thái giải ngân thành công.');
       else toast.error(result.message);
     });
   };

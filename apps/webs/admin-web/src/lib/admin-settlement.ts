@@ -96,6 +96,7 @@ export async function updateAdminSettlement(input: {
     `/admin/settlements/${input.settlementId}/action`,
     { action: input.action, ...(input.reason ? { reason: input.reason } : {}) },
   );
-  if (!res.data?.data) throw new Error('Cập nhật khoản ghi có thất bại.');
+  if (!res.data?.data)
+    throw new Error('Cập nhật trạng thái giải ngân thất bại.');
   return res.data.data;
 }

@@ -5,15 +5,17 @@ import {
   Tag,
   Truck,
 } from 'lucide-react';
+import { ProductStatusValues } from '@common/constants/product.constant';
 import Link from 'next/link';
 import { FeaturedCategoriesCarousel } from '../components/FeaturedCategoriesCarousel';
 import { MainShell } from '../components/MainShell';
 import { ProductCard } from '../components/ProductCard';
 import {
-  getManyProducts,
+  getProductById,
   getRootCategories,
   toCardProduct,
 } from '../lib/catalog';
+import { getHomeProductPlacements } from '../lib/product-placement';
 
 const BANNERS = [
   {
@@ -32,21 +34,26 @@ const PERKS = [
   { icon: Headphones, label: 'Hỗ trợ 24/7' },
 ];
 
-function shuffle<T>(arr: T[]): T[] {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-
 export default async function HomePage() {
-  const [rootCategories, productsRes] = await Promise.all([
+  const [rootCategories, placementRes] = await Promise.all([
     getRootCategories(),
-    getManyProducts({ limit: 20 }),
+    getHomeProductPlacements(),
   ]);
-  const featured = shuffle(productsRes.products.map(toCardProduct));
+  const products = await Promise.all(
+    placementRes.placements.map((placement) =>
+      getProductById(placement.productId),
+    ),
+  );
+  const featured = products
+    .filter(
+      (product): product is NonNullable<typeof product> =>
+        !!product &&
+        product.status === ProductStatusValues.ACTIVE &&
+        product.isApproved &&
+        !product.isHidden &&
+        !product.deletedAt,
+    )
+    .map(toCardProduct);
   return (
     <MainShell>
       {/* Hero banner */}
@@ -109,21 +116,20 @@ export default async function HomePage() {
       {/* Featured */}
       <section className="container-page mt-6">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-base md:text-lg font-semibold">Gợi ý hôm nay</h2>
-          <Link href="/search" className="text-sm text-primary hover:underline">
-            Xem thêm
-          </Link>
+          <h2 className="text-base md:text-lg font-semibold">
+            Sản phẩm nổi bật
+          </h2>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           {featured.map((p) => (
             <ProductCard key={p.id} p={p} />
           ))}
         </div>
-        <div className="mt-6 flex justify-center">
-          <Link href="/search" className="btn-outline btn-md rounded-full px-8">
-            Xem thêm sản phẩm
-          </Link>
-        </div>
+        {!featured.length && (
+          <div className="card p-8 text-center text-muted">
+            Chưa có sản phẩm nào đang được quảng bá.
+          </div>
+        )}
       </section>
     </MainShell>
   );

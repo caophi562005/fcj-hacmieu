@@ -10,6 +10,7 @@ import {
   Video,
   Wallet,
   Clock3,
+  Megaphone,
 } from 'lucide-react';
 
 const ITEMS: NavItem[] = [
@@ -29,7 +30,12 @@ const ITEMS: NavItem[] = [
     icon: Wallet,
     match: (p) => p === '/finance' || p.startsWith('/finance/payouts'),
   },
-  { href: '/finance/settlements', label: 'Khoản tiền sắp nhận', icon: Clock3 },
+  { href: '/finance/settlements', label: 'Lịch giải ngân', icon: Clock3 },
+  {
+    href: '/marketing/placements',
+    label: 'Quảng bá sản phẩm',
+    icon: Megaphone,
+  },
   { href: '/settings', label: 'Thiết lập Shop', icon: Settings },
 ];
 

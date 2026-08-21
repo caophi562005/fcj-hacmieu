@@ -102,13 +102,15 @@ export default async function RevenuePage({
   const totalPages = Math.max(ledgerRes.totalPages || 1, 1);
 
   // Link xuất file Excel/CSV từ admin-bff
-  const exportUrl = `${process.env.ADMIN_BFF_URL || 'http://localhost:3300'}/api/v1/admin/revenue/export-excel?${new URLSearchParams({
-    ...(shopId ? { shopId } : {}),
-    ...(startDate ? { startDate } : {}),
-    ...(endDate ? { endDate } : {}),
-    ...(sortBy ? { sortBy } : {}),
-    ...(sortOrder ? { sortOrder } : {}),
-  }).toString()}`;
+  const exportUrl = `${process.env.ADMIN_BFF_URL || 'http://localhost:3300'}/api/v1/admin/revenue/export-excel?${new URLSearchParams(
+    {
+      ...(shopId ? { shopId } : {}),
+      ...(startDate ? { startDate } : {}),
+      ...(endDate ? { endDate } : {}),
+      ...(sortBy ? { sortBy } : {}),
+      ...(sortOrder ? { sortOrder } : {}),
+    },
+  ).toString()}`;
 
   return (
     <div className="space-y-6">
@@ -119,7 +121,8 @@ export default async function RevenuePage({
             Báo cáo Doanh thu & Thuế Sàn
           </h1>
           <p className="text-ink-muted text-sm mt-1">
-            Thống kê doanh số giao dịch (GMV), hoa hồng sàn (5%), thuế trích nộp thay (1.5%) &amp; sổ cái tài chính.
+            Thống kê doanh số giao dịch (GMV), hoa hồng sàn (5%), thuế trích nộp
+            thay (1.5%) &amp; sổ cái tài chính.
           </p>
         </div>
 
@@ -173,7 +176,7 @@ export default async function RevenuePage({
         />
         <Link href={shopId ? `/settlements?shopId=${shopId}` : '/settlements'}>
           <KpiCard
-            title="Chờ ghi có Seller"
+            title="Chờ giải ngân Seller"
             subtitle={`${settlementSummary.pendingCount} khoản đang chờ`}
             value={formatVND(settlementSummary.pendingAmount)}
             icon={Clock3}
@@ -262,9 +265,12 @@ export default async function RevenuePage({
       {/* Financial Ledger Table */}
       <section className="card overflow-hidden">
         <div className="p-4 border-b border-slate-100 flex items-center justify-between">
-          <h3 className="font-semibold text-ink">Sổ cái chi tiết doanh thu đơn hàng</h3>
+          <h3 className="font-semibold text-ink">
+            Sổ cái chi tiết doanh thu đơn hàng
+          </h3>
           <span className="text-xs text-ink-muted">
-            Hiển thị {items.length} trên tổng số {ledgerRes.totalItems} giao dịch
+            Hiển thị {items.length} trên tổng số {ledgerRes.totalItems} giao
+            dịch
           </span>
         </div>
 
@@ -274,11 +280,21 @@ export default async function RevenuePage({
               <tr className="bg-surface-alt border-b border-slate-100 text-ink-muted">
                 <th className="py-3 px-4 text-left font-semibold">Order ID</th>
                 <th className="py-3 px-4 text-left font-semibold">Shop ID</th>
-                <th className="py-3 px-4 text-right font-semibold">Doanh thu gộp</th>
-                <th className="py-3 px-4 text-right font-semibold">Phí sàn (5%)</th>
-                <th className="py-3 px-4 text-right font-semibold">Thuế nộp thay (1.5%)</th>
-                <th className="py-3 px-4 text-right font-semibold">Thực nhận Seller</th>
-                <th className="py-3 px-4 text-left font-semibold">Ngày ghi nhận</th>
+                <th className="py-3 px-4 text-right font-semibold">
+                  Doanh thu gộp
+                </th>
+                <th className="py-3 px-4 text-right font-semibold">
+                  Phí sàn (5%)
+                </th>
+                <th className="py-3 px-4 text-right font-semibold">
+                  Thuế nộp thay (1.5%)
+                </th>
+                <th className="py-3 px-4 text-right font-semibold">
+                  Thực nhận Seller
+                </th>
+                <th className="py-3 px-4 text-left font-semibold">
+                  Ngày ghi nhận
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-ink">

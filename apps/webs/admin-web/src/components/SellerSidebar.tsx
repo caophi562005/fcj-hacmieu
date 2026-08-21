@@ -40,6 +40,7 @@ const ITEMS: NavItem[] = [
   { href: '/payouts', label: 'Yêu cầu rút tiền', icon: CircleDollarSign },
   { href: '/settlements', label: 'Đối soát Seller', icon: Clock3 },
   { href: '/revenue', label: 'Báo cáo doanh thu', icon: DollarSign },
+  { href: '/placements', label: 'Quản lý quảng bá', icon: Megaphone },
   { href: '/knowledge-base', label: 'Knowledge Base', icon: BookOpen },
   { href: '/reports', label: 'Quản lý báo cáo', icon: Megaphone },
 ];

@@ -77,7 +77,7 @@ message AdjustShopCreditRequest {
   optional string processId = 1;
   string shopId = 2;
   string type = 3; // CREDIT | DEBIT
-  string source = 4; // ORDER_REVENUE | PLATFORM_FEE | TAX_WITHHOLDING | WITHDRAWAL | REFUND | SYSTEM | OTHER
+  string source = 4; // ORDER_REVENUE | PLATFORM_FEE | TAX_WITHHOLDING | WITHDRAWAL | REFUND | SYSTEM | PRODUCT_PLACEMENT | OTHER
   optional string referenceId = 5;
   int32 amount = 6;
   string description = 7;
@@ -412,4 +412,76 @@ message GetPlatformLedgerListResponse {
   int32 totalItems = 3;
   int32 totalPages = 4;
   repeated PlatformLedgerResponse items = 5;
+}
+
+service ProductPlacementModule {
+  rpc GetProductPlacementConfig(GetProductPlacementConfigRequest) returns (ProductPlacementConfigResponse);
+  rpc CreateProductPlacement(CreateProductPlacementRequest) returns (ProductPlacementResponse);
+  rpc GetProductPlacements(GetProductPlacementsRequest) returns (GetProductPlacementsResponse);
+  rpc GetActiveProductPlacements(GetActiveProductPlacementsRequest) returns (GetProductPlacementsResponse);
+  rpc CancelProductPlacement(CancelProductPlacementRequest) returns (ProductPlacementResponse);
+}
+
+message GetProductPlacementConfigRequest {
+  optional string processId = 1;
+}
+
+message CreateProductPlacementRequest {
+  optional string processId = 1;
+  string shopId = 2;
+  string productId = 3;
+  int32 durationDays = 4;
+  string idempotencyKey = 5;
+}
+
+message GetProductPlacementsRequest {
+  optional string processId = 1;
+  optional string shopId = 2;
+  int32 page = 3;
+  int32 limit = 4;
+  optional string status = 5;
+}
+
+message GetActiveProductPlacementsRequest {
+  optional string processId = 1;
+}
+
+message CancelProductPlacementRequest {
+  optional string processId = 1;
+  string placementId = 2;
+  string actorId = 3;
+  string reason = 4;
+}
+
+message ProductPlacementResponse {
+  string id = 1;
+  string shopId = 2;
+  string productId = 3;
+  int32 position = 4;
+  int32 amount = 5;
+  int32 durationDays = 6;
+  string startsAt = 7;
+  string endsAt = 8;
+  string status = 9;
+  optional string cancelledAt = 10;
+  optional string cancelledBy = 11;
+  optional string cancelReason = 12;
+  string createdAt = 13;
+  string updatedAt = 14;
+}
+
+message ProductPlacementConfigResponse {
+  int32 maxActiveSlots = 1;
+  int32 occupiedSlots = 2;
+  int32 availableSlots = 3;
+  int32 pricePerDay = 4;
+  repeated int32 allowedDurations = 5;
+}
+
+message GetProductPlacementsResponse {
+  int32 page = 1;
+  int32 limit = 2;
+  int32 totalItems = 3;
+  int32 totalPages = 4;
+  repeated ProductPlacementResponse placements = 5;
 }

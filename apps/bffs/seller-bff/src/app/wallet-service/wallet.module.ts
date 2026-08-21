@@ -8,12 +8,24 @@ import { SettlementController } from './controllers/settlement.controller';
 import { CreditService } from './services/credit.service';
 import { PayoutService } from './services/payout.service';
 import { SettlementService } from './services/settlement.service';
+import { ProductPlacementController } from './controllers/product-placement.controller';
+import { ProductPlacementService } from './services/product-placement.service';
 
 @Module({
   imports: [
     ClientsModule.register([GrpcClientProvider(GrpcService.WALLET_SERVICE)]),
   ],
-  controllers: [CreditController, PayoutController, SettlementController],
-  providers: [CreditService, PayoutService, SettlementService],
+  controllers: [
+    CreditController,
+    PayoutController,
+    SettlementController,
+    ProductPlacementController,
+  ],
+  providers: [
+    CreditService,
+    PayoutService,
+    SettlementService,
+    ProductPlacementService,
+  ],
 })
 export class WalletModule {}

@@ -19,6 +19,7 @@ export const CreditTransactionSourceValues = {
   WITHDRAWAL: 'WITHDRAWAL',
   REFUND: 'REFUND',
   SYSTEM: 'SYSTEM',
+  PRODUCT_PLACEMENT: 'PRODUCT_PLACEMENT',
   OTHER: 'OTHER',
 } as const;
 
@@ -29,6 +30,7 @@ export const CreditTransactionSourceEnums = z.enum([
   CreditTransactionSourceValues.WITHDRAWAL,
   CreditTransactionSourceValues.REFUND,
   CreditTransactionSourceValues.SYSTEM,
+  CreditTransactionSourceValues.PRODUCT_PLACEMENT,
   CreditTransactionSourceValues.OTHER,
 ]);
 

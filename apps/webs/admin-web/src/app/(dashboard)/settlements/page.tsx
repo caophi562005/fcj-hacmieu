@@ -7,6 +7,8 @@ import {
 } from '../../../lib/admin-settlement';
 import { SettlementActions } from './ui';
 
+export const dynamic = 'force-dynamic';
+
 type SearchParams = {
   page?: string;
   orderId?: string;
@@ -18,12 +20,12 @@ type SearchParams = {
   sortOrder?: string;
 };
 const STATUS_LABEL: Record<string, string> = {
-  PENDING: 'Đang chờ',
-  PROCESSING: 'Đang ghi có',
-  SETTLED: 'Đã ghi có',
-  HELD: 'Tạm khóa',
+  PENDING: 'Chờ giải ngân',
+  PROCESSING: 'Đang xử lý giải ngân',
+  SETTLED: 'Đã giải ngân',
+  HELD: 'Đang tạm giữ',
   CANCELLED: 'Đã hủy',
-  FAILED: 'Lỗi - chờ thử lại',
+  FAILED: 'Giải ngân lỗi',
 };
 const number = (raw?: string) =>
   raw && Number.isFinite(Number(raw)) ? Number(raw) : undefined;
@@ -70,13 +72,14 @@ export default async function SettlementsPage({
           Đối soát khoản tiền Seller
         </h1>
         <p className="text-sm text-ink-muted mt-1">
-          Theo dõi khoản sắp ghi có và khóa thủ công khi cần kiểm tra giao dịch.
+          Theo dõi lịch giải ngân và tạm giữ thủ công khi cần kiểm tra giao
+          dịch.
         </p>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <Summary
           icon={<WalletCards />}
-          label="Đang chờ"
+          label="Chờ giải ngân"
           amount={summary.pendingAmount}
           count={summary.pendingCount}
         />
@@ -88,13 +91,13 @@ export default async function SettlementsPage({
         />
         <Summary
           icon={<LockKeyhole />}
-          label="Đang khóa"
+          label="Đang tạm giữ"
           amount={summary.heldAmount}
           count={summary.heldCount}
         />
         <Summary
           icon={<AlertTriangle />}
-          label="Đang lỗi"
+          label="Giải ngân lỗi"
           amount={summary.failedAmount}
           count={summary.failedCount}
         />
@@ -213,7 +216,7 @@ export default async function SettlementsPage({
               {!data.settlements.length && (
                 <tr>
                   <td colSpan={6} className="p-10 text-center text-ink-muted">
-                    Không tìm thấy khoản ghi có.
+                    Không tìm thấy khoản giải ngân.
                   </td>
                 </tr>
               )}
