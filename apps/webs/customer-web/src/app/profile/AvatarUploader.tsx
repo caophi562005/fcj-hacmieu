@@ -36,7 +36,7 @@ export function AvatarUploader({ src, alt }: Props) {
   };
 
   return (
-    <div className="flex flex-col items-center text-center md:border-l md:border-border-subtle md:pl-6">
+    <div className="flex flex-col items-center text-center xl:border-l xl:border-border-subtle xl:pl-6">
       <form ref={formRef} action={formAction}>
         <div className="relative">
           {/* eslint-disable-next-line @next/next/no-img-element */}

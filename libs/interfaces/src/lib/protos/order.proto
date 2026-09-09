@@ -50,6 +50,22 @@ message CreateOrderRequest {
   repeated OrderGroup orders = 7;
   optional int32 coin = 8;
   string shippingMethod = 9;
+  ShippingAddress shippingAddress = 10;
+}
+
+message ShippingAddress {
+  int32 provinceId = 1;
+  int32 districtId = 2;
+  string wardCode = 3;
+}
+
+message ShippingLocation {
+  int32 provinceId = 1;
+  int32 districtId = 2;
+  int32 wardId = 3;
+  string address = 4;
+  optional double latitude = 5;
+  optional double longitude = 6;
 }
 
 message Receiver {
@@ -57,6 +73,8 @@ message Receiver {
   string phone = 2;
   string address = 3;
   optional string note = 4;
+  optional double latitude = 5;
+  optional double longitude = 6;
 }
 
 message OrderGroup {
@@ -139,6 +157,8 @@ message Order {
   optional string deletedAt = 19;
   string createdAt = 20;
   string updatedAt = 21;
+  optional ShippingLocation shippingOrigin = 22;
+  optional ShippingLocation shippingDestination = 23;
 }
 
 message GetOrderResponse {
@@ -164,6 +184,8 @@ message GetOrderResponse {
   string firstProductImage = 17;
   string createdAt = 18;
   string updatedAt = 19;
+  optional ShippingLocation shippingOrigin = 20;
+  optional ShippingLocation shippingDestination = 21;
 }
 
 message OrderItemSnapshot {

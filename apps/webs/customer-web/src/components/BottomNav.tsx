@@ -1,7 +1,13 @@
 'use client';
 
 import type { LucideIcon } from 'lucide-react';
-import { House, LayoutGrid, MessageCircle, UserRound } from 'lucide-react';
+import {
+  House,
+  LayoutGrid,
+  MessageCircle,
+  Play,
+  UserRound,
+} from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -20,6 +26,12 @@ const ITEMS: Item[] = [
     label: 'Danh mục',
     icon: LayoutGrid,
     match: (p) => p.startsWith('/search'),
+  },
+  {
+    href: '/videos',
+    label: 'Video',
+    icon: Play,
+    match: (p) => p.startsWith('/videos'),
   },
   {
     href: '/chat',
@@ -50,7 +62,8 @@ export function BottomNav() {
           <Link
             key={it.href}
             href={it.href}
-            className={`relative flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors ${
+            aria-current={active ? 'page' : undefined}
+            className={`relative min-w-0 flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors ${
               active ? 'text-primary' : 'text-ink-muted hover:text-primary'
             }`}
           >

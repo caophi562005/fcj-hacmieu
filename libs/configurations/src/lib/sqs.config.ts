@@ -24,6 +24,15 @@ export const SqsConfigurationSchema = z.object({
 
   UPDATE_VIDEO_STATUS_QUEUE_NAME: z.string(),
   UPDATE_VIDEO_STATUS_QUEUE_URL: z.string(),
+
+  SEND_MARKETING_EMAIL_QUEUE_NAME: z.string().default('SEND_MARKETING_EMAIL'),
+  SEND_MARKETING_EMAIL_QUEUE_URL: z
+    .string()
+    .default('https://sqs.ap-southeast-1.amazonaws.com/example/send-marketing-email'),
+  SCAN_MARKETING_QUEUE_NAME: z.string().default('SCAN_MARKETING'),
+  SCAN_MARKETING_QUEUE_URL: z
+    .string()
+    .default('https://sqs.ap-southeast-1.amazonaws.com/example/scan-marketing'),
 });
 
 const configServer = SqsConfigurationSchema.safeParse(process.env);

@@ -1,3 +1,5 @@
+export * from './marketing-preference-request.model';
+export * from './marketing-preference-response.model';
 export * from './auth/auth-request.model';
 export * from './auth/auth-response.model';
 export * from './permission/permission-request.model';

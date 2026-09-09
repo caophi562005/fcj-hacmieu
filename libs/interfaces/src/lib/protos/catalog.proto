@@ -7,8 +7,22 @@ service ProductModule {
   rpc GetProduct(GetProductRequest) returns (ProductResponse);
   rpc CreateProduct(CreateProductRequest) returns (ProductResponse);
   rpc UpdateProduct(UpdateProductRequest) returns (ProductResponse);
+  rpc UpdateSoldCounts(UpdateSoldCountsRequest) returns (UpdateSoldCountsResponse);
   rpc DeleteProduct(DeleteProductRequest) returns (ProductResponse);
   rpc ValidateProducts(ValidateProductsRequest) returns (ValidateProductsResponse);
+}
+
+message ProductSoldCount {
+  string productId = 1;
+  int32 soldCount = 2;
+}
+
+message UpdateSoldCountsRequest {
+  repeated ProductSoldCount items = 1;
+}
+
+message UpdateSoldCountsResponse {
+  int32 count = 1;
 }
 
 //==================== GetManyProductsRequest ====================//
@@ -72,6 +86,7 @@ message CreateProductRequest {
   repeated string categories = 20;
   repeated SKUInput skus = 21;
   repeated AttributeProduct attributes = 22;
+  int32 weightGram = 23;
 }
 
 //==================== UpdateProductRequest ====================//
@@ -104,6 +119,7 @@ message UpdateProductRequest {
   repeated AttributeProduct attributes = 22;
   string id = 23;
   optional bool isApproved = 24;
+  int32 weightGram = 25;
 }
 
 //==================== DeleteProductRequest ====================//
@@ -151,6 +167,7 @@ message ProductResponse {
   string deletedAt = 32;
   string createdAt = 33;
   string updatedAt = 34;
+  int32 weightGram = 35;
 }
 
 service CategoryModule {
@@ -455,6 +472,10 @@ message ValidateItemsResponse {
   string skuValue = 9;
   string shopId = 10;
   string error = 11;
+  int32 provinceId = 12;
+  int32 districtId = 13;
+  int32 wardId = 14;
+  int32 weightGram = 15;
 }
 
 

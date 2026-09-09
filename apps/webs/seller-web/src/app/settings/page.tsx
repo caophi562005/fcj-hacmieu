@@ -2,6 +2,7 @@ import { Info } from 'lucide-react';
 import { redirect } from 'next/navigation';
 import { isAuthed } from '../../lib/auth';
 import { getMerchant, getShop } from '../../lib/shop';
+import { getDistricts, getProvinces, getWards } from '../../lib/location';
 import { MerchantInfo } from './_components/MerchantInfo';
 import {
   EMPTY_SHOP,
@@ -14,7 +15,11 @@ export const metadata = { title: 'Thiết lập Shop — V-Shop Seller' };
 export default async function SettingsPage() {
   if (!(await isAuthed())) redirect('/login?next=/settings');
 
-  const [merchant, shop] = await Promise.all([getMerchant(), getShop()]);
+  const [merchant, shop, provinces] = await Promise.all([
+    getMerchant(),
+    getShop(),
+    getProvinces(),
+  ]);
 
   // Chưa đăng ký bán hàng → không có merchant. Hiển thị notice.
   if (!merchant) {
@@ -50,6 +55,11 @@ export default async function SettingsPage() {
         logo: shop.logo,
         banner: shop.banner,
         pickupAddress: shop.pickupAddress,
+        pickupProvinceId: shop.pickupProvinceId ?? null,
+        pickupDistrictId: shop.pickupDistrictId ?? null,
+        pickupWardId: shop.pickupWardId ?? null,
+        pickupLatitude: shop.pickupLatitude ?? null,
+        pickupLongitude: shop.pickupLongitude ?? null,
         returnAddress: shop.returnAddress,
         bankName: shop.bankName,
         bankAccountNumber: shop.bankAccountNumber,
@@ -57,6 +67,15 @@ export default async function SettingsPage() {
         bankAccountName: shop.bankAccountName,
       }
     : EMPTY_SHOP;
+
+  const [initialDistricts, initialWards] = await Promise.all([
+    shop?.pickupProvinceId
+      ? getDistricts(shop.pickupProvinceId)
+      : Promise.resolve([]),
+    shop?.pickupDistrictId
+      ? getWards(shop.pickupDistrictId)
+      : Promise.resolve([]),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -67,6 +86,9 @@ export default async function SettingsPage() {
           mode={shop ? 'edit' : 'create'}
           initial={initial}
           merchantId={merchant.id}
+          provinces={provinces}
+          initialDistricts={initialDistricts}
+          initialWards={initialWards}
         />
       </div>
     </div>

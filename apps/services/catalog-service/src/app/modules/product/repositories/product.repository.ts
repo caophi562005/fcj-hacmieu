@@ -8,6 +8,7 @@ import {
   ValidateItemResult,
   ValidateProductsRequest,
 } from '@common/interfaces/models/catalog';
+import { ProductSoldCount } from '@common/interfaces/proto-types/catalog';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 
@@ -19,6 +20,21 @@ interface AttributeInputItem {
 @Injectable()
 export class ProductRepository {
   constructor(private readonly prismaService: PrismaService) {}
+
+  async updateSoldCounts(items: ProductSoldCount[]) {
+    if (items.length === 0) return { count: 0 };
+
+    await this.prismaService.$transaction(
+      items.map((item) =>
+        this.prismaService.product.update({
+          where: { id: item.productId, deletedAt: null },
+          data: { soldCount: item.soldCount },
+        }),
+      ),
+    );
+
+    return { count: items.length };
+  }
 
   private readonly productResponseInclude = {
     skus: {
@@ -96,13 +112,6 @@ export class ProductRepository {
         ...productData,
         isApproved: productData.status === ProductStatusValues.ACTIVE,
         isHidden: false,
-
-        provinceId: 1,
-        provinceName: 'test provinceName',
-        districtId: 1,
-        districtName: 'test districtName',
-        wardId: 1,
-        wardName: 'test wardName',
 
         createdById: data.createdById,
         brand: data.brandId
@@ -309,6 +318,10 @@ export class ProductRepository {
           productImage: '',
           skuValue: '',
           shopId: '',
+          provinceId: 0,
+          districtId: 0,
+          wardId: 0,
+          weightGram: 500,
           error: 'SKU_NOT_FOUND',
         });
         continue;
@@ -327,6 +340,10 @@ export class ProductRepository {
           productImage: '',
           skuValue: '',
           shopId: '',
+          provinceId: 0,
+          districtId: 0,
+          wardId: 0,
+          weightGram: 500,
           error: 'PRODUCT_ID_MISMATCH',
         });
         continue;
@@ -347,6 +364,10 @@ export class ProductRepository {
           productImage: sku.image,
           skuValue: sku.value,
           shopId: product.shopId,
+          provinceId: product.provinceId,
+          districtId: product.districtId,
+          wardId: product.wardId,
+          weightGram: product.weightGram,
           error: `PRODUCT_STATUS_${product.status}`,
         });
         continue;
@@ -366,6 +387,10 @@ export class ProductRepository {
           productImage: sku.image,
           skuValue: sku.value,
           shopId: product.shopId,
+          provinceId: product.provinceId,
+          districtId: product.districtId,
+          wardId: product.wardId,
+          weightGram: product.weightGram,
           error: 'PRODUCT_UNAVAILABLE',
         });
         continue;
@@ -384,6 +409,10 @@ export class ProductRepository {
           productImage: sku.image,
           skuValue: sku.value,
           shopId: product.shopId,
+          provinceId: product.provinceId,
+          districtId: product.districtId,
+          wardId: product.wardId,
+          weightGram: product.weightGram,
           error: 'OUT_OF_STOCK',
         });
         continue;
@@ -400,6 +429,10 @@ export class ProductRepository {
         productName: product.name,
         productImage: sku.image,
         skuValue: sku.value,
+        provinceId: product.provinceId,
+        districtId: product.districtId,
+        wardId: product.wardId,
+        weightGram: product.weightGram,
         shopId: product.shopId, // Order Service sẽ dùng cái này để group đơn
       });
     }
@@ -429,7 +462,9 @@ export class ProductRepository {
       shopId: data.shopId || undefined,
       isApproved: data.publicOnly ? true : data.isApproved,
       isHidden: data.publicOnly ? false : undefined,
-      status: data.publicOnly ? ProductStatusValues.ACTIVE : data.status || undefined,
+      status: data.publicOnly
+        ? ProductStatusValues.ACTIVE
+        : data.status || undefined,
       categories:
         categories.length > 0
           ? {

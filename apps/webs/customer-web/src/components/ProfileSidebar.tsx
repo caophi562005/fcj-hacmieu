@@ -29,21 +29,21 @@ const ITEMS: { href: string; label: string; icon: LucideIcon }[] = [
 export function ProfileSidebar({ user }: { user: MockUser }) {
   const pathname = usePathname() ?? '';
   return (
-    <aside className="w-full md:w-60 shrink-0">
+    <aside className="min-w-0 w-full md:w-60 shrink-0">
       <div className="card p-4 mb-4 flex items-center gap-3">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={user.avatar}
           alt={user.name}
-          className="w-12 h-12 rounded-full object-cover bg-surface-muted"
+          className="w-12 h-12 shrink-0 rounded-full object-cover bg-surface-muted"
         />
         <div className="min-w-0">
           <div className="text-xs text-ink-subtle">Tài khoản</div>
           <div className="font-semibold truncate">{user.name}</div>
         </div>
       </div>
-      <nav className="card p-2">
-        <ul className="flex md:block overflow-x-auto md:overflow-visible scrollbar-none">
+      <nav className="card p-2" aria-label="Điều hướng tài khoản">
+        <ul className="flex md:block overflow-x-auto md:overflow-visible">
           {ITEMS.map((it) => {
             const active =
               it.href === '/profile'
@@ -54,14 +54,15 @@ export function ProfileSidebar({ user }: { user: MockUser }) {
               <li key={it.href} className="shrink-0 md:shrink">
                 <Link
                   href={it.href}
+                  aria-current={active ? 'page' : undefined}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded text-sm whitespace-nowrap transition-colors ${
                     active
                       ? 'bg-primary-50 text-primary font-semibold'
                       : 'text-ink-muted hover:bg-surface-muted hover:text-ink'
                   }`}
                 >
-                  <Icon className="w-4 h-4" />
-                  <span>{it.label}</span>
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <span className="md:whitespace-normal">{it.label}</span>
                 </Link>
               </li>
             );

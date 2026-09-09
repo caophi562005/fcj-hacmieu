@@ -231,3 +231,58 @@ message UserBasicInfo {
   repeated string group = 7;
   string avatar = 8;
 }
+
+service MarketingPreferenceModule {
+  rpc GetMarketingPreferences(GetMarketingPreferencesRequest) returns (MarketingPreferencesResponse);
+  rpc UpdateMarketingPreferences(UpdateMarketingPreferencesRequest) returns (MarketingPreferencesResponse);
+  rpc GetMarketingRecipients(GetMarketingRecipientsRequest) returns (GetMarketingRecipientsResponse);
+  rpc UnsubscribeMarketing(UnsubscribeMarketingRequest) returns (MarketingPreferencesResponse);
+}
+
+message GetMarketingPreferencesRequest {
+  optional string processId = 1;
+  string userId = 2;
+}
+
+message UpdateMarketingPreferencesRequest {
+  optional string processId = 1;
+  string userId = 2;
+  bool promotionOffers = 3;
+  bool voucherReminders = 4;
+  string consentSource = 5;
+  string consentVersion = 6;
+}
+
+message GetMarketingRecipientsRequest {
+  optional string processId = 1;
+  string topic = 2;
+  int32 page = 3;
+  int32 limit = 4;
+  repeated string userIds = 5;
+}
+
+message UnsubscribeMarketingRequest {
+  optional string processId = 1;
+  string email = 2;
+  string topic = 3;
+}
+
+message MarketingPreferencesResponse {
+  string userId = 1;
+  bool promotionOffers = 2;
+  bool voucherReminders = 3;
+}
+
+message MarketingRecipient {
+  string userId = 1;
+  string email = 2;
+  string username = 3;
+}
+
+message GetMarketingRecipientsResponse {
+  int32 page = 1;
+  int32 limit = 2;
+  int32 totalItems = 3;
+  int32 totalPages = 4;
+  repeated MarketingRecipient recipients = 5;
+}

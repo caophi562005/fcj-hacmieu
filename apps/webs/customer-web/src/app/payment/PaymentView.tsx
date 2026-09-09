@@ -11,12 +11,28 @@ import {
   Wallet,
 } from 'lucide-react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useTransition } from 'react';
 import { toast } from 'react-toastify';
 import { formatVnd } from '../../components/ProductCard';
 import { createOrderAction } from '../../lib/order.actions';
+import type {
+  DistrictResponse,
+  ProvinceResponse,
+  WardResponse,
+} from '../../lib/location';
+import {
+  loadPaymentDistricts,
+  loadPaymentWards,
+  quoteShippingAction,
+} from './actions';
 import type { PaymentShopGroupView, PaymentVoucherView } from './payment.types';
+import type { DeliveryCoordinates } from './DeliveryMapDialog';
+
+const DeliveryMapDialog = dynamic(() => import('./DeliveryMapDialog'), {
+  ssr: false,
+});
 
 type Props = {
   groups: PaymentShopGroupView[];
@@ -25,6 +41,12 @@ type Props = {
   initialName?: string;
   initialPhone?: string;
   initialAddress?: string;
+  provinces: ProvinceResponse[];
+  initialProvinceId: number;
+  initialDistrictId: number;
+  initialWardId: number;
+  initialDistricts: DistrictResponse[];
+  initialWards: WardResponse[];
 };
 
 type ShippingMethod = 'fast' | 'std';
@@ -79,9 +101,15 @@ export function PaymentView({
   initialName,
   initialPhone,
   initialAddress,
+  provinces,
+  initialProvinceId,
+  initialDistrictId,
+  initialWardId,
+  initialDistricts,
+  initialWards,
 }: Props) {
   const router = useRouter();
-  const [shippingMethod, setShippingMethod] = useState<ShippingMethod>('fast');
+  const [shippingMethod, setShippingMethod] = useState<ShippingMethod>('std');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('COD');
   const [coinInput, setCoinInput] = useState('0');
 
@@ -91,6 +119,22 @@ export function PaymentView({
     () => initialAddress || '',
   );
   const [receiverNote, setReceiverNote] = useState('');
+  const [isMapOpen, setIsMapOpen] = useState(false);
+  const [deliveryCoordinates, setDeliveryCoordinates] =
+    useState<DeliveryCoordinates | null>(null);
+  const [provinceId, setProvinceId] = useState(initialProvinceId);
+  const [districtId, setDistrictId] = useState(initialDistrictId);
+  const [wardId, setWardId] = useState(initialWardId);
+  const [districts, setDistricts] = useState(initialDistricts);
+  const [wards, setWards] = useState(initialWards);
+  const [shippingQuote, setShippingQuote] = useState<{
+    key: string;
+    total: number;
+    byShop: Record<string, number>;
+    error?: string;
+  } | null>(null);
+  const [quoteRetry, setQuoteRetry] = useState(0);
+  const [isLoadingAddress, startAddressTransition] = useTransition();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isOrderSuccess, setIsOrderSuccess] = useState(false);
@@ -104,8 +148,131 @@ export function PaymentView({
     [groups],
   );
 
-  const shippingFee =
-    SHIPPING_OPTIONS.find((option) => option.id === shippingMethod)?.fee ?? 0;
+  useEffect(() => {
+    if (!provinceId) {
+      setDistricts([]);
+      setWards([]);
+      return;
+    }
+    if (provinceId === initialProvinceId) {
+      setDistricts(initialDistricts);
+      return;
+    }
+    startAddressTransition(async () => {
+      setDistricts(await loadPaymentDistricts(provinceId));
+      setWards([]);
+    });
+  }, [provinceId, initialProvinceId, initialDistricts]);
+
+  useEffect(() => {
+    if (!districtId) {
+      setWards([]);
+      return;
+    }
+    if (districtId === initialDistrictId) {
+      setWards(initialWards);
+      return;
+    }
+    startAddressTransition(async () => {
+      setWards(await loadPaymentWards(districtId));
+    });
+  }, [districtId, initialDistrictId, initialWards]);
+
+  const selectedProvince = provinces.find((item) => item.id === provinceId);
+  const selectedDistrict = districts.find((item) => item.id === districtId);
+  const selectedWard = wards.find((item) => item.id === wardId);
+  const fullAddress = [
+    receiverAddress.trim(),
+    selectedWard?.name,
+    selectedDistrict?.name,
+    selectedProvince?.name,
+  ]
+    .filter(Boolean)
+    .join(', ');
+
+  const shippingGroups = useMemo(() => {
+    const result = new Map<
+      string,
+      {
+        shopId: string;
+        fromDistrictId: number;
+        fromWardCode: string;
+        weight: number;
+      }
+    >();
+    for (const shop of groups) {
+      const weight = shop.items.reduce(
+        (sum, item) => sum + item.weightGram * item.quantity,
+        0,
+      );
+      result.set(shop.shopId, {
+        shopId: shop.shopId,
+        fromDistrictId: shop.pickupDistrictId,
+        fromWardCode: String(shop.pickupWardId),
+        weight,
+      });
+    }
+    return Array.from(result.values());
+  }, [groups]);
+
+  const quoteKey =
+    provinceId &&
+    districtId &&
+    wardId &&
+    receiverAddress.trim() &&
+    shippingGroups.length
+      ? JSON.stringify([
+          provinceId,
+          districtId,
+          wardId,
+          receiverAddress.trim(),
+          shippingGroups,
+          quoteRetry,
+        ])
+      : '';
+
+  useEffect(() => {
+    if (!quoteKey) return;
+    let cancelled = false;
+    // Debounce address edits and discard responses for an older address/cart.
+    const timer = setTimeout(async () => {
+      try {
+        const result = await quoteShippingAction({
+          destinationDistrictId: districtId,
+          destinationWardCode: String(wardId),
+          groups: shippingGroups,
+        });
+        if (cancelled) return;
+        setShippingQuote(
+          result.ok
+            ? { key: quoteKey, total: result.total, byShop: result.byShop }
+            : { key: quoteKey, total: 0, byShop: {}, error: result.message },
+        );
+      } catch {
+        if (!cancelled) {
+          setShippingQuote({
+            key: quoteKey,
+            total: 0,
+            byShop: {},
+            error: 'Không thể tính phí vận chuyển. Vui lòng thử lại.',
+          });
+        }
+      }
+    }, 400);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [quoteKey, districtId, wardId, shippingGroups]);
+
+  const currentQuote = shippingQuote?.key === quoteKey ? shippingQuote : null;
+  const isShippingReady = !!quoteKey && !!currentQuote && !currentQuote.error;
+  const shippingStatus = !quoteKey
+    ? 'Chưa đủ địa chỉ'
+    : currentQuote?.error
+      ? 'Chưa tính được phí'
+      : 'Đang tính phí...';
+  const shippingFee = isShippingReady ? currentQuote.total : 0;
   const voucherDiscount = voucher ? calcDiscount(voucher, subtotal) : 0;
   const payableBeforeCoin = Math.max(
     0,
@@ -134,11 +301,19 @@ export function PaymentView({
     if (
       !receiverName.trim() ||
       !receiverPhone.trim() ||
-      !receiverAddress.trim()
+      !receiverAddress.trim() ||
+      !provinceId ||
+      !districtId ||
+      !wardId
     ) {
       toast.info(
         'Vui lòng nhập đầy đủ tên, số điện thoại và địa chỉ nhận hàng',
       );
+      return;
+    }
+
+    if (!isShippingReady) {
+      toast.info('Vui lòng đợi tính phí vận chuyển hoàn tất.');
       return;
     }
 
@@ -148,11 +323,17 @@ export function PaymentView({
       discountCode: voucher?.code,
       coin: appliedCoin,
       paymentMethod,
+      shippingAddress: {
+        provinceId,
+        districtId,
+        wardCode: String(wardId),
+      },
       receiver: {
         name: receiverName.trim(),
         phone: receiverPhone.trim(),
-        address: receiverAddress.trim(),
+        address: fullAddress,
         note: receiverNote.trim() || undefined,
+        ...(deliveryCoordinates ?? {}),
       },
       orders: groups.map((group) => ({
         shopId: group.shopId,
@@ -239,6 +420,62 @@ export function PaymentView({
               />
             </label>
           </div>
+          <div className="grid sm:grid-cols-3 gap-3 mt-3">
+            <label className="block">
+              <span className="text-sm font-medium">Tỉnh / Thành</span>
+              <select
+                className="input mt-1"
+                value={provinceId || ''}
+                onChange={(event) => {
+                  setProvinceId(Number(event.target.value) || 0);
+                  setDistrictId(0);
+                  setWardId(0);
+                }}
+              >
+                <option value="">Chọn tỉnh / thành</option>
+                {provinces.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block">
+              <span className="text-sm font-medium">Quận / Huyện</span>
+              <select
+                className="input mt-1"
+                value={districtId || ''}
+                disabled={!provinceId || isLoadingAddress}
+                onChange={(event) => {
+                  setDistrictId(Number(event.target.value) || 0);
+                  setWardId(0);
+                }}
+              >
+                <option value="">Chọn quận / huyện</option>
+                {districts.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block">
+              <span className="text-sm font-medium">Phường / Xã</span>
+              <select
+                className="input mt-1"
+                value={wardId || ''}
+                disabled={!districtId || isLoadingAddress}
+                onChange={(event) => setWardId(Number(event.target.value) || 0)}
+              >
+                <option value="">Chọn phường / xã</option>
+                {wards.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
           <label className="block mt-3">
             <span className="text-sm font-medium">Địa chỉ</span>
             <input
@@ -248,6 +485,18 @@ export function PaymentView({
               onChange={(e) => setReceiverAddress(e.target.value)}
             />
           </label>
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              className="btn-outline btn-md"
+              onClick={() => setIsMapOpen(true)}
+            >
+              <MapPin className="h-4 w-4" />
+              {deliveryCoordinates
+                ? 'Thay đổi vị trí trên bản đồ'
+                : 'Chọn vị trí trên bản đồ'}
+            </button>
+          </div>
           <label className="block mt-3">
             <span className="text-sm font-medium">Ghi chú (tuỳ chọn)</span>
             <textarea
@@ -307,44 +556,54 @@ export function PaymentView({
                 </div>
               </div>
             ))}
+            <div className="flex justify-between border-t border-border-subtle px-4 py-3 text-sm">
+              <span className="text-ink-muted">Phí GHN của shop</span>
+              <span className="font-semibold">
+                {isShippingReady
+                  ? formatVnd(currentQuote.byShop[group.shopId] ?? 0)
+                  : shippingStatus}
+              </span>
+            </div>
           </div>
         ))}
 
         <div className="card p-4">
           <div className="font-semibold mb-3">Đơn vị vận chuyển</div>
           <div className="space-y-2">
-            {SHIPPING_OPTIONS.map((method) => (
-              <label
-                key={method.id}
-                className={`flex items-center gap-3 p-3 rounded border cursor-pointer transition-colors duration-200 ${
-                  shippingMethod === method.id
-                    ? 'border-primary bg-primary-50/40'
-                    : 'border-border hover:border-primary'
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="shipping"
-                  checked={shippingMethod === method.id}
-                  onChange={() => setShippingMethod(method.id)}
-                  className="accent-primary"
-                />
-                <Truck className="w-4 h-4 text-primary" />
-                <div className="flex-1">
-                  <div className="text-sm font-medium">{method.label}</div>
-                  <div className="text-xs text-ink-subtle">
-                    Dự kiến: {method.eta}
+            {SHIPPING_OPTIONS.filter((method) => method.id === 'std').map(
+              (method) => (
+                <label
+                  key={method.id}
+                  className={`flex items-center gap-3 p-3 rounded border cursor-pointer transition-colors duration-200 ${
+                    shippingMethod === method.id
+                      ? 'border-primary bg-primary-50/40'
+                      : 'border-border hover:border-primary'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="shipping"
+                    checked={shippingMethod === method.id}
+                    onChange={() => setShippingMethod(method.id)}
+                    className="accent-primary"
+                  />
+                  <Truck className="w-4 h-4 text-primary" />
+                  <div className="flex-1">
+                    <div className="text-sm font-medium">{method.label}</div>
+                    <div className="text-xs text-ink-subtle">
+                      Dự kiến: {method.eta}
+                    </div>
                   </div>
-                </div>
-                <div className="text-sm font-semibold">
-                  {method.fee === 0 ? (
-                    <span className="text-success">Miễn phí</span>
-                  ) : (
-                    formatVnd(method.fee)
-                  )}
-                </div>
-              </label>
-            ))}
+                  <div className="text-sm font-semibold">
+                    {!isShippingReady ? (
+                      <span className="text-ink-muted">{shippingStatus}</span>
+                    ) : (
+                      formatVnd(shippingFee)
+                    )}
+                  </div>
+                </label>
+              ),
+            )}
           </div>
         </div>
 
@@ -429,7 +688,9 @@ export function PaymentView({
             <div className="flex justify-between">
               <dt className="text-ink-muted">Phí vận chuyển</dt>
               <dd>
-                {shippingFee === 0 ? (
+                {!isShippingReady ? (
+                  <span className="text-ink-muted">{shippingStatus}</span>
+                ) : shippingFee === 0 ? (
                   <span className="text-success">Miễn phí</span>
                 ) : (
                   formatVnd(shippingFee)
@@ -457,10 +718,23 @@ export function PaymentView({
             <div className="border-t border-border-subtle pt-2 flex justify-between">
               <dt className="font-semibold">Tổng thanh toán</dt>
               <dd className="font-bold text-primary text-lg">
-                {formatVnd(total)}
+                {isShippingReady ? formatVnd(total) : '—'}
               </dd>
             </div>
           </dl>
+
+          {currentQuote?.error && (
+            <div role="alert" className="mt-3 text-sm text-danger">
+              <p>{currentQuote.error}</p>
+              <button
+                type="button"
+                className="mt-1 underline"
+                onClick={() => setQuoteRetry((retry) => retry + 1)}
+              >
+                Thử lại
+              </button>
+            </div>
+          )}
 
           {voucher?.code && (
             <p className="text-xs text-ink-subtle mt-2">
@@ -471,7 +745,7 @@ export function PaymentView({
           <button
             type="button"
             onClick={handleCreateOrder}
-            disabled={isSubmitting || totalItems === 0}
+            disabled={isSubmitting || totalItems === 0 || !isShippingReady}
             className="btn-primary btn-lg w-full mt-4 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {isSubmitting ? 'Đang đặt hàng...' : 'Đặt hàng'}
@@ -488,6 +762,12 @@ export function PaymentView({
           </p>
         </div>
       </aside>
+      <DeliveryMapDialog
+        open={isMapOpen}
+        initialCoordinates={deliveryCoordinates}
+        onClose={() => setIsMapOpen(false)}
+        onConfirm={setDeliveryCoordinates}
+      />
     </div>
   );
 }

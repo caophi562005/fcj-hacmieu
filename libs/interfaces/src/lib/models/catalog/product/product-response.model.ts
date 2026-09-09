@@ -63,6 +63,10 @@ export const ValidateItemResultSchema = z.object({
   productName: z.string(),
   productImage: z.url(),
   skuValue: z.string(),
+  provinceId: z.number().int(),
+  districtId: z.number().int(),
+  wardId: z.number().int(),
+  weightGram: z.number().int().positive(),
   shopId: z.string(), // Để check lại shop sở hữu
   error: z.string().optional(), // Lý do lỗi: "OUT_OF_STOCK", "PRODUCT_INACTIVE"...
 });

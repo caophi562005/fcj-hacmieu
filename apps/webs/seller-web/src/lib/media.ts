@@ -1,4 +1,12 @@
-import { createPresignedUrl as _createPresignedUrl } from '@common/web-core/lib/media';
+import {
+  buildProductImageFileName,
+  buildShopBannerFileName,
+  buildShopLogoFileName,
+  buildSkuImageFileName,
+  createServerMediaClient,
+  imageMimeTypeToExtension,
+  type PresignedImageInput,
+} from '@common/web-core/lib/server-media';
 import { createServerApi } from './api';
 
 export {
@@ -8,11 +16,7 @@ export {
   buildSkuImageFileName,
   imageMimeTypeToExtension,
   type PresignedImageInput,
-} from '@common/web-core/lib/media';
+};
 
-export async function createPresignedUrl(
-  payload: Parameters<typeof _createPresignedUrl>[1],
-) {
-  const api = await createServerApi();
-  return _createPresignedUrl(api, payload);
-}
+const sellerMediaClient = createServerMediaClient(createServerApi);
+export const { createPresignedUrl } = sellerMediaClient;

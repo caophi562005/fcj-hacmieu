@@ -125,6 +125,107 @@ export interface CheckPromotionRequest {
   userId: string;
 }
 
+export interface GetManyMarketingCampaignsRequest {
+  processId?: string | undefined;
+  status?: string | undefined;
+  page: number;
+  limit: number;
+}
+
+export interface GetMarketingCampaignRequest {
+  processId?: string | undefined;
+  id: string;
+}
+
+export interface CreateMarketingCampaignRequest {
+  processId?: string | undefined;
+  name: string;
+  promotionId: string;
+  subject: string;
+  preheader?: string | undefined;
+  introContent: string;
+  scheduledAt?: string | undefined;
+  createdById: string;
+}
+
+export interface DispatchMarketingCampaignRequest {
+  processId?: string | undefined;
+  id: string;
+}
+
+export interface ScanMarketingRequest {
+  processId?: string | undefined;
+  now?: string | undefined;
+}
+
+export interface ProcessMarketingDeliveryRequest {
+  processId?: string | undefined;
+  deliveryId: string;
+}
+
+export interface RecordMarketingWebhookRequest {
+  processId?: string | undefined;
+  payload: string;
+  svixId: string;
+  svixTimestamp: string;
+  svixSignature: string;
+}
+
+export interface MarketingCampaignResponse {
+  id: string;
+  name: string;
+  type: string;
+  status: string;
+  promotionId: string;
+  promotionCode: string;
+  promotionName: string;
+  subject: string;
+  preheader?: string | undefined;
+  introContent: string;
+  scheduledAt?: string | undefined;
+  startedAt?: string | undefined;
+  completedAt?: string | undefined;
+  recipientCount: number;
+  sentCount: number;
+  deliveredCount: number;
+  openedCount: number;
+  clickedCount: number;
+  bouncedCount: number;
+  complainedCount: number;
+  createdById: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GetManyMarketingCampaignsResponse {
+  page: number;
+  limit: number;
+  totalItems: number;
+  totalPages: number;
+  campaigns: MarketingCampaignResponse[];
+}
+
+export interface MarketingOperationResponse {
+  accepted: boolean;
+  queuedCount: number;
+  message: string;
+}
+
+export interface MarketingDeliveryResponse {
+  id: string;
+  type: string;
+  status: string;
+  campaignId?: string | undefined;
+  promotionId: string;
+  redemptionId?: string | undefined;
+  userId: string;
+  recipientEmail: string;
+  providerMessageId?: string | undefined;
+  errorMessage?: string | undefined;
+  sentAt?: string | undefined;
+  createdAt: string;
+}
+
 export interface ClaimPromotionRequest {
   processId?: string | undefined;
   promotionId: string;
@@ -153,6 +254,8 @@ export interface PromotionRedemptionResponse {
   usedAt?: string | undefined;
   cancelledAt?: string | undefined;
   createdAt: string;
+  promotionEndsAt?: string | undefined;
+  promotionStatus?: string | undefined;
 }
 
 export interface GetMyVouchersResponse {
@@ -261,3 +364,77 @@ export function RedemptionModuleControllerMethods() {
 }
 
 export const REDEMPTION_MODULE_SERVICE_NAME = "RedemptionModule";
+
+export interface MarketingModuleClient {
+  getManyMarketingCampaigns(request: GetManyMarketingCampaignsRequest): Observable<GetManyMarketingCampaignsResponse>;
+
+  getMarketingCampaign(request: GetMarketingCampaignRequest): Observable<MarketingCampaignResponse>;
+
+  createMarketingCampaign(request: CreateMarketingCampaignRequest): Observable<MarketingCampaignResponse>;
+
+  dispatchMarketingCampaign(request: DispatchMarketingCampaignRequest): Observable<MarketingOperationResponse>;
+
+  scanMarketing(request: ScanMarketingRequest): Observable<MarketingOperationResponse>;
+
+  processMarketingDelivery(request: ProcessMarketingDeliveryRequest): Observable<MarketingDeliveryResponse>;
+
+  recordMarketingWebhook(request: RecordMarketingWebhookRequest): Observable<MarketingOperationResponse>;
+}
+
+export interface MarketingModuleController {
+  getManyMarketingCampaigns(
+    request: GetManyMarketingCampaignsRequest,
+  ):
+    | Promise<GetManyMarketingCampaignsResponse>
+    | Observable<GetManyMarketingCampaignsResponse>
+    | GetManyMarketingCampaignsResponse;
+
+  getMarketingCampaign(
+    request: GetMarketingCampaignRequest,
+  ): Promise<MarketingCampaignResponse> | Observable<MarketingCampaignResponse> | MarketingCampaignResponse;
+
+  createMarketingCampaign(
+    request: CreateMarketingCampaignRequest,
+  ): Promise<MarketingCampaignResponse> | Observable<MarketingCampaignResponse> | MarketingCampaignResponse;
+
+  dispatchMarketingCampaign(
+    request: DispatchMarketingCampaignRequest,
+  ): Promise<MarketingOperationResponse> | Observable<MarketingOperationResponse> | MarketingOperationResponse;
+
+  scanMarketing(
+    request: ScanMarketingRequest,
+  ): Promise<MarketingOperationResponse> | Observable<MarketingOperationResponse> | MarketingOperationResponse;
+
+  processMarketingDelivery(
+    request: ProcessMarketingDeliveryRequest,
+  ): Promise<MarketingDeliveryResponse> | Observable<MarketingDeliveryResponse> | MarketingDeliveryResponse;
+
+  recordMarketingWebhook(
+    request: RecordMarketingWebhookRequest,
+  ): Promise<MarketingOperationResponse> | Observable<MarketingOperationResponse> | MarketingOperationResponse;
+}
+
+export function MarketingModuleControllerMethods() {
+  return function (constructor: Function) {
+    const grpcMethods: string[] = [
+      "getManyMarketingCampaigns",
+      "getMarketingCampaign",
+      "createMarketingCampaign",
+      "dispatchMarketingCampaign",
+      "scanMarketing",
+      "processMarketingDelivery",
+      "recordMarketingWebhook",
+    ];
+    for (const method of grpcMethods) {
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcMethod("MarketingModule", method)(constructor.prototype[method], method, descriptor);
+    }
+    const grpcStreamMethods: string[] = [];
+    for (const method of grpcStreamMethods) {
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcStreamMethod("MarketingModule", method)(constructor.prototype[method], method, descriptor);
+    }
+  };
+}
+
+export const MARKETING_MODULE_SERVICE_NAME = "MarketingModule";

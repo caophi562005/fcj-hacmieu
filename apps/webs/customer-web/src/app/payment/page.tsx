@@ -5,6 +5,7 @@ import { getProductById } from '../../lib/catalog';
 import { getMyVouchers } from '../../lib/promotions';
 import { getShopById } from '../../lib/shop';
 import { getCurrentUser } from '../../lib/iam';
+import { getDistricts, getProvinces, getWards } from '../../lib/location';
 import { getMyWallet } from '../../lib/wallet';
 import { PaymentView } from './PaymentView';
 import type { PaymentShopGroupView, PaymentVoucherView } from './payment.types';
@@ -57,12 +58,19 @@ export default async function PaymentPage({
     new Set(cart.cartItems.flatMap((g) => g.cartItems.map((i) => i.productId))),
   );
 
-  const [shops, products, myVouchers, wallet, user] = await Promise.all([
-    Promise.all(cart.cartItems.map((g) => getShopById(g.shopId))),
-    Promise.all(productIds.map((id) => getProductById(id))),
-    getMyVouchers({ status: 'AVAILABLE', limit: 50 }),
-    getMyWallet(),
-    getCurrentUser(),
+  const [shops, products, myVouchers, wallet, user, provinces] =
+    await Promise.all([
+      Promise.all(cart.cartItems.map((g) => getShopById(g.shopId))),
+      Promise.all(productIds.map((id) => getProductById(id))),
+      getMyVouchers({ status: 'AVAILABLE', limit: 50 }),
+      getMyWallet(),
+      getCurrentUser(),
+      getProvinces(),
+    ]);
+
+  const [initialDistricts, initialWards] = await Promise.all([
+    user?.provinceId ? getDistricts(user.provinceId) : Promise.resolve([]),
+    user?.districtId ? getWards(user.districtId) : Promise.resolve([]),
   ]);
 
   const skuPrice = new Map<string, number>();
@@ -80,6 +88,8 @@ export default async function PaymentPage({
         shopId: g.shopId,
         shopName: shop?.name ?? 'Shop không xác định',
         shopLogo: shop?.logo ?? null,
+        pickupDistrictId: shop?.pickupDistrictId ?? 0,
+        pickupWardId: shop?.pickupWardId ?? 0,
         items: g.cartItems
           .filter((it) => selectedIds.has(it.id))
           .map((it) => ({
@@ -91,6 +101,13 @@ export default async function PaymentPage({
             quantity: it.quantity,
             price:
               skuPrice.get(it.skuId) ?? productBasePrice.get(it.productId) ?? 0,
+            provinceId:
+              products.find((p) => p?.id === it.productId)?.provinceId ?? 0,
+            districtId:
+              products.find((p) => p?.id === it.productId)?.districtId ?? 0,
+            wardId: products.find((p) => p?.id === it.productId)?.wardId ?? 0,
+            weightGram:
+              products.find((p) => p?.id === it.productId)?.weightGram ?? 500,
           })),
       };
     })
@@ -129,11 +146,13 @@ export default async function PaymentPage({
             availableCoin={Math.max(0, Math.floor(wallet.balance ?? 0))}
             initialName={user?.username ?? ''}
             initialPhone={user?.phoneNumber ?? ''}
-            initialAddress={
-              [user?.address, user?.wardName, user?.districtName, user?.provinceName]
-                .filter(Boolean)
-                .join(', ') || ''
-            }
+            initialAddress={user?.address ?? ''}
+            provinces={provinces}
+            initialProvinceId={user?.provinceId ?? 0}
+            initialDistrictId={user?.districtId ?? 0}
+            initialWardId={user?.wardId ?? 0}
+            initialDistricts={initialDistricts}
+            initialWards={initialWards}
           />
         )}
       </div>

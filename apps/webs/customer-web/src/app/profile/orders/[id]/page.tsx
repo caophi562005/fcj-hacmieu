@@ -20,6 +20,7 @@ import { ReportButton } from '../../../../components/ReportButton';
 import { getMyOrderById } from '../../../../lib/order';
 import { getMyReviewByOrderItemId } from '../../../../lib/review';
 import { OrderReviews } from './OrderReviews';
+import { OrderRouteButton } from './OrderRouteButton';
 
 function statusLabel(
   status: string,
@@ -255,6 +256,23 @@ export default async function OrderDetailPage({
                   Ghi chú: {order.receiver.note}
                 </p>
               )}
+              {order.shippingOrigin?.latitude != null &&
+              order.shippingOrigin.longitude != null &&
+              order.shippingDestination?.latitude != null &&
+              order.shippingDestination.longitude != null ? (
+                <OrderRouteButton
+                  origin={{
+                    address: order.shippingOrigin.address,
+                    latitude: order.shippingOrigin.latitude,
+                    longitude: order.shippingOrigin.longitude,
+                  }}
+                  destination={{
+                    address: order.shippingDestination.address,
+                    latitude: order.shippingDestination.latitude,
+                    longitude: order.shippingDestination.longitude,
+                  }}
+                />
+              ) : null}
             </div>
           </div>
         </div>

@@ -115,6 +115,8 @@ export class OrderRepository {
       phone?: string;
       address?: string;
       note?: string;
+      latitude?: number;
+      longitude?: number;
     };
 
     const receiver = {
@@ -122,6 +124,8 @@ export class OrderRepository {
       phone: receiverRaw.phone || '',
       address: receiverRaw.address || '',
       note: receiverRaw.note || undefined,
+      latitude: receiverRaw.latitude,
+      longitude: receiverRaw.longitude,
     };
 
     return {
@@ -138,6 +142,8 @@ export class OrderRepository {
       discount: order.discount,
       grandTotal: order.grandTotal,
       receiver,
+      shippingOrigin: order.shippingOrigin ?? null,
+      shippingDestination: order.shippingDestination ?? null,
       timeline: Array.isArray(order.timeline) ? order.timeline : [],
       itemsSnapshot: order.items,
       firstProductName: order.items[0]?.productName || '',
@@ -160,7 +166,7 @@ export class OrderRepository {
           const discount = shopOrder.discount || 0;
           const grandTotal = Math.max(
             0,
-            itemTotal + data.shippingFee + discount,
+            itemTotal + shopOrder.shippingFee + discount,
           );
 
           return tx.order.create({
@@ -172,13 +178,15 @@ export class OrderRepository {
 
               itemTotal: itemTotal,
 
-              shippingFee: data.shippingFee,
+              shippingFee: shopOrder.shippingFee,
 
               discount: discount,
 
               grandTotal,
 
               receiver: data.receiver,
+              shippingOrigin: shopOrder.shippingOrigin,
+              shippingDestination: shopOrder.shippingDestination,
               paymentMethod: data.paymentMethod,
               paymentId: data.paymentId,
               paymentStatus: PaymentStatusValues.PENDING,
@@ -293,7 +301,9 @@ export class OrderRepository {
     settlementPolicy: { commissionRate: number; taxRate: number },
   ) {
     return this.prismaService.$transaction(async (tx) => {
-      const order = await tx.order.findUniqueOrThrow({ where: { id: data.id } });
+      const order = await tx.order.findUniqueOrThrow({
+        where: { id: data.id },
+      });
       const updated = await tx.order.update({
         where: { id: data.id, shopId: data.shopId ? data.shopId : undefined },
         data: {
@@ -320,7 +330,10 @@ export class OrderRepository {
           commissionFee,
           taxRate: settlementPolicy.taxRate,
           taxWithheld,
-          netSellerAmount: Math.max(0, updated.itemTotal - commissionFee - taxWithheld),
+          netSellerAmount: Math.max(
+            0,
+            updated.itemTotal - commissionFee - taxWithheld,
+          ),
           completedAt: updated.updatedAt.toISOString(),
         } satisfies Prisma.InputJsonObject;
 
@@ -342,6 +355,38 @@ export class OrderRepository {
 
       return updated;
     });
+  }
+
+  async getCompletedSoldCountsForOrder(orderId: string) {
+    const orderItems = await this.prismaService.orderItem.findMany({
+      where: { orderId },
+      select: { productId: true },
+    });
+    const productIds = Array.from(
+      new Set(orderItems.map((item) => item.productId)),
+    );
+    if (productIds.length === 0) return [];
+
+    const completedItems = await this.prismaService.orderItem.findMany({
+      where: {
+        productId: { in: productIds },
+        order: { status: OrderStatus.COMPLETED, deletedAt: null },
+      },
+      select: { productId: true, quantity: true },
+    });
+
+    const totals = new Map<string, number>();
+    for (const item of completedItems) {
+      totals.set(
+        item.productId,
+        (totals.get(item.productId) ?? 0) + item.quantity,
+      );
+    }
+
+    return productIds.map((productId) => ({
+      productId,
+      soldCount: totals.get(productId) ?? 0,
+    }));
   }
 
   async claimOutboxEvents(batchSize: number) {

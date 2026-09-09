@@ -224,6 +224,54 @@ export interface UserBasicInfo {
   avatar: string;
 }
 
+export interface GetMarketingPreferencesRequest {
+  processId?: string | undefined;
+  userId: string;
+}
+
+export interface UpdateMarketingPreferencesRequest {
+  processId?: string | undefined;
+  userId: string;
+  promotionOffers: boolean;
+  voucherReminders: boolean;
+  consentSource: string;
+  consentVersion: string;
+}
+
+export interface GetMarketingRecipientsRequest {
+  processId?: string | undefined;
+  topic: string;
+  page: number;
+  limit: number;
+  userIds: string[];
+}
+
+export interface UnsubscribeMarketingRequest {
+  processId?: string | undefined;
+  email: string;
+  topic: string;
+}
+
+export interface MarketingPreferencesResponse {
+  userId: string;
+  promotionOffers: boolean;
+  voucherReminders: boolean;
+}
+
+export interface MarketingRecipient {
+  userId: string;
+  email: string;
+  username: string;
+}
+
+export interface GetMarketingRecipientsResponse {
+  page: number;
+  limit: number;
+  totalItems: number;
+  totalPages: number;
+  recipients: MarketingRecipient[];
+}
+
 export const IAM_SERVICE_PACKAGE_NAME = "IAM_SERVICE";
 
 export interface AuthModuleClient {
@@ -362,3 +410,56 @@ export function UserModuleControllerMethods() {
 }
 
 export const USER_MODULE_SERVICE_NAME = "UserModule";
+
+export interface MarketingPreferenceModuleClient {
+  getMarketingPreferences(request: GetMarketingPreferencesRequest): Observable<MarketingPreferencesResponse>;
+
+  updateMarketingPreferences(request: UpdateMarketingPreferencesRequest): Observable<MarketingPreferencesResponse>;
+
+  getMarketingRecipients(request: GetMarketingRecipientsRequest): Observable<GetMarketingRecipientsResponse>;
+
+  unsubscribeMarketing(request: UnsubscribeMarketingRequest): Observable<MarketingPreferencesResponse>;
+}
+
+export interface MarketingPreferenceModuleController {
+  getMarketingPreferences(
+    request: GetMarketingPreferencesRequest,
+  ): Promise<MarketingPreferencesResponse> | Observable<MarketingPreferencesResponse> | MarketingPreferencesResponse;
+
+  updateMarketingPreferences(
+    request: UpdateMarketingPreferencesRequest,
+  ): Promise<MarketingPreferencesResponse> | Observable<MarketingPreferencesResponse> | MarketingPreferencesResponse;
+
+  getMarketingRecipients(
+    request: GetMarketingRecipientsRequest,
+  ):
+    | Promise<GetMarketingRecipientsResponse>
+    | Observable<GetMarketingRecipientsResponse>
+    | GetMarketingRecipientsResponse;
+
+  unsubscribeMarketing(
+    request: UnsubscribeMarketingRequest,
+  ): Promise<MarketingPreferencesResponse> | Observable<MarketingPreferencesResponse> | MarketingPreferencesResponse;
+}
+
+export function MarketingPreferenceModuleControllerMethods() {
+  return function (constructor: Function) {
+    const grpcMethods: string[] = [
+      "getMarketingPreferences",
+      "updateMarketingPreferences",
+      "getMarketingRecipients",
+      "unsubscribeMarketing",
+    ];
+    for (const method of grpcMethods) {
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcMethod("MarketingPreferenceModule", method)(constructor.prototype[method], method, descriptor);
+    }
+    const grpcStreamMethods: string[] = [];
+    for (const method of grpcStreamMethods) {
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcStreamMethod("MarketingPreferenceModule", method)(constructor.prototype[method], method, descriptor);
+    }
+  };
+}
+
+export const MARKETING_PREFERENCE_MODULE_SERVICE_NAME = "MarketingPreferenceModule";

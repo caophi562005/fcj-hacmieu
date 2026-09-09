@@ -317,11 +317,11 @@ export function CartView({
   }
 
   return (
-    <div className="grid lg:grid-cols-[1fr_360px] gap-4">
+    <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-4">
       {/* Items */}
-      <div className="space-y-3">
+      <div className="min-w-0 space-y-3">
         {/* Bulk toolbar */}
-        <div className="card px-4 py-3 flex items-center gap-3 text-sm">
+        <div className="card px-3 sm:px-4 py-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
           <label className="inline-flex items-center gap-2 cursor-pointer select-none">
             <input
               type="checkbox"
@@ -374,7 +374,7 @@ export function CartView({
               </div>
 
               {/* Header row (desktop) */}
-              <div className="hidden md:grid grid-cols-[24px_1fr_120px_140px_120px_40px] gap-3 items-center px-4 py-2 border-b border-border-subtle text-xs text-ink-subtle">
+              <div className="hidden xl:grid grid-cols-[16px_minmax(0,1fr)_88px_106px_100px_32px] gap-3 items-center px-4 py-2 border-b border-border-subtle text-xs text-ink-subtle">
                 <span></span>
                 <span>Sản phẩm</span>
                 <span className="text-center">Đơn giá</span>
@@ -389,7 +389,7 @@ export function CartView({
                 return (
                   <div
                     key={it.id}
-                    className="grid grid-cols-[24px_80px_1fr_40px] md:grid-cols-[24px_1fr_120px_140px_120px_40px] items-center gap-3 p-4 border-b border-border-subtle last:border-0"
+                    className="grid grid-cols-[16px_minmax(0,1fr)_32px] xl:grid-cols-[16px_minmax(0,1fr)_88px_106px_100px_32px] items-center gap-x-3 gap-y-2 p-3 sm:p-4 border-b border-border-subtle last:border-0"
                   >
                     <input
                       type="checkbox"
@@ -399,18 +399,18 @@ export function CartView({
                       aria-label={`Chọn ${it.productName}`}
                     />
 
-                    <div className="md:contents">
-                      <div className="flex items-center gap-3 md:col-span-1 col-span-2 min-w-0">
+                    <div className="col-span-2 min-w-0 xl:col-span-1">
+                      <div className="flex items-center gap-3 min-w-0">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={it.productImage || '/placeholder.png'}
                           alt={it.productName}
-                          className="w-16 h-16 md:w-20 md:h-20 rounded object-cover bg-surface-muted shrink-0"
+                          className="w-14 h-14 sm:w-16 sm:h-16 rounded object-cover bg-surface-muted shrink-0"
                         />
                         <div className="min-w-0">
                           <Link
                             href={`/product/${it.productId}`}
-                            className="text-sm line-clamp-2 hover:text-primary transition-colors cursor-pointer"
+                            className="text-sm line-clamp-2 break-words hover:text-primary transition-colors cursor-pointer"
                           >
                             {it.productName}
                           </Link>
@@ -421,8 +421,8 @@ export function CartView({
                       </div>
                     </div>
 
-                    <div className="md:text-center text-sm">
-                      <span className="md:hidden text-ink-subtle mr-1">
+                    <div className="col-start-2 col-span-2 xl:col-auto xl:text-center text-sm break-words">
+                      <span className="xl:hidden text-ink-subtle mr-1">
                         Giá:
                       </span>
                       <span className="text-primary font-semibold">
@@ -430,7 +430,7 @@ export function CartView({
                       </span>
                     </div>
 
-                    <div className="md:flex md:justify-center">
+                    <div className="col-start-2 row-start-3 xl:col-auto xl:row-auto flex xl:justify-center">
                       <div className="inline-flex items-center border border-border rounded">
                         <button
                           type="button"
@@ -460,11 +460,14 @@ export function CartView({
                       </div>
                     </div>
 
-                    <div className="md:text-right text-sm font-semibold text-primary">
+                    <div className="col-start-2 col-span-2 row-start-4 xl:col-auto xl:row-auto xl:text-right text-sm font-semibold text-primary break-words">
+                      <span className="xl:hidden text-ink-subtle font-normal mr-1">
+                        Thành tiền:
+                      </span>
                       {it.price > 0 ? formatVnd(it.price * qty) : '—'}
                     </div>
 
-                    <div className="text-right md:col-auto col-span-4">
+                    <div className="col-start-3 row-start-3 xl:col-auto xl:row-auto text-right">
                       <button
                         type="button"
                         onClick={() => handleDelete(it)}
@@ -635,7 +638,7 @@ export function CartView({
       </div>
 
       {/* Summary */}
-      <aside className="space-y-3">
+      <aside className="min-w-0 space-y-3">
         <div className="card p-4 lg:sticky lg:top-20">
           <h2 className="font-semibold mb-3">Tóm tắt đơn hàng</h2>
           <dl className="text-sm space-y-2">

@@ -6,12 +6,18 @@ export type PaymentItemView = {
   skuValue: string;
   quantity: number;
   price: number;
+  provinceId: number;
+  districtId: number;
+  wardId: number;
+  weightGram: number;
 };
 
 export type PaymentShopGroupView = {
   shopId: string;
   shopName: string;
   shopLogo: string | null;
+  pickupDistrictId: number;
+  pickupWardId: number;
   items: PaymentItemView[];
 };
 

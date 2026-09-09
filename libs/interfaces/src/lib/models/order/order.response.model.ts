@@ -1,4 +1,8 @@
-import { OrderItemSchema, OrderSchema } from '@common/schemas/order';
+import {
+  OrderItemSchema,
+  OrderSchema,
+  ShippingLocationSchema,
+} from '@common/schemas/order';
 import z from 'zod';
 import { PaginationQueryResponseSchema } from '../common/pagination.model';
 
@@ -46,6 +50,8 @@ export const GetOrderResponseSchema = OrderSchema.pick({
   ),
   firstProductName: z.string(),
   firstProductImage: z.string(),
+  shippingOrigin: ShippingLocationSchema.nullable(),
+  shippingDestination: ShippingLocationSchema.nullable(),
 });
 
 export const GetManyOrdersResponseSchema = PaginationQueryResponseSchema.extend(

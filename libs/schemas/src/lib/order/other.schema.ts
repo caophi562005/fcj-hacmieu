@@ -12,6 +12,17 @@ export const ReceiverSchema = z.object({
   phone: z.string(),
   address: z.string(),
   note: z.string().optional(),
+  latitude: z.number().min(-90).max(90).optional(),
+  longitude: z.number().min(-180).max(180).optional(),
+});
+
+export const ShippingLocationSchema = z.object({
+  provinceId: z.number().int().positive(),
+  districtId: z.number().int().positive(),
+  wardId: z.number().int().positive(),
+  address: z.string(),
+  latitude: z.number().min(-90).max(90).optional(),
+  longitude: z.number().min(-180).max(180).optional(),
 });
 
 export const TimelineSchema = z.array(
@@ -44,5 +55,6 @@ export const OrderSchema = BaseSchema.extend({
 });
 
 export type Receiver = z.infer<typeof ReceiverSchema>;
+export type ShippingLocation = z.infer<typeof ShippingLocationSchema>;
 export type Timeline = z.infer<typeof TimelineSchema>;
 export type Order = z.infer<typeof OrderSchema>;

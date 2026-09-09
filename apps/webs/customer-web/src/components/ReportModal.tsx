@@ -1,7 +1,8 @@
 'use client';
 
 import { X } from 'lucide-react';
-import { useState, useTransition } from 'react';
+import { useEffect, useId, useState, useTransition } from 'react';
+import { createPortal } from 'react-dom';
 import { toast } from 'react-toastify';
 import {
   createReportAction,
@@ -43,8 +44,18 @@ export function ReportModal({
   const [category, setCategory] = useState<ReportCategory | null>(null);
   const [description, setDescription] = useState('');
   const [isPending, startTransition] = useTransition();
+  const titleId = useId();
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    if (!isOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isOpen]);
+
+  if (!isOpen || typeof document === 'undefined') return null;
 
   const targetName = TARGET_TYPE_MAP[targetType] || 'đối tượng này';
 
@@ -81,25 +92,31 @@ export function ReportModal({
     });
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-in fade-in duration-200">
-      <div className="bg-white rounded-lg w-full max-w-md shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 animate-in fade-in duration-200">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        className="bg-white rounded-lg w-full min-w-0 max-w-md shadow-xl overflow-hidden flex flex-col max-h-[min(80dvh,640px)]"
+      >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-border">
-          <h2 className="text-lg font-semibold text-ink">
+        <div className="flex shrink-0 items-center justify-between gap-3 p-4 border-b border-border">
+          <h2 id={titleId} className="text-lg font-semibold text-ink">
             Báo cáo {targetName}
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="text-ink-muted hover:text-ink p-1 rounded-full hover:bg-surface-muted transition-colors"
+            aria-label="Đóng báo cáo"
+            className="shrink-0 text-ink-muted hover:text-ink p-1 rounded-full hover:bg-surface-muted transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Body */}
-        <div className="p-4 overflow-y-auto">
+        <div className="min-h-0 flex-1 p-4 overflow-y-auto overscroll-contain">
           <p className="text-sm text-ink-subtle mb-4">
             Vui lòng chọn lý do bạn muốn báo cáo {targetName}. Thông tin của bạn
             sẽ được giữ bí mật.
@@ -146,7 +163,7 @@ export function ReportModal({
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-border flex justify-end gap-3 bg-surface-muted/50">
+        <div className="shrink-0 p-4 border-t border-border flex flex-wrap justify-end gap-3 bg-surface-muted/50">
           <button
             type="button"
             onClick={onClose}
@@ -165,6 +182,7 @@ export function ReportModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

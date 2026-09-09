@@ -12,7 +12,9 @@ import { getMyOrders } from '../../lib/order';
 import { getMyVouchers } from '../../lib/promotions';
 import { getMyWallet } from '../../lib/wallet';
 import { AvatarUploader } from './AvatarUploader';
+import { MarketingPreferencesForm } from './MarketingPreferencesForm';
 import { ProfileForm } from './ProfileForm';
+import { getMarketingPreferences } from '../../lib/iam';
 
 export default async function ProfilePage() {
   const user = await getAuth();
@@ -29,15 +31,16 @@ export default async function ProfilePage() {
     wards = await getWards(user.districtId);
   }
 
-  const [wallet, vouchersRes, ordersRes] = await Promise.all([
+  const [wallet, vouchersRes, ordersRes, marketingPreferences] = await Promise.all([
     getMyWallet(),
     getMyVouchers({ status: 'AVAILABLE', limit: 1 }),
     getMyOrders({ limit: 1 }),
+    getMarketingPreferences(),
   ]);
 
   return (
     <>
-      <div className="card p-5 mb-4 flex flex-wrap items-center gap-4">
+      <div className="card p-3 sm:p-5 mb-4 flex flex-wrap items-center gap-4">
         <div className="relative">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -46,13 +49,13 @@ export default async function ProfilePage() {
             className="w-16 h-16 rounded-full object-cover bg-surface-muted"
           />
         </div>
-        <div className="flex-1 min-w-[200px]">
+        <div className="w-full min-w-0 sm:flex-1 break-words">
           <h1 className="text-lg font-semibold">Xin chào, {user.name}!</h1>
           <p className="text-sm text-ink-muted">
             Chào mừng bạn quay trở lại V-Shop.
           </p>
         </div>
-        <div className="grid grid-cols-3 gap-3 w-full sm:w-auto">
+        <div className="grid grid-cols-3 gap-2 sm:gap-3 w-full min-w-0">
           <Stat
             icon={Coins}
             label="V-Xu"
@@ -71,14 +74,14 @@ export default async function ProfilePage() {
         </div>
       </div>
 
-      <div className="card p-5 mb-4">
+      <div className="card p-3 sm:p-5 mb-4">
         <h2 className="text-base font-semibold">Hồ sơ của tôi</h2>
         <p className="text-sm text-ink-muted mt-1">
           Quản lý thông tin để bảo mật tài khoản.
         </p>
       </div>
 
-      <div className="card p-5 grid md:grid-cols-[1fr_220px] gap-6">
+      <div className="card p-3 sm:p-5 grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_220px] gap-6">
         <ProfileForm
           name={user.name}
           email={user.email}
@@ -94,10 +97,15 @@ export default async function ProfilePage() {
           initialWards={wards}
         />
 
-        <div className="order-1 md:order-2">
+        <div className="min-w-0 order-1 xl:order-2">
           <AvatarUploader src={user.avatar} alt="Avatar" />
         </div>
       </div>
+
+      <MarketingPreferencesForm
+        promotionOffers={marketingPreferences.promotionOffers}
+        voucherReminders={marketingPreferences.voucherReminders}
+      />
     </>
   );
 }
@@ -112,10 +120,10 @@ function Stat({
   value: string;
 }) {
   return (
-    <div className="card p-3 text-center bg-surface-alt border border-border-subtle">
+    <div className="card min-w-0 p-2 sm:p-3 text-center bg-surface-alt border border-border-subtle">
       <Icon className="w-5 h-5 text-primary mx-auto" />
       <div className="text-xs text-ink-subtle mt-1">{label}</div>
-      <div className="font-bold text-primary">{value}</div>
+      <div className="font-bold text-primary break-words">{value}</div>
     </div>
   );
 }

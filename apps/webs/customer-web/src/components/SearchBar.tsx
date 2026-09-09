@@ -58,7 +58,7 @@ export function SearchBar({
       <form
         onSubmit={onSubmit}
         role="search"
-        className="flex-1 flex items-center h-10 md:h-11 rounded bg-surface-muted hover:bg-white border border-transparent hover:border-primary focus-within:bg-white focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-colors"
+        className="min-w-0 flex-1 flex items-center h-10 md:h-11 rounded bg-surface-muted hover:bg-white border border-transparent hover:border-primary focus-within:bg-white focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-colors"
       >
         <SearchIcon className="w-5 h-5 text-ink-subtle ml-3 shrink-0" />
         <input
@@ -67,7 +67,7 @@ export function SearchBar({
           value={value}
           onChange={(e) => setValue(e.target.value)}
           placeholder="Tìm sản phẩm, thương hiệu, cửa hàng…"
-          className="flex-1 bg-transparent border-0 outline-none text-sm px-3 placeholder:text-ink-subtle"
+          className="min-w-0 flex-1 bg-transparent border-0 outline-none text-sm px-3 placeholder:text-ink-subtle"
           aria-label="Tìm kiếm"
         />
         <button
@@ -86,19 +86,19 @@ export function SearchBar({
       role="search"
       className="flex items-center h-11 rounded border border-border focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 overflow-hidden"
     >
-      <SearchIcon className="w-5 h-5 text-ink-subtle ml-3" />
+      <SearchIcon className="w-5 h-5 shrink-0 text-ink-subtle ml-3" />
       <input
         type="search"
         name="q"
         value={value}
         onChange={(e) => setValue(e.target.value)}
         placeholder="Tìm sản phẩm…"
-        className="flex-1 bg-transparent border-0 outline-none px-3 text-sm"
+        className="min-w-0 flex-1 bg-transparent border-0 outline-none px-3 text-sm"
         aria-label="Từ khóa tìm kiếm"
       />
       <button
         type="submit"
-        className="bg-primary text-white h-full px-5 font-medium hover:bg-primary-600 transition-colors cursor-pointer"
+        className="shrink-0 bg-primary text-white h-full px-5 font-medium hover:bg-primary-600 transition-colors cursor-pointer"
       >
         Tìm
       </button>

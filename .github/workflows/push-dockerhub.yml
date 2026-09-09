@@ -1,0 +1,205 @@
+name: CI/CD - Docker Hub
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  actions: read
+  contents: read
+  id-token: write # required by AWS OIDC for the EKS deploy job
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      affected_apps: ${{ steps.set-matrix.outputs.affected_apps }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compute affected apps matrix
+        id: set-matrix
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE="${{ github.event.pull_request.base.sha }}"
+            HEAD="${{ github.event.pull_request.head.sha }}"
+          else
+            BASE="${{ github.event.before }}"
+            HEAD="${{ github.sha }}"
+            if [ -z "$BASE" ] || [ "$BASE" = "0000000000000000000000000000000000000000" ]; then
+              BASE="HEAD^"
+              HEAD="HEAD"
+            fi
+          fi
+
+          echo "Using BASE=$BASE HEAD=$HEAD"
+
+          CHANGED_FILES=$(git diff --name-only --diff-filter=ACMRT "$BASE" "$HEAD" || true)
+          echo "Changed files:"
+          printf '%s\n' "$CHANGED_FILES"
+
+          SERVICES_JSON='[
+            {"name":"admin-bff","dockerfile":"apps/bffs/admin-bff/Dockerfile","path":"apps/bffs/admin-bff"},
+            {"name":"customer-bff","dockerfile":"apps/bffs/customer-bff/Dockerfile","path":"apps/bffs/customer-bff"},
+            {"name":"seller-bff","dockerfile":"apps/bffs/seller-bff/Dockerfile","path":"apps/bffs/seller-bff"},
+            {"name":"customer-web","dockerfile":"apps/webs/customer-web/Dockerfile","path":"apps/webs/customer-web"},
+            {"name":"seller-web","dockerfile":"apps/webs/seller-web/Dockerfile","path":"apps/webs/seller-web"},
+            {"name":"admin-web","dockerfile":"apps/webs/admin-web/Dockerfile","path":"apps/webs/admin-web"},
+            {"name":"catalog-service","dockerfile":"apps/services/catalog-service/Dockerfile","path":"apps/services/catalog-service"},
+            {"name":"iam-service","dockerfile":"apps/services/iam-service/Dockerfile","path":"apps/services/iam-service"},
+            {"name":"order-service","dockerfile":"apps/services/order-service/Dockerfile","path":"apps/services/order-service"},
+            {"name":"payment-service","dockerfile":"apps/services/payment-service/Dockerfile","path":"apps/services/payment-service"},
+            {"name":"promotion-service","dockerfile":"apps/services/promotion-service/Dockerfile","path":"apps/services/promotion-service"},
+            {"name":"shop-service","dockerfile":"apps/services/shop-service/Dockerfile","path":"apps/services/shop-service"},
+            {"name":"utility-service","dockerfile":"apps/services/utility-service/Dockerfile","path":"apps/services/utility-service"},
+            {"name":"wallet-service","dockerfile":"apps/services/wallet-service/Dockerfile","path":"apps/services/wallet-service"},
+            {"name":"ai-service","dockerfile":"apps/services/ai-service/Dockerfile","path":"apps/services/ai-service"}
+          ]'
+
+          GLOBAL_CHANGED=$(printf '%s\n' "$CHANGED_FILES" \
+            | grep -E '^(libs/|tsconfig\.|nx\.json|pnpm-workspace\.yaml)' || true)
+
+          if [ -n "$GLOBAL_CHANGED" ]; then
+            echo "Global file changed -> affect ALL services."
+            AFFECTED_APPS_JSON=$(echo "$SERVICES_JSON" | jq -c '[.[].name]')
+          else
+            AFFECTED_APPS_JSON=$(echo "$SERVICES_JSON" | jq -c \
+              --arg files "$CHANGED_FILES" \
+              '[.[] | select(.path as $p | $files | split("\n") | any(startswith($p + "/"))) | .name]')
+          fi
+
+          echo "Affected apps: $AFFECTED_APPS_JSON"
+          echo "affected_apps=$AFFECTED_APPS_JSON" >> "$GITHUB_OUTPUT"
+
+          if [ "$AFFECTED_APPS_JSON" = "[]" ]; then
+            echo "No affected apps."
+            echo 'matrix={"include":[]}' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          MATRIX=$(jq -nc \
+            --argjson affected "$AFFECTED_APPS_JSON" \
+            --argjson services "$SERVICES_JSON" \
+            '{include: ($services | map(select(.name as $n | $affected | index($n) != null) | {name, dockerfile}))}')
+
+          echo "matrix=$MATRIX"
+          echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: check
+    if: ${{ fromJson(needs.check.outputs.matrix).include[0] != null }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.check.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate tag
+        id: tag
+        shell: bash
+        run: echo "TAG=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      - name: Validate Docker Hub secrets
+        if: ${{ github.event_name != 'pull_request' }}
+        shell: bash
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          test -n "$DOCKERHUB_USERNAME" || { echo "Missing secret: DOCKERHUB_USERNAME"; exit 1; }
+          test -n "$DOCKERHUB_TOKEN" || { echo "Missing secret: DOCKERHUB_TOKEN"; exit 1; }
+
+      - name: Login to Docker Hub
+        if: ${{ github.event_name != 'pull_request' }}
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and Push to Docker Hub
+        if: ${{ github.event_name != 'pull_request' }}
+        shell: bash
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          TAG: ${{ steps.tag.outputs.TAG }}
+        run: |
+          set -euo pipefail
+
+          IMAGE="${DOCKERHUB_USERNAME}/vshop-${{ matrix.name }}"
+
+          docker build \
+            -f "${{ matrix.dockerfile }}" \
+            -t "$IMAGE:latest" \
+            -t "$IMAGE:$TAG" \
+            .
+
+          docker push "$IMAGE:latest"
+          docker push "$IMAGE:$TAG"
+
+      - name: Build only (PR validation)
+        if: ${{ github.event_name == 'pull_request' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker build \
+            -f "${{ matrix.dockerfile }}" \
+            -t "vshop-${{ matrix.name }}:pr" \
+            .
+
+  # deploy:
+  #   runs-on: ubuntu-latest
+  #   needs: [check, docker]
+  #   if: ${{ github.event_name != 'pull_request' && fromJson(needs.check.outputs.matrix).include[0] != null }}
+  #   steps:
+  #     - uses: actions/checkout@v4
+
+  #     - name: Configure AWS credentials via OIDC
+  #       uses: aws-actions/configure-aws-credentials@v4
+  #       with:
+  #         role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+  #         aws-region: us-east-1
+
+  #     - name: Update kubeconfig for EKS
+  #       run: aws eks update-kubeconfig --region ${{ secrets.AWS_REGION }} --name ${{ secrets.EKS_CLUSTER_NAME }}
+
+  #     - name: Deploy Docker Hub images to affected deployments
+  #       shell: bash
+  #       env:
+  #         AFFECTED_APPS: ${{ needs.check.outputs.affected_apps }}
+  #         DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+  #       run: |
+  #         set -euo pipefail
+  #         test -n "$DOCKERHUB_USERNAME" || { echo "Missing secret: DOCKERHUB_USERNAME"; exit 1; }
+
+  #         for APP in $(echo "$AFFECTED_APPS" | jq -r '.[]'); do
+  #           IMAGE="${DOCKERHUB_USERNAME}/vshop-${APP}:latest"
+  #           echo "Updating ${APP}-deployment -> $IMAGE"
+
+  #           # Container names in helm/manifests match the app names.
+  #           kubectl set image \
+  #             deployment/${APP}-deployment \
+  #             ${APP}="$IMAGE"
+  #         done
+
+  #     - name: Verify Deployments
+  #       shell: bash
+  #       env:
+  #         AFFECTED_APPS: ${{ needs.check.outputs.affected_apps }}
+  #       run: |
+  #         set -euo pipefail
+  #         for APP in $(echo "$AFFECTED_APPS" | jq -r '.[]'); do
+  #           echo "Checking status for ${APP}-deployment..."
+  #           kubectl rollout status deployment/${APP}-deployment --timeout=3m
+  #         done

@@ -47,6 +47,12 @@ type VoucherUiStatus = 'available' | 'used' | 'cancelled';
 function getUiStatus(v: PromotionRedemptionResponse): VoucherUiStatus {
   if (v.cancelledAt) return 'cancelled';
   if (v.usedAt) return 'used';
+  if (
+    v.promotionStatus !== 'ACTIVE' ||
+    (v.promotionEndsAt && new Date(v.promotionEndsAt) <= new Date())
+  ) {
+    return 'cancelled';
+  }
   return 'available';
 }
 

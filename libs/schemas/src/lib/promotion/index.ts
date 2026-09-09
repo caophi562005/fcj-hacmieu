@@ -36,4 +36,8 @@ export const PromotionRedemptionSchema = z.object({
   usedAt: z.any(),
   cancelledAt: z.any(),
   createdAt: z.any(),
+  promotionEndsAt: z.any().optional(),
+  promotionStatus: PromotionStatusEnums.optional(),
 });
+
+export * from './marketing.schema';

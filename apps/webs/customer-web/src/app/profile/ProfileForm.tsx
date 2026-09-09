@@ -42,13 +42,17 @@ export function ProfileForm({
   initialDistricts,
   initialWards,
 }: Props) {
-  const [state, formAction] = useActionState(updateProfileAction, INITIAL_STATE);
+  const [state, formAction] = useActionState(
+    updateProfileAction,
+    INITIAL_STATE,
+  );
 
   const [provinceId, setProvinceId] = useState(initialProvinceId);
   const [districtId, setDistrictId] = useState(initialDistrictId);
   const [wardId, setWardId] = useState(initialWardId);
 
-  const [districts, setDistricts] = useState<DistrictResponse[]>(initialDistricts);
+  const [districts, setDistricts] =
+    useState<DistrictResponse[]>(initialDistricts);
   const [wards, setWards] = useState<WardResponse[]>(initialWards);
 
   const [isPendingDistricts, startTransitionDistricts] = useTransition();
@@ -115,7 +119,7 @@ export function ProfileForm({
   }, [districtId, initialDistrictId, initialWards]);
 
   return (
-    <form action={formAction} className="space-y-4 order-2 md:order-1">
+    <form action={formAction} className="min-w-0 space-y-4 order-2 xl:order-1">
       <ReadonlyField label="Username" value={name} />
       <ReadonlyField label="Email" value={email} />
 
@@ -128,7 +132,7 @@ export function ProfileForm({
 
       <div>
         <span className="text-sm font-medium block mb-1">Giới tính</span>
-        <div className="flex gap-4 text-sm">
+        <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
           {[
             { v: GenderValues.MALE, l: 'Nam' },
             { v: GenderValues.FEMALE, l: 'Nữ' },
@@ -155,7 +159,7 @@ export function ProfileForm({
         defaultValue={birthday}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 [&>label]:min-w-0 [&_select]:min-w-0">
         <label className="block">
           <span className="text-sm font-medium">Tỉnh / Thành</span>
           <select
@@ -164,9 +168,7 @@ export function ProfileForm({
             onChange={(e) => {
               const val = Number(e.target.value);
               setProvinceId(val);
-              setProvinceName(
-                provinces.find((p) => p.id === val)?.name || '',
-              );
+              setProvinceName(provinces.find((p) => p.id === val)?.name || '');
             }}
             className="input mt-1"
           >
@@ -188,9 +190,7 @@ export function ProfileForm({
             onChange={(e) => {
               const val = Number(e.target.value);
               setDistrictId(val);
-              setDistrictName(
-                districts.find((d) => d.id === val)?.name || '',
-              );
+              setDistrictName(districts.find((d) => d.id === val)?.name || '');
             }}
             disabled={isPendingDistricts || !districts.length}
             className="input mt-1 disabled:bg-surface-muted"
@@ -238,9 +238,7 @@ export function ProfileForm({
 
       {state.message && (
         <p
-          className={`text-sm ${
-            state.ok ? 'text-success' : 'text-danger'
-          }`}
+          className={`text-sm ${state.ok ? 'text-success' : 'text-danger'}`}
           role="status"
           aria-live="polite"
         >

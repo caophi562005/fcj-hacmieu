@@ -56,11 +56,6 @@ export class SKUService {
             skuId: item.skuId,
             userId: data.userId,
           });
-
-          this.sKURepository.updateProduct({
-            id: item.productId,
-            soldCount: item.quantity,
-          });
         }),
       );
     } catch (error) {
@@ -71,14 +66,6 @@ export class SKUService {
   async increaseStock(data: IncreaseStockRequest) {
     try {
       await this.sKURepository.increaseStock(data);
-      await Promise.all(
-        data.items.map(async (item) => {
-          await this.sKURepository.updateProduct({
-            id: item.productId,
-            soldCount: -item.quantity,
-          });
-        }),
-      );
     } catch (error) {
       console.log(error);
     }

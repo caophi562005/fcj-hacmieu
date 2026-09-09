@@ -1,7 +1,11 @@
 import { PaymentMethodEnums } from '@common/constants/payment.constant';
 import { ShippingMethodEnums } from '@common/constants/order.constant';
 import { ValidateItemResultSchema } from '@common/interfaces/models/catalog/product/product-response.model';
-import { OrderSchema, ReceiverSchema } from '@common/schemas/order';
+import {
+  OrderSchema,
+  ReceiverSchema,
+  ShippingLocationSchema,
+} from '@common/schemas/order';
 import z from 'zod';
 import { PaginationQueryRequestSchema } from '../common/pagination.model';
 
@@ -14,6 +18,11 @@ export const CreateOrderRequestSchema = z
     paymentMethod: PaymentMethodEnums,
     userId: z.uuid(),
     receiver: ReceiverSchema,
+    shippingAddress: z.object({
+      provinceId: z.number().int().positive(),
+      districtId: z.number().int().positive(),
+      wardCode: z.string().trim().min(1),
+    }),
     orders: z.array(
       z.object({
         shopId: z.uuid(),
@@ -25,7 +34,6 @@ export const CreateOrderRequestSchema = z
 
 export const CreateOrderRepositorySchema = z.object({
   userId: z.uuid(),
-  shippingFee: z.number().int().nonnegative(),
   paymentMethod: PaymentMethodEnums,
   receiver: ReceiverSchema,
   paymentId: z.uuid(),
@@ -33,8 +41,11 @@ export const CreateOrderRepositorySchema = z.object({
     z.object({
       itemTotal: z.number().optional(),
       discount: z.number(),
+      shippingFee: z.number().int().nonnegative(),
       shopId: z.uuid(),
       items: z.array(ValidateItemResultSchema),
+      shippingOrigin: ShippingLocationSchema,
+      shippingDestination: ShippingLocationSchema,
     }),
   ),
 });

@@ -8,6 +8,7 @@ import {
   UpdateProductRequest,
   ValidateProductsRequest,
 } from '@common/interfaces/models/catalog';
+import { UpdateSoldCountsRequest } from '@common/interfaces/proto-types/catalog';
 import { Controller, UseInterceptors } from '@nestjs/common';
 import { GrpcMethod } from '@nestjs/microservices';
 import { ProductService } from '../services/product.service';
@@ -35,6 +36,11 @@ export class ProductGrpcController {
   @GrpcMethod(GrpcModuleName.CATALOG.PRODUCT, 'UpdateProduct')
   updateProduct(data: UpdateProductRequest) {
     return this.productService.update(data);
+  }
+
+  @GrpcMethod(GrpcModuleName.CATALOG.PRODUCT, 'UpdateSoldCounts')
+  updateSoldCounts(data: UpdateSoldCountsRequest) {
+    return this.productService.updateSoldCounts(data);
   }
 
   @GrpcMethod(GrpcModuleName.CATALOG.PRODUCT, 'DeleteProduct')

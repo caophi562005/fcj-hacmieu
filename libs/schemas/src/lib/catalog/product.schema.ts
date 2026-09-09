@@ -16,6 +16,7 @@ export const ProductSchema = BaseSchema.extend({
 
   wardId: z.number().int(),
   wardName: z.string(),
+  weightGram: z.number().int().positive().max(50_000).default(500),
 
   sizeGuide: z.string().optional(),
   basePrice: z.number().default(0),
@@ -54,6 +55,7 @@ export const ProductViewSchema = z.object({
 
   wardId: z.number().int(),
   wardName: z.string(),
+  weightGram: z.number().int().positive().max(50_000).default(500),
 
   brandId: z.uuid().optional(),
   brandName: z.string().optional(),

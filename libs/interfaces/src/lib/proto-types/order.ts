@@ -37,6 +37,22 @@ export interface CreateOrderRequest {
   orders: OrderGroup[];
   coin?: number | undefined;
   shippingMethod: string;
+  shippingAddress: ShippingAddress | undefined;
+}
+
+export interface ShippingAddress {
+  provinceId: number;
+  districtId: number;
+  wardCode: string;
+}
+
+export interface ShippingLocation {
+  provinceId: number;
+  districtId: number;
+  wardId: number;
+  address: string;
+  latitude?: number | undefined;
+  longitude?: number | undefined;
 }
 
 export interface Receiver {
@@ -44,6 +60,8 @@ export interface Receiver {
   phone: string;
   address: string;
   note?: string | undefined;
+  latitude?: number | undefined;
+  longitude?: number | undefined;
 }
 
 export interface OrderGroup {
@@ -126,6 +144,8 @@ export interface Order {
   deletedAt?: string | undefined;
   createdAt: string;
   updatedAt: string;
+  shippingOrigin?: ShippingLocation | undefined;
+  shippingDestination?: ShippingLocation | undefined;
 }
 
 export interface GetOrderResponse {
@@ -148,6 +168,8 @@ export interface GetOrderResponse {
   firstProductImage: string;
   createdAt: string;
   updatedAt: string;
+  shippingOrigin?: ShippingLocation | undefined;
+  shippingDestination?: ShippingLocation | undefined;
 }
 
 export interface OrderItemSnapshot {

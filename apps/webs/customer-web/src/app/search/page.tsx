@@ -131,7 +131,7 @@ export default async function SearchPage({
           </span>
         </nav>
 
-        <div className="grid md:grid-cols-[260px_1fr] gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-[260px_minmax(0,1fr)] gap-4">
           <FilterForm
             categories={categories}
             selectedCategories={selectedCategories}

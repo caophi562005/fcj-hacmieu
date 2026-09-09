@@ -115,6 +115,11 @@ message CreateShopRequest {
   optional string bankAccountName = 13;
   optional string createdById = 14;
   optional string bankName = 15;
+  optional int32 pickupProvinceId = 16;
+  optional int32 pickupDistrictId = 17;
+  optional int32 pickupWardId = 18;
+  optional double pickupLatitude = 19;
+  optional double pickupLongitude = 20;
 }
 
 message UpdateShopRequest {
@@ -134,6 +139,11 @@ message UpdateShopRequest {
   optional string bankAccountName = 14;
   optional string updatedById = 15;
   optional string bankName = 16;
+  optional int32 pickupProvinceId = 17;
+  optional int32 pickupDistrictId = 18;
+  optional int32 pickupWardId = 19;
+  optional double pickupLatitude = 20;
+  optional double pickupLongitude = 21;
 }
 
 message DeleteShopRequest {
@@ -164,6 +174,11 @@ message ShopResponse {
   string createdAt = 19;
   string updatedAt = 20;
   string bankName = 21;
+  optional int32 pickupProvinceId = 22;
+  optional int32 pickupDistrictId = 23;
+  optional int32 pickupWardId = 24;
+  optional double pickupLatitude = 25;
+  optional double pickupLongitude = 26;
 }
 
 message GetManyShopsResponse {

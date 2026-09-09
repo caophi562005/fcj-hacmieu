@@ -30,13 +30,17 @@ type RefreshResponse = {
   };
 };
 
-function decodeJwtExp(token: string): number | null {
+type AccessTokenPayload = {
+  exp?: number;
+  'cognito:groups'?: string[];
+};
+
+function decodeJwtPayload(token: string): AccessTokenPayload | null {
   try {
     const [, payloadB64] = token.split('.');
     if (!payloadB64) return null;
     const json = atob(payloadB64.replace(/-/g, '+').replace(/_/g, '/'));
-    const payload = JSON.parse(json) as { exp?: number };
-    return typeof payload.exp === 'number' ? payload.exp : null;
+    return JSON.parse(json) as AccessTokenPayload;
   } catch {
     return null;
   }
@@ -82,13 +86,18 @@ export async function proxy(req: NextRequest) {
 
   if (!accessToken) return NextResponse.next();
 
-  const exp = decodeJwtExp(accessToken);
+  const payload = decodeJwtPayload(accessToken);
+  const exp = payload?.exp;
   if (!exp) return NextResponse.next();
 
   const nowSec = Math.floor(Date.now() / 1000);
   const remaining = exp - nowSec;
+  const hasSellerGroup = payload?.['cognito:groups']?.includes('SELLER') ?? false;
 
-  if (remaining > REFRESH_THRESHOLD_SECONDS) {
+  // A seller can be approved after the current access token was issued.
+  // Refresh immediately when the token does not yet contain SELLER so the
+  // new Cognito group/merchant claims are picked up without waiting for expiry.
+  if (remaining > REFRESH_THRESHOLD_SECONDS && hasSellerGroup) {
     return NextResponse.next();
   }
 

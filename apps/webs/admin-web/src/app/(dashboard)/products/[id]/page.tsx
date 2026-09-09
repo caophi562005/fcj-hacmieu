@@ -93,6 +93,7 @@ export default async function ProductDetailPage({
     description: product.description ?? '',
     basePrice: product.basePrice ?? 0,
     virtualPrice: product.virtualPrice ?? 0,
+    weightGram: product.weightGram ?? 500,
     status: product.status,
     brandId: product.brandId ?? '',
     sizeGuide: product.sizeGuide ?? '',

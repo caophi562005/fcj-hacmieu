@@ -1,12 +1,14 @@
 import { AppConfiguration } from '@common/configurations/app.config';
 import { SqsConfiguration } from '@common/configurations/sqs.config';
-import {
-  OrderStatusValues,
-  ShippingMethodFees,
-} from '@common/constants/order.constant';
+import { OrderStatusValues } from '@common/constants/order.constant';
 import { PaymentStatusValues } from '@common/constants/payment.constant';
 import { PrismaErrorValues } from '@common/constants/prisma.constant';
 import { DiscountTypeValues } from '@common/constants/promotion.constant';
+import {
+  SHOP_MODULE_SERVICE_NAME,
+  SHOP_SERVICE_PACKAGE_NAME,
+  ShopModuleClient,
+} from '@common/interfaces/proto-types/shop';
 import {
   WalletTransactionSourceValues,
   WalletTransactionTypeValues,
@@ -22,9 +24,7 @@ import {
   UpdateStatusOrderRequest,
 } from '@common/interfaces/models/order';
 import { CreatePromotionRedemptionRequest } from '@common/interfaces/models/promotion';
-import {
-  AdjustWalletRequest,
-} from '@common/interfaces/models/wallet';
+import { AdjustWalletRequest } from '@common/interfaces/models/wallet';
 import {
   CATALOG_SERVICE_PACKAGE_NAME,
   PRODUCT_MODULE_SERVICE_NAME,
@@ -58,6 +58,7 @@ import {
 } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
 import { SqsService } from '@ssut/nestjs-sqs';
+import axios from 'axios';
 import { firstValueFrom } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 import { CartItemService } from '../../cart/services/cart-item.service';
@@ -70,6 +71,7 @@ export class OrderService implements OnModuleInit {
   private walletModule!: WalletModuleClient;
   private platformLedgerModule!: PlatformLedgerModuleClient;
   private notificationModule!: NotificationServiceClient;
+  private shopModule!: ShopModuleClient;
 
   constructor(
     @Inject(CATALOG_SERVICE_PACKAGE_NAME)
@@ -83,6 +85,9 @@ export class OrderService implements OnModuleInit {
 
     @Inject(UTILITY_SERVICE_PACKAGE_NAME)
     private utilityClient: ClientGrpc,
+
+    @Inject(SHOP_SERVICE_PACKAGE_NAME)
+    private shopClient: ClientGrpc,
 
     private readonly orderRepository: OrderRepository,
     private readonly cartItemService: CartItemService,
@@ -105,8 +110,12 @@ export class OrderService implements OnModuleInit {
       this.walletClient.getService<PlatformLedgerModuleClient>(
         PLATFORM_LEDGER_MODULE_SERVICE_NAME,
       );
-    this.notificationModule = this.utilityClient.getService<NotificationServiceClient>(
-      NOTIFICATION_SERVICE_NAME,
+    this.notificationModule =
+      this.utilityClient.getService<NotificationServiceClient>(
+        NOTIFICATION_SERVICE_NAME,
+      );
+    this.shopModule = this.shopClient.getService<ShopModuleClient>(
+      SHOP_MODULE_SERVICE_NAME,
     );
   }
 
@@ -120,6 +129,51 @@ export class OrderService implements OnModuleInit {
     } catch (error) {
       console.error(`Error sending message to ${queueName}:`, error);
       throw new InternalServerErrorException('Error.SendOrderMessageFailed');
+    }
+  }
+
+  private async calculateShippingFee(
+    items: Array<{
+      weightGram: number;
+      quantity: number;
+    }>,
+    origin: { districtId: number; wardCode: string },
+    destination: { districtId: number; wardCode: string },
+  ): Promise<number> {
+    const token = process.env.GHN_API_KEY;
+    const shopId = process.env.GHN_SHOP_ID;
+    if (!token || !shopId) {
+      throw new InternalServerErrorException('Error.GhnConfigurationMissing');
+    }
+
+    const baseUrl =
+      process.env.GHN_API_BASE_URL ??
+      'https://dev-online-gateway.ghn.vn/shiip/public-api';
+
+    try {
+      const weight = items.reduce(
+        (sum, item) => sum + item.weightGram * item.quantity,
+        0,
+      );
+      const { data } = await axios.post(
+        `${baseUrl}/v2/shipping-order/fee`,
+        {
+          service_type_id: 2,
+          from_district_id: origin.districtId,
+          from_ward_code: origin.wardCode,
+          to_district_id: destination.districtId,
+          to_ward_code: destination.wardCode,
+          weight,
+          insurance_value: 0,
+        },
+        { headers: { Token: token, ShopId: shopId } },
+      );
+      return Number(data?.data?.total ?? 0);
+    } catch (error) {
+      const message = axios.isAxiosError(error)
+        ? error.response?.data?.message
+        : undefined;
+      throw new BadRequestException(message || 'Error.GhnCalculateFeeFailed');
     }
   }
 
@@ -150,10 +204,6 @@ export class OrderService implements OnModuleInit {
     userId,
     ...data
   }: CreateOrderRequest): Promise<CreateOrderResponse> {
-    const shippingFee = ShippingMethodFees[data.shippingMethod];
-    if (shippingFee === undefined) {
-      throw new BadRequestException('Error.InvalidShippingMethod');
-    }
     const requestedCoin = Math.max(0, Math.floor(data.coin ?? 0));
     if (requestedCoin > 0) {
       const wallet = await firstValueFrom(
@@ -202,22 +252,70 @@ export class OrderService implements OnModuleInit {
     );
 
     // Tính itemTotal cho từng order bằng map để tránh filter lặp nhiều lần.
-    const ordersWithTotal = data.orders.map((order) => {
-      const orderItems = order.cartItemIds
-        .map((id) => validatedItemByCartItemId.get(id))
-        .filter((item) => item && item.shopId === order.shopId);
+    const ordersWithTotal = await Promise.all(
+      data.orders.map(async (order) => {
+        const shop = await firstValueFrom(
+          this.shopModule.getShop({ processId, id: order.shopId }),
+        );
+        if (
+          !shop.pickupAddress ||
+          !shop.pickupProvinceId ||
+          !shop.pickupDistrictId ||
+          !shop.pickupWardId
+        ) {
+          throw new BadRequestException('Error.ShopPickupAddressIncomplete');
+        }
+        const orderItems = order.cartItemIds
+          .map((id) => validatedItemByCartItemId.get(id))
+          .filter((item) => item && item.shopId === order.shopId);
 
-      const itemTotal = orderItems.reduce(
-        (sum, item) => sum + item.price * item.quantity,
-        0,
-      );
-      return {
-        shopId: order.shopId,
-        items: orderItems,
-        itemTotal,
-        discount: 0, // Sẽ được tính sau
-      };
-    });
+        const itemTotal = orderItems.reduce(
+          (sum, item) => sum + item.price * item.quantity,
+          0,
+        );
+        return {
+          shopId: order.shopId,
+          items: orderItems,
+          itemTotal,
+          shippingFee: await this.calculateShippingFee(
+            orderItems,
+            {
+              districtId: shop.pickupDistrictId,
+              wardCode: String(shop.pickupWardId),
+            },
+            {
+              districtId: data.shippingAddress.districtId,
+              wardCode: data.shippingAddress.wardCode,
+            },
+          ),
+          shippingOrigin: {
+            provinceId: shop.pickupProvinceId,
+            districtId: shop.pickupDistrictId,
+            wardId: shop.pickupWardId,
+            address: shop.pickupAddress,
+            ...(shop.pickupLatitude != null
+              ? { latitude: shop.pickupLatitude }
+              : {}),
+            ...(shop.pickupLongitude != null
+              ? { longitude: shop.pickupLongitude }
+              : {}),
+          },
+          shippingDestination: {
+            provinceId: data.shippingAddress.provinceId,
+            districtId: data.shippingAddress.districtId,
+            wardId: Number(data.shippingAddress.wardCode),
+            address: data.receiver.address,
+            ...(data.receiver.latitude != null
+              ? { latitude: data.receiver.latitude }
+              : {}),
+            ...(data.receiver.longitude != null
+              ? { longitude: data.receiver.longitude }
+              : {}),
+          },
+          discount: 0, // Sẽ được tính sau
+        };
+      }),
+    );
 
     // Check promotion và phân bổ discount
     let promotionData: {
@@ -272,7 +370,7 @@ export class OrderService implements OnModuleInit {
       let remainingDiscount = discountAmount;
 
       sortedOrders.forEach((order) => {
-        const orderTotal = order.itemTotal + shippingFee;
+        const orderTotal = order.itemTotal + order.shippingFee;
         if (remainingDiscount >= orderTotal) {
           // Giảm hết order này
           order.discount = -orderTotal;
@@ -315,7 +413,7 @@ export class OrderService implements OnModuleInit {
 
         const orderPayableAfterDiscount = Math.max(
           0,
-          order.itemTotal + shippingFee + order.discount,
+          order.itemTotal + order.shippingFee + order.discount,
         );
 
         if (orderPayableAfterDiscount <= 0) return;
@@ -341,7 +439,6 @@ export class OrderService implements OnModuleInit {
     const mergedData = {
       userId,
       receiver: data.receiver,
-      shippingFee,
       paymentMethod: data.paymentMethod,
       paymentId,
       orders: ordersWithTotal,
@@ -448,7 +545,7 @@ export class OrderService implements OnModuleInit {
       userId,
       shopId,
     );
-    
+
     return { orders: cancelledOrders };
   }
 
@@ -470,9 +567,16 @@ export class OrderService implements OnModuleInit {
       });
 
       if (order.status === OrderStatusValues.COMPLETED) {
+        const soldCounts =
+          await this.orderRepository.getCompletedSoldCountsForOrder(order.id);
+        await firstValueFrom(
+          this.productModule.updateSoldCounts({ items: soldCounts }),
+        );
+
         const grossAmount = order.itemTotal;
         const commissionFee = Math.floor(
-          (grossAmount * AppConfiguration.ORDER_SELLER_COMMISSION_PERCENT) / 100,
+          (grossAmount * AppConfiguration.ORDER_SELLER_COMMISSION_PERCENT) /
+            100,
         );
         const taxWithheld = Math.floor(
           (grossAmount * AppConfiguration.ORDER_SELLER_TAX_PERCENT) / 100,

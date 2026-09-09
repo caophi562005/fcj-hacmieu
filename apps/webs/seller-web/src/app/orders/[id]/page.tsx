@@ -18,6 +18,7 @@ import {
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { getSellerOrderById } from '../../../lib/order';
+import { DeliveryLocationButton } from './DeliveryLocationButton';
 import { OrderStatusActions } from './OrderStatusActions';
 
 export const metadata = { title: 'Chi tiết đơn hàng — V-Shop Seller' };
@@ -250,6 +251,17 @@ export default async function OrderDetailPage({
                   Ghi chú: {order.receiver.note}
                 </p>
               )}
+              {order.shippingDestination?.latitude != null &&
+              order.shippingDestination.longitude != null ? (
+                <DeliveryLocationButton
+                  location={{
+                    address:
+                      order.shippingDestination.address || order.receiver.address,
+                    latitude: order.shippingDestination.latitude,
+                    longitude: order.shippingDestination.longitude,
+                  }}
+                />
+              ) : null}
             </div>
           </div>
         </div>

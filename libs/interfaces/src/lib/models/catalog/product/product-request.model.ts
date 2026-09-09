@@ -101,6 +101,7 @@ export const CreateProductRequestSchema = ProductSchema.pick({
   districtName: true,
   wardId: true,
   wardName: true,
+  weightGram: true,
   status: true,
 })
   .extend({

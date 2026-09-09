@@ -74,6 +74,8 @@ model Product {
     wardId   Int
     wardName String
 
+    weightGram Int @default(500)
+
     sizeGuide    String?    @db.Text
     basePrice    Float      @default(0)
     virtualPrice Float      @default(0)

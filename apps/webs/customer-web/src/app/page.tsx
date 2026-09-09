@@ -12,6 +12,7 @@ import { MainShell } from '../components/MainShell';
 import { ProductCard } from '../components/ProductCard';
 import {
   getProductById,
+  getManyProducts,
   getRootCategories,
   toCardProduct,
 } from '../lib/catalog';
@@ -39,12 +40,12 @@ export default async function HomePage() {
     getRootCategories(),
     getHomeProductPlacements(),
   ]);
-  const products = await Promise.all(
+  const promotedProducts = await Promise.all(
     placementRes.placements.map((placement) =>
       getProductById(placement.productId),
     ),
   );
-  const featured = products
+  const validPromotedProducts = promotedProducts
     .filter(
       (product): product is NonNullable<typeof product> =>
         !!product &&
@@ -52,8 +53,33 @@ export default async function HomePage() {
         product.isApproved &&
         !product.isHidden &&
         !product.deletedAt,
-    )
-    .map(toCardProduct);
+    );
+
+  const slotCount = Math.max(placementRes.limit || 20, validPromotedProducts.length);
+  const remainingSlots = Math.max(0, slotCount - validPromotedProducts.length);
+  const promotedIds = new Set(validPromotedProducts.map((product) => product.id));
+
+  let fallbackProducts: Awaited<ReturnType<typeof getManyProducts>>['products'] = [];
+  if (remainingSlots > 0) {
+    const candidates = await getManyProducts({ page: 1, limit: 100 });
+    const eligible = candidates.products.filter(
+      (product) =>
+        !promotedIds.has(product.id) &&
+        product.status === ProductStatusValues.ACTIVE,
+    );
+
+    for (let i = eligible.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [eligible[i], eligible[j]] = [eligible[j], eligible[i]];
+    }
+
+    fallbackProducts = eligible.slice(0, remainingSlots);
+  }
+
+  const featured = [
+    ...validPromotedProducts.map(toCardProduct),
+    ...fallbackProducts.map(toCardProduct),
+  ];
   return (
     <MainShell>
       {/* Hero banner */}

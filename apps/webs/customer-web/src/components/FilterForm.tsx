@@ -1,9 +1,9 @@
 'use client';
 
-import { SlidersHorizontal } from 'lucide-react';
+import { ChevronDown, SlidersHorizontal } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { type FormEvent } from 'react';
+import { useId, useState, type FormEvent } from 'react';
 import type { CategoryItem } from '../lib/catalog';
 
 type Props = {
@@ -24,6 +24,8 @@ export function FilterForm({
 }: Props) {
   const router = useRouter();
   const sp = useSearchParams();
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const panelId = useId();
   const selectedSet = new Set(selectedCategories);
   const hasActiveFilter =
     selectedCategories.length > 0 ||
@@ -62,11 +64,37 @@ export function FilterForm({
     // reset về trang 1 khi đổi filter
     const qs = next.toString();
     router.push(qs ? `/search?${qs}` : '/search');
+    setMobileOpen(false);
   };
 
   return (
-    <aside className="hidden md:block card p-4 self-start sticky top-20">
-      <form onSubmit={onSubmit} className="flex flex-col">
+    <aside className="min-w-0 card p-4 self-start md:sticky md:top-20">
+      <button
+        type="button"
+        className="md:hidden flex w-full items-center gap-2 text-left text-sm font-semibold"
+        aria-expanded={mobileOpen}
+        aria-controls={panelId}
+        onClick={() => setMobileOpen((open) => !open)}
+      >
+        <SlidersHorizontal className="w-4 h-4 shrink-0 text-primary" />
+        <span className="min-w-0 flex-1">
+          Bộ lọc danh mục & giá
+          {hasActiveFilter && (
+            <span className="block text-xs font-normal text-primary">
+              Đang áp dụng
+            </span>
+          )}
+        </span>
+        <ChevronDown
+          className={`w-4 h-4 shrink-0 transition-transform ${mobileOpen ? 'rotate-180' : ''}`}
+        />
+      </button>
+      <form
+        id={panelId}
+        key={JSON.stringify([selectedCategories, minPrice, maxPrice])}
+        onSubmit={onSubmit}
+        className={`${mobileOpen ? 'flex' : 'hidden'} md:flex flex-col mt-4 md:mt-0`}
+      >
         <div className="flex items-center justify-between gap-2 mb-3">
           <div className="flex items-center gap-2">
             <SlidersHorizontal className="w-4 h-4 text-primary" />
@@ -116,7 +144,8 @@ export function FilterForm({
               min={0}
               name="minPrice"
               defaultValue={minPrice ?? ''}
-              className="input h-9"
+              className="input min-w-0 h-9"
+              aria-label="Giá tối thiểu"
               placeholder="₫ Từ"
             />
             <span className="text-ink-subtle">-</span>
@@ -125,7 +154,8 @@ export function FilterForm({
               min={0}
               name="maxPrice"
               defaultValue={maxPrice ?? ''}
-              className="input h-9"
+              className="input min-w-0 h-9"
+              aria-label="Giá tối đa"
               placeholder="₫ Đến"
             />
           </div>

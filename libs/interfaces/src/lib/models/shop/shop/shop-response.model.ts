@@ -12,6 +12,12 @@ export const PublicShopResponseSchema = ShopSchema.pick({
   logo: true,
   banner: true,
   phone: true,
+  pickupAddress: true,
+  pickupProvinceId: true,
+  pickupDistrictId: true,
+  pickupWardId: true,
+  pickupLatitude: true,
+  pickupLongitude: true,
   createdAt: true,
 });
 

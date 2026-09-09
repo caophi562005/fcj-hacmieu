@@ -7,51 +7,6 @@ import { PrismaService } from '../../../prisma/prisma.service';
 export class SKURepository {
   constructor(private readonly prismaService: PrismaService) {}
 
-  updateProduct(data: { id: string; soldCount: number }) {
-    return this.prismaService.product.update({
-      where: {
-        id: data.id,
-      },
-      data: {
-        soldCount: {
-          increment: data.soldCount,
-        },
-      },
-      include: {
-        skus: {
-          where: {
-            deletedAt: null,
-          },
-          select: {
-            id: true,
-            value: true,
-            price: true,
-            stock: true,
-            image: true,
-          },
-        },
-        brand: {
-          select: {
-            id: true,
-            name: true,
-            logo: true,
-          },
-        },
-        categories: {
-          where: {
-            deletedAt: null,
-          },
-          select: {
-            id: true,
-            name: true,
-            logo: true,
-            parentCategory: true,
-          },
-        },
-      },
-    });
-  }
-
   findById(data: Prisma.SKUWhereUniqueInput) {
     return this.prismaService.sKU.findUnique({
       where: {

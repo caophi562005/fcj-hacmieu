@@ -55,6 +55,12 @@ export class ShopService implements OnModuleInit {
       logo: response.logo,
       banner: response.banner,
       phone: response.phone,
+      pickupAddress: response.pickupAddress,
+      pickupProvinceId: response.pickupProvinceId,
+      pickupDistrictId: response.pickupDistrictId,
+      pickupWardId: response.pickupWardId,
+      pickupLatitude: response.pickupLatitude,
+      pickupLongitude: response.pickupLongitude,
       createdAt: response.createdAt,
     };
   }

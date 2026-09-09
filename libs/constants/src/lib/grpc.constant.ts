@@ -27,6 +27,7 @@ export const GrpcModuleName = {
   PROMOTION: {
     PROMOTION: 'PromotionModule',
     REDEMPTION: 'RedemptionModule',
+    MARKETING: 'MarketingModule',
   },
 
   PAYMENT: {
@@ -46,6 +47,7 @@ export const GrpcModuleName = {
 
   IAM: {
     USER: 'UserModule',
+    MARKETING_PREFERENCE: 'MarketingPreferenceModule',
     PERMISSION: 'PermissionModule',
     AUTH: 'AuthModule',
   },

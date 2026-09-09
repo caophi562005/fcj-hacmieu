@@ -8,6 +8,7 @@ import {
   MAX_IMAGE_SIZE_BYTES,
 } from '@common/web-core/lib/image-constants';
 import { ImagePlus, Save, Store, Undo2, X } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import {
   useEffect,
   useRef,
@@ -17,6 +18,15 @@ import {
 } from 'react';
 import { toast } from 'react-toastify';
 import { createShopAction, updateShopAction } from '../actions';
+import type {
+  DistrictResponse,
+  ProvinceResponse,
+  WardResponse,
+} from '../../../lib/location';
+import { loadDistricts, loadWards } from '../lookups';
+import type { MapCoordinates } from './ShopMapDialog';
+
+const ShopMapDialog = dynamic(() => import('./ShopMapDialog'), { ssr: false });
 
 type ShopStatus = (typeof ShopStatusEnums)['options'][number];
 
@@ -35,6 +45,11 @@ export type ShopFormInitial = {
   logo: string | null;
   banner: string | null;
   pickupAddress: string | null;
+  pickupProvinceId: number | null;
+  pickupDistrictId: number | null;
+  pickupWardId: number | null;
+  pickupLatitude: number | null;
+  pickupLongitude: number | null;
   returnAddress: string | null;
   bankName: string | null;
   bankAccountNumber: string | null;
@@ -50,6 +65,11 @@ export const EMPTY_SHOP: ShopFormInitial = {
   logo: null,
   banner: null,
   pickupAddress: '',
+  pickupProvinceId: null,
+  pickupDistrictId: null,
+  pickupWardId: null,
+  pickupLatitude: null,
+  pickupLongitude: null,
   returnAddress: '',
   bankName: '',
   bankAccountNumber: '',
@@ -62,9 +82,19 @@ type Props = {
   initial: ShopFormInitial;
   /** Cần khi `mode === 'create'` để body POST hợp lệ với DTO. */
   merchantId?: string;
+  provinces: ProvinceResponse[];
+  initialDistricts: DistrictResponse[];
+  initialWards: WardResponse[];
 };
 
-export function ShopForm({ mode, initial, merchantId }: Props) {
+export function ShopForm({
+  mode,
+  initial,
+  merchantId,
+  provinces,
+  initialDistricts,
+  initialWards,
+}: Props) {
   const [isPending, startTransition] = useTransition();
 
   const [name, setName] = useState(initial.name);
@@ -74,6 +104,26 @@ export function ShopForm({ mode, initial, merchantId }: Props) {
   const [pickupAddress, setPickupAddress] = useState(
     initial.pickupAddress ?? '',
   );
+  const [pickupProvinceId, setPickupProvinceId] = useState(
+    initial.pickupProvinceId ?? 0,
+  );
+  const [pickupDistrictId, setPickupDistrictId] = useState(
+    initial.pickupDistrictId ?? 0,
+  );
+  const [pickupWardId, setPickupWardId] = useState(initial.pickupWardId ?? 0);
+  const [pickupCoordinates, setPickupCoordinates] =
+    useState<MapCoordinates | null>(
+      initial.pickupLatitude != null && initial.pickupLongitude != null
+        ? {
+            latitude: initial.pickupLatitude,
+            longitude: initial.pickupLongitude,
+          }
+        : null,
+    );
+  const [districts, setDistricts] = useState(initialDistricts);
+  const [wards, setWards] = useState(initialWards);
+  const [isMapOpen, setIsMapOpen] = useState(false);
+  const [isLoadingLocation, startLocationTransition] = useTransition();
   const [returnAddress, setReturnAddress] = useState(
     initial.returnAddress ?? '',
   );
@@ -101,6 +151,17 @@ export function ShopForm({ mode, initial, merchantId }: Props) {
     setPhone(initial.phone);
     setStatus(initial.status);
     setPickupAddress(initial.pickupAddress ?? '');
+    setPickupProvinceId(initial.pickupProvinceId ?? 0);
+    setPickupDistrictId(initial.pickupDistrictId ?? 0);
+    setPickupWardId(initial.pickupWardId ?? 0);
+    setPickupCoordinates(
+      initial.pickupLatitude != null && initial.pickupLongitude != null
+        ? {
+            latitude: initial.pickupLatitude,
+            longitude: initial.pickupLongitude,
+          }
+        : null,
+    );
     setReturnAddress(initial.returnAddress ?? '');
     setBankName(initial.bankName ?? '');
     setBankAccountNumber(initial.bankAccountNumber ?? '');
@@ -154,6 +215,11 @@ export function ShopForm({ mode, initial, merchantId }: Props) {
       phone: phone.trim() || null,
       status,
       pickupAddress: pickupAddress.trim() || null,
+      pickupProvinceId: pickupProvinceId || null,
+      pickupDistrictId: pickupDistrictId || null,
+      pickupWardId: pickupWardId || null,
+      pickupLatitude: pickupCoordinates?.latitude ?? null,
+      pickupLongitude: pickupCoordinates?.longitude ?? null,
       returnAddress: returnAddress.trim() || null,
       bankName: bankName.trim() || null,
       bankAccountNumber: bankAccountNumber.trim() || null,
@@ -231,6 +297,52 @@ export function ShopForm({ mode, initial, merchantId }: Props) {
       <section className="card p-5 md:p-6 space-y-4">
         <h3 className="text-base font-semibold text-ink">Thông tin chung</h3>
 
+        <div className="grid sm:grid-cols-3 gap-4">
+          <LocationSelect
+            label="Tỉnh / Thành"
+            value={pickupProvinceId}
+            options={provinces}
+            placeholder="Chọn tỉnh / thành"
+            onChange={(value) => {
+              setPickupProvinceId(value);
+              setPickupDistrictId(0);
+              setPickupWardId(0);
+              setDistricts([]);
+              setWards([]);
+              if (value) {
+                startLocationTransition(async () =>
+                  setDistricts(await loadDistricts(value)),
+                );
+              }
+            }}
+          />
+          <LocationSelect
+            label="Quận / Huyện"
+            value={pickupDistrictId}
+            options={districts}
+            placeholder="Chọn quận / huyện"
+            disabled={!pickupProvinceId || isLoadingLocation}
+            onChange={(value) => {
+              setPickupDistrictId(value);
+              setPickupWardId(0);
+              setWards([]);
+              if (value) {
+                startLocationTransition(async () =>
+                  setWards(await loadWards(value)),
+                );
+              }
+            }}
+          />
+          <LocationSelect
+            label="Phường / Xã"
+            value={pickupWardId}
+            options={wards}
+            placeholder="Chọn phường / xã"
+            disabled={!pickupDistrictId || isLoadingLocation}
+            onChange={setPickupWardId}
+          />
+        </div>
+
         <Field
           id="shop-name"
           label="Tên shop"
@@ -240,6 +352,25 @@ export function ShopForm({ mode, initial, merchantId }: Props) {
           maxLength={500}
           placeholder="Ví dụ: V-Shop Official"
         />
+
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            className="btn-outline btn-md"
+            onClick={() => setIsMapOpen(true)}
+          >
+            {pickupCoordinates
+              ? 'Thay đổi vị trí kho'
+              : 'Chọn vị trí kho trên bản đồ'}
+          </button>
+          {pickupCoordinates ? (
+            <span className="text-sm text-success">Đã xác nhận toạ độ kho</span>
+          ) : (
+            <span className="text-xs text-ink-muted">
+              Cần toạ độ để hiển thị tuyến giao hàng.
+            </span>
+          )}
+        </div>
 
         <div>
           <label
@@ -355,6 +486,13 @@ export function ShopForm({ mode, initial, merchantId }: Props) {
         />
       </section>
 
+      <ShopMapDialog
+        open={isMapOpen}
+        initialCoordinates={pickupCoordinates}
+        onClose={() => setIsMapOpen(false)}
+        onConfirm={setPickupCoordinates}
+      />
+
       {/* Submit */}
       <div className="flex items-center justify-end gap-3">
         <button
@@ -373,6 +511,41 @@ export function ShopForm({ mode, initial, merchantId }: Props) {
         </button>
       </div>
     </form>
+  );
+}
+
+function LocationSelect({
+  label,
+  value,
+  options,
+  placeholder,
+  disabled,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  options: Array<{ id: number; name: string }>;
+  placeholder: string;
+  disabled?: boolean;
+  onChange: (value: number) => void;
+}) {
+  return (
+    <label className="block">
+      <span className="block text-sm font-medium text-ink mb-1.5">{label}</span>
+      <select
+        className="input"
+        value={value || ''}
+        disabled={disabled}
+        onChange={(event) => onChange(Number(event.target.value) || 0)}
+      >
+        <option value="">{placeholder}</option>
+        {options.map((option) => (
+          <option key={option.id} value={option.id}>
+            {option.name}
+          </option>
+        ))}
+      </select>
+    </label>
   );
 }
 

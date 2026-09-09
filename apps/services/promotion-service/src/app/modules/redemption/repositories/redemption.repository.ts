@@ -145,8 +145,17 @@ export class RedemptionRepository {
 
     const where: Prisma.RedemptionWhereInput = { userId: data.userId };
     if (data.status === RedemptionStatusValues.AVAILABLE) {
+      const now = new Date();
       where.usedAt = null;
       where.cancelledAt = null;
+      where.promotion = {
+        status: 'ACTIVE',
+        deletedAt: null,
+        AND: [
+          { OR: [{ startsAt: null }, { startsAt: { lte: now } }] },
+          { OR: [{ endsAt: null }, { endsAt: { gt: now } }] },
+        ],
+      };
     } else if (data.status === RedemptionStatusValues.USED) {
       where.usedAt = { not: null };
     } else if (data.status === RedemptionStatusValues.CANCELLED) {
@@ -156,6 +165,11 @@ export class RedemptionRepository {
     const [redemptions, totalItems] = await Promise.all([
       this.prismaService.redemption.findMany({
         where,
+        include: {
+          promotion: {
+            select: { endsAt: true, status: true },
+          },
+        },
         orderBy: { claimedAt: 'desc' },
         skip,
         take: limit,
@@ -168,7 +182,11 @@ export class RedemptionRepository {
       limit,
       totalItems,
       totalPages: Math.ceil(totalItems / limit),
-      redemptions,
+      redemptions: redemptions.map(({ promotion, ...redemption }) => ({
+        ...redemption,
+        promotionEndsAt: promotion.endsAt,
+        promotionStatus: promotion.status,
+      })),
     };
   }
 }

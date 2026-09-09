@@ -45,7 +45,8 @@ export class AccessTokenGuard implements CanActivate, OnModuleInit {
 
   private async extractAndValidateToken(
     request: any,
-  ): Promise<ValidateTokenResponse> {
+    refresh = false,
+  ): Promise<{ token: ValidateTokenResponse; fromCache: boolean }> {
     const accessToken = getAccessToken(request);
     if (!accessToken) {
       throw new UnauthorizedException('Error.AccessTokenNotFound');
@@ -57,12 +58,13 @@ export class AccessTokenGuard implements CanActivate, OnModuleInit {
 
     const cacheKey = generateTokenCacheKey(accessToken);
 
-    const cacheData =
-      await this.cacheManager.get<ValidateTokenResponse>(cacheKey);
+    const cacheData = refresh
+      ? undefined
+      : await this.cacheManager.get<ValidateTokenResponse>(cacheKey);
 
     if (cacheData) {
       request[MetadataKeys.USER_DATA] = cacheData;
-      return cacheData;
+      return { token: cacheData, fromCache: true };
     }
 
     const processId = request[MetadataKeys.PROCESS_ID];
@@ -85,7 +87,7 @@ export class AccessTokenGuard implements CanActivate, OnModuleInit {
         ms(RedisConfiguration.CACHE_TOKEN_TTL as StringValue),
       );
       request[MetadataKeys.USER_DATA] = decodedAccessToken;
-      return decodedAccessToken;
+      return { token: decodedAccessToken, fromCache: false };
     } catch (e) {
       throw new UnauthorizedException('Error.InvalidAccessToken');
     }
@@ -95,7 +97,6 @@ export class AccessTokenGuard implements CanActivate, OnModuleInit {
     decodedAccessToken: ValidateTokenResponse,
     request: any,
   ): Promise<void> {
-    const path = request.route.path;
     const method = request.method;
 
     const permissionObject = keyBy(
@@ -104,7 +105,35 @@ export class AccessTokenGuard implements CanActivate, OnModuleInit {
     );
 
     // Kiểm tra quyển truy cập
-    const canAccess = permissionObject[`${path}:${method}`];
+    const normalizePath = (value?: string): string | undefined => {
+      if (!value) return undefined;
+      const pathname = value.split('?')[0];
+      const normalized = `/${pathname}`.replace(/\/+/g, '/');
+      return normalized.length > 1 && normalized.endsWith('/')
+        ? normalized.slice(0, -1)
+        : normalized;
+    };
+
+    const routePath = normalizePath(request.route?.path);
+    const baseUrl = normalizePath(request.baseUrl);
+    const mountedRoutePath =
+      baseUrl && routePath
+        ? normalizePath(`${baseUrl}/${routePath.replace(/^\//, '')}`)
+        : undefined;
+    const pathCandidates = Array.from(
+      new Set(
+        [
+          routePath,
+          mountedRoutePath,
+          normalizePath(request.path),
+          normalizePath(request.originalUrl),
+        ].filter((path): path is string => Boolean(path)),
+      ),
+    );
+
+    const canAccess = pathCandidates.some((path) =>
+      Boolean(permissionObject[`${path}:${method}`]),
+    );
     if (!canAccess) {
       throw new ForbiddenException('Error.AccessDenied');
     }
@@ -113,10 +142,21 @@ export class AccessTokenGuard implements CanActivate, OnModuleInit {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     //Extract và validate token
-    const decodedAccessToken = await this.extractAndValidateToken(request);
+    const cached = await this.extractAndValidateToken(request);
+    let token = cached.token;
 
     //Check user permission
-    await this.validateUserPermission(decodedAccessToken, request);
+    try {
+      await this.validateUserPermission(token, request);
+    } catch (error) {
+      if (!cached.fromCache || !(error instanceof ForbiddenException))
+        throw error;
+
+      // A route may have been added since the token's permissions were cached.
+      // Revalidate both tokens through IAM before deciding to deny access.
+      ({ token } = await this.extractAndValidateToken(request, true));
+      await this.validateUserPermission(token, request);
+    }
 
     return true;
   }

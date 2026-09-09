@@ -92,6 +92,7 @@ export default async function ProductDetailPage({
     description: product.description ?? '',
     basePrice: product.basePrice ?? 0,
     virtualPrice: product.virtualPrice ?? 0,
+    weightGram: product.weightGram ?? 500,
     status: product.status,
     brandId: product.brandId ?? '',
     sizeGuide: product.sizeGuide ?? '',
@@ -202,7 +203,9 @@ export default async function ProductDetailPage({
                 )}
                 <div className="flex items-center gap-2 mt-2">
                   <img
-                    src={r.user?.avatar || `https://i.pravatar.cc/40?u=${r.userId}`}
+                    src={
+                      r.user?.avatar || `https://i.pravatar.cc/40?u=${r.userId}`
+                    }
                     alt="avatar"
                     className="w-6 h-6 rounded-full"
                   />

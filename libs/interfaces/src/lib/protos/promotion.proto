@@ -134,6 +134,117 @@ service RedemptionModule {
   rpc GetMyVouchers(GetMyVouchersRequest) returns (GetMyVouchersResponse);
 }
 
+service MarketingModule {
+  rpc GetManyMarketingCampaigns(GetManyMarketingCampaignsRequest) returns (GetManyMarketingCampaignsResponse);
+  rpc GetMarketingCampaign(GetMarketingCampaignRequest) returns (MarketingCampaignResponse);
+  rpc CreateMarketingCampaign(CreateMarketingCampaignRequest) returns (MarketingCampaignResponse);
+  rpc DispatchMarketingCampaign(DispatchMarketingCampaignRequest) returns (MarketingOperationResponse);
+  rpc ScanMarketing(ScanMarketingRequest) returns (MarketingOperationResponse);
+  rpc ProcessMarketingDelivery(ProcessMarketingDeliveryRequest) returns (MarketingDeliveryResponse);
+  rpc RecordMarketingWebhook(RecordMarketingWebhookRequest) returns (MarketingOperationResponse);
+}
+
+message GetManyMarketingCampaignsRequest {
+  optional string processId = 1;
+  optional string status = 2;
+  int32 page = 3;
+  int32 limit = 4;
+}
+
+message GetMarketingCampaignRequest {
+  optional string processId = 1;
+  string id = 2;
+}
+
+message CreateMarketingCampaignRequest {
+  optional string processId = 1;
+  string name = 2;
+  string promotionId = 3;
+  string subject = 4;
+  optional string preheader = 5;
+  string introContent = 6;
+  optional string scheduledAt = 7;
+  string createdById = 8;
+}
+
+message DispatchMarketingCampaignRequest {
+  optional string processId = 1;
+  string id = 2;
+}
+
+message ScanMarketingRequest {
+  optional string processId = 1;
+  optional string now = 2;
+}
+
+message ProcessMarketingDeliveryRequest {
+  optional string processId = 1;
+  string deliveryId = 2;
+}
+
+message RecordMarketingWebhookRequest {
+  optional string processId = 1;
+  string payload = 2;
+  string svixId = 3;
+  string svixTimestamp = 4;
+  string svixSignature = 5;
+}
+
+message MarketingCampaignResponse {
+  string id = 1;
+  string name = 2;
+  string type = 3;
+  string status = 4;
+  string promotionId = 5;
+  string promotionCode = 6;
+  string promotionName = 7;
+  string subject = 8;
+  optional string preheader = 9;
+  string introContent = 10;
+  optional string scheduledAt = 11;
+  optional string startedAt = 12;
+  optional string completedAt = 13;
+  int32 recipientCount = 14;
+  int32 sentCount = 15;
+  int32 deliveredCount = 16;
+  int32 openedCount = 17;
+  int32 clickedCount = 18;
+  int32 bouncedCount = 19;
+  int32 complainedCount = 20;
+  string createdById = 21;
+  string createdAt = 22;
+  string updatedAt = 23;
+}
+
+message GetManyMarketingCampaignsResponse {
+  int32 page = 1;
+  int32 limit = 2;
+  int32 totalItems = 3;
+  int32 totalPages = 4;
+  repeated MarketingCampaignResponse campaigns = 5;
+}
+
+message MarketingOperationResponse {
+  bool accepted = 1;
+  int32 queuedCount = 2;
+  string message = 3;
+}
+
+message MarketingDeliveryResponse {
+  string id = 1;
+  string type = 2;
+  string status = 3;
+  optional string campaignId = 4;
+  string promotionId = 5;
+  optional string redemptionId = 6;
+  string userId = 7;
+  string recipientEmail = 8;
+  optional string providerMessageId = 9;
+  optional string errorMessage = 10;
+  optional string sentAt = 11;
+  string createdAt = 12;
+}
+
 message ClaimPromotionRequest {
   optional string processId = 1;
   string promotionId = 2;
@@ -162,6 +273,8 @@ message PromotionRedemptionResponse {
   optional string usedAt = 11;
   optional string cancelledAt = 12;
   string createdAt = 13;
+  optional string promotionEndsAt = 14;
+  optional string promotionStatus = 15;
 }
 
 message GetMyVouchersResponse {

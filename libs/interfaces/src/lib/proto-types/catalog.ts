@@ -10,6 +10,19 @@ import { Observable } from "rxjs";
 
 export const protobufPackage = "CATALOG_SERVICE";
 
+export interface ProductSoldCount {
+  productId: string;
+  soldCount: number;
+}
+
+export interface UpdateSoldCountsRequest {
+  items: ProductSoldCount[];
+}
+
+export interface UpdateSoldCountsResponse {
+  count: number;
+}
+
 /** ==================== GetManyProductsRequest ====================// */
 export interface GetManyProductsRequest {
   processId?: string | undefined;
@@ -67,6 +80,7 @@ export interface CreateProductRequest {
   categories: string[];
   skus: SKUInput[];
   attributes: AttributeProduct[];
+  weightGram: number;
 }
 
 /** ==================== UpdateProductRequest ====================// */
@@ -95,6 +109,7 @@ export interface UpdateProductRequest {
   attributes: AttributeProduct[];
   id: string;
   isApproved?: boolean | undefined;
+  weightGram: number;
 }
 
 /** ==================== DeleteProductRequest ====================// */
@@ -140,6 +155,7 @@ export interface ProductResponse {
   deletedAt: string;
   createdAt: string;
   updatedAt: string;
+  weightGram: number;
 }
 
 export interface ParentCategoryResponse {
@@ -416,6 +432,10 @@ export interface ValidateItemsResponse {
   skuValue: string;
   shopId: string;
   error: string;
+  provinceId: number;
+  districtId: number;
+  wardId: number;
+  weightGram: number;
 }
 
 export interface ValidateProductsResponse {
@@ -445,6 +465,8 @@ export interface ProductModuleClient {
 
   updateProduct(request: UpdateProductRequest): Observable<ProductResponse>;
 
+  updateSoldCounts(request: UpdateSoldCountsRequest): Observable<UpdateSoldCountsResponse>;
+
   deleteProduct(request: DeleteProductRequest): Observable<ProductResponse>;
 
   validateProducts(request: ValidateProductsRequest): Observable<ValidateProductsResponse>;
@@ -465,6 +487,10 @@ export interface ProductModuleController {
     request: UpdateProductRequest,
   ): Promise<ProductResponse> | Observable<ProductResponse> | ProductResponse;
 
+  updateSoldCounts(
+    request: UpdateSoldCountsRequest,
+  ): Promise<UpdateSoldCountsResponse> | Observable<UpdateSoldCountsResponse> | UpdateSoldCountsResponse;
+
   deleteProduct(
     request: DeleteProductRequest,
   ): Promise<ProductResponse> | Observable<ProductResponse> | ProductResponse;
@@ -481,6 +507,7 @@ export function ProductModuleControllerMethods() {
       "getProduct",
       "createProduct",
       "updateProduct",
+      "updateSoldCounts",
       "deleteProduct",
       "validateProducts",
     ];

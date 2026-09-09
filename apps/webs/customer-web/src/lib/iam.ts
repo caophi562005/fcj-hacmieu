@@ -1,5 +1,6 @@
 import type { Response as ApiResponse } from '@common/interfaces/models/common/response.model';
 import type {
+  MarketingPreferencesResponse,
   UpdateUserRequest,
   UserResponse,
 } from '@common/interfaces/models/iam';
@@ -17,6 +18,39 @@ import { createServerApi } from './api';
 export async function getCurrentUser() {
   const api = await createServerApi();
   return _getCurrentUser(api);
+}
+
+export async function getMarketingPreferences(): Promise<MarketingPreferencesResponse> {
+  const api = await createServerApi();
+  const { data } = await api.get<ApiResponse<MarketingPreferencesResponse>>(
+    '/iam/marketing-preferences',
+  );
+  return (
+    data?.data ?? {
+      userId: '',
+      promotionOffers: false,
+      voucherReminders: false,
+    }
+  );
+}
+
+export async function updateMarketingPreferences(payload: {
+  promotionOffers: boolean;
+  voucherReminders: boolean;
+  consentSource?: string;
+  consentVersion?: string;
+}): Promise<MarketingPreferencesResponse> {
+  const api = await createServerApi();
+  const { data } = await api.put<ApiResponse<MarketingPreferencesResponse>>(
+    '/iam/marketing-preferences',
+    {
+      ...payload,
+      consentSource: payload.consentSource ?? 'PROFILE',
+      consentVersion: payload.consentVersion ?? '2026-09-07',
+    },
+  );
+  if (!data?.data) throw new Error('Không thể cập nhật lựa chọn email.');
+  return data.data;
 }
 
 export async function changePassword(

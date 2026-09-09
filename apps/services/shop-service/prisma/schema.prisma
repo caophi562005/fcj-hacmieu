@@ -1,85 +1,90 @@
 generator client {
-    provider      = "prisma-client"
-    output        = "../src/generated/prisma-client"
-    moduleFormat  = "cjs"
-    binaryTargets = ["native", "debian-openssl-1.1.x"]
+  provider      = "prisma-client"
+  output        = "../src/generated/prisma-client"
+  moduleFormat  = "cjs"
+  binaryTargets = ["native", "debian-openssl-1.1.x"]
 }
 
 datasource db {
-    provider = "postgresql"
+  provider = "postgresql"
 }
 
 enum MerchantType {
-    INDIVIDUAL
-    BUSINESS
+  INDIVIDUAL
+  BUSINESS
 }
 
 enum MerchantApprovalStatus {
-    PENDING
-    APPROVED
-    REJECTED
-    SUSPENDED
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
 }
 
 enum ShopStatus {
-    DRAFT
-    ACTIVE
-    INACTIVE
-    CLOSED
+  DRAFT
+  ACTIVE
+  INACTIVE
+  CLOSED
 }
 
 model Merchant {
-    id        String       @id @default(uuid())
-    userId    String       @unique
-    type      MerchantType @default(INDIVIDUAL)
-    legalName String       @db.VarChar(500)
-    taxCode   String?      @db.VarChar(100)
+  id        String       @id @default(uuid())
+  userId    String       @unique
+  type      MerchantType @default(INDIVIDUAL)
+  legalName String       @db.VarChar(500)
+  taxCode   String?      @db.VarChar(100)
 
-    approvalStatus MerchantApprovalStatus @default(PENDING)
-    canSell        Boolean                @default(false)
+  approvalStatus MerchantApprovalStatus @default(PENDING)
+  canSell        Boolean                @default(false)
 
-    shop Shop?
+  shop Shop?
 
-    createdById String?
-    updatedById String?
-    deletedById String?
+  createdById String?
+  updatedById String?
+  deletedById String?
 
-    deletedAt DateTime?
-    createdAt DateTime  @default(now())
-    updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
-    @@index([approvalStatus])
-    @@index([canSell])
-    @@index([deletedAt])
+  @@index([approvalStatus])
+  @@index([canSell])
+  @@index([deletedAt])
 }
 
 model Shop {
-    id          String     @id @default(uuid())
-    merchantId  String     @unique
-    merchant    Merchant   @relation(fields: [merchantId], references: [id], onDelete: Cascade)
-    userId      String     @default("")
-    name        String     @db.VarChar(500)
-    description String     @default("")
-    logo        String?    @db.VarChar(1000)
-    banner      String?    @db.VarChar(1000)
-    phone       String?    @db.VarChar(20)
-    status      ShopStatus @default(DRAFT)
+  id          String     @id @default(uuid())
+  merchantId  String     @unique
+  merchant    Merchant   @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  userId      String     @default("")
+  name        String     @db.VarChar(500)
+  description String     @default("")
+  logo        String?    @db.VarChar(1000)
+  banner      String?    @db.VarChar(1000)
+  phone       String?    @db.VarChar(20)
+  status      ShopStatus @default(DRAFT)
 
-    pickupAddress     String?
-    returnAddress     String?
-    bankName          String? @db.VarChar(255)
-    bankAccountNumber String? @db.VarChar(50)
-    bankCode          String? @db.VarChar(50)
-    bankAccountName   String? @db.VarChar(255)
+  pickupAddress     String?
+  pickupProvinceId  Int?
+  pickupDistrictId  Int?
+  pickupWardId      Int?
+  pickupLatitude    Float?
+  pickupLongitude   Float?
+  returnAddress     String?
+  bankName          String? @db.VarChar(255)
+  bankAccountNumber String? @db.VarChar(50)
+  bankCode          String? @db.VarChar(50)
+  bankAccountName   String? @db.VarChar(255)
 
-    createdById String?
-    updatedById String?
-    deletedById String?
+  createdById String?
+  updatedById String?
+  deletedById String?
 
-    deletedAt DateTime?
-    createdAt DateTime  @default(now())
-    updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
-    @@index([status])
-    @@index([deletedAt])
+  @@index([status])
+  @@index([deletedAt])
 }

@@ -89,6 +89,13 @@
         "inputs": ["prisma/schema.prisma"]
       },
       "cache": true
+    },
+    "e2e": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["generate-prisma"],
+      "options": {
+        "command": "pnpm exec vitest run --config apps/services/promotion-service/vitest.config.ts"
+      }
     }
   }
 }

@@ -5,7 +5,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "pnpm nx reset && pnpm nx run-many -t serve --projects=iam-service,shop-service,catalog-service,order-service,utility-service,wallet-service,promotion-service,payment-service,ai-service,customer-bff,customer-web,seller-bff,seller-web,admin-bff,admin-web",
-    "build": "pnpm nx reset && pnpm nx run-many -t build --projects=iam-service,catalog-service,order-service,payment-service,utility-service,promotion-service,customer-bff",
+    "build": "pnpm nx reset && pnpm nx run-many -t build --projects=iam-service,shop-service,catalog-service,order-service,utility-service,wallet-service,promotion-service,payment-service,ai-service,customer-bff,customer-web,seller-bff,seller-web,admin-bff,admin-web",
     "generate-ts-proto": "pnpm nx generate-ts-proto interfaces"
   },
   "private": true,
@@ -37,6 +37,7 @@
     "date-fns": "^4.1.0",
     "express": "^5.2.1",
     "hls.js": "^1.6.16",
+    "leaflet": "^1.9.4",
     "lodash": "^4.18.1",
     "lucide-react": "^1.11.0",
     "mime-types": "^3.0.2",
@@ -47,6 +48,7 @@
     "openid-client": "^5.7.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-leaflet": "^5.0.0",
     "react-medium-image-zoom": "^5.4.4",
     "react-toastify": "^11.1.0",
     "reflect-metadata": "^0.1.13",
@@ -78,6 +80,7 @@
     "@swc/core": "~1.15.5",
     "@swc/helpers": "~0.5.18",
     "@types/express": "^5.0.6",
+    "@types/leaflet": "^1.9.22",
     "@types/lodash": "^4.17.24",
     "@types/mime-types": "^3.0.1",
     "@types/ms": "^2.1.0",
@@ -101,6 +104,7 @@
     "tslib": "^2.3.0",
     "typescript": "~5.9.2",
     "typescript-eslint": "^8.40.0",
+    "vitest": "^4.1.5",
     "webpack-cli": "^5.1.4"
   }
 }

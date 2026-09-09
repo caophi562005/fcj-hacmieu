@@ -7,6 +7,7 @@ import {
   ValidateProductsRequest,
   ValidateProductsResponse,
 } from '@common/interfaces/models/catalog';
+import { UpdateSoldCountsRequest } from '@common/interfaces/proto-types/catalog';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ProductRepository } from '../repositories/product.repository';
 
@@ -54,6 +55,10 @@ export class ProductService {
       }
       throw error;
     }
+  }
+
+  async updateSoldCounts(data: UpdateSoldCountsRequest) {
+    return this.productRepository.updateSoldCounts(data.items);
   }
 
   async delete({ processId, ...data }: DeleteProductRequest) {

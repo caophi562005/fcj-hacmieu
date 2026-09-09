@@ -43,3 +43,17 @@ export const GroupEnums = z.enum([
 ]);
 
 export type GroupType = z.infer<typeof GroupEnums>;
+
+// ====================================================================================================
+
+export const MarketingTopicValues = {
+  PROMOTION_OFFERS: 'PROMOTION_OFFERS',
+  VOUCHER_REMINDERS: 'VOUCHER_REMINDERS',
+} as const;
+
+export const MarketingTopicEnums = z.enum([
+  MarketingTopicValues.PROMOTION_OFFERS,
+  MarketingTopicValues.VOUCHER_REMINDERS,
+]);
+
+export type MarketingTopicType = z.infer<typeof MarketingTopicEnums>;

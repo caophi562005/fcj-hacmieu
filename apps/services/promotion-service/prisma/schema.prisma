@@ -30,6 +30,36 @@ enum PromotionScope {
     SHIPPING // giảm phí ship
 }
 
+enum MarketingCampaignType {
+    PROMOTION_ANNOUNCEMENT
+}
+
+enum MarketingCampaignStatus {
+    DRAFT
+    SCHEDULED
+    PROCESSING
+    COMPLETED
+    CANCELLED
+    FAILED
+}
+
+enum MarketingDeliveryType {
+    PROMOTION_ANNOUNCEMENT
+    VOUCHER_EXPIRY_REMINDER
+}
+
+enum MarketingDeliveryStatus {
+    QUEUED
+    PROCESSING
+    SENT
+    DELIVERED
+    OPENED
+    CLICKED
+    BOUNCED
+    COMPLAINED
+    FAILED
+}
+
 model Promotion {
     id          String  @id @default(uuid())
     code        String
@@ -63,6 +93,8 @@ model Promotion {
     updatedAt DateTime  @updatedAt
 
     redemptions Redemption[]
+    marketingCampaigns MarketingCampaign[]
+    marketingDeliveries MarketingDelivery[]
 
     @@unique([code])
     @@index([deletedAt])
@@ -94,6 +126,90 @@ model Redemption {
     cancelledAt DateTime?
     createdAt   DateTime  @default(now())
 
+    marketingDeliveries MarketingDelivery[]
+
     @@unique([promotionId, userId])
     @@unique([code, userId])
+}
+
+model MarketingCampaign {
+    id          String                  @id @default(uuid())
+    name        String                  @db.VarChar(255)
+    type        MarketingCampaignType   @default(PROMOTION_ANNOUNCEMENT)
+    status      MarketingCampaignStatus @default(DRAFT)
+    promotionId String
+    promotion   Promotion               @relation(fields: [promotionId], references: [id])
+
+    subject      String   @db.VarChar(255)
+    preheader    String?  @db.VarChar(255)
+    introContent String   @db.VarChar(2000)
+    scheduledAt DateTime?
+    startedAt   DateTime?
+    completedAt DateTime?
+
+    recipientCount   Int @default(0)
+    sentCount        Int @default(0)
+    deliveredCount   Int @default(0)
+    openedCount      Int @default(0)
+    clickedCount     Int @default(0)
+    bouncedCount     Int @default(0)
+    complainedCount  Int @default(0)
+
+    createdById String
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    deliveries MarketingDelivery[]
+
+    @@index([status, scheduledAt])
+    @@index([promotionId])
+}
+
+model MarketingDelivery {
+    id           String                  @id @default(uuid())
+    type         MarketingDeliveryType
+    status       MarketingDeliveryStatus @default(QUEUED)
+    dedupeKey    String                  @unique @db.VarChar(255)
+    campaignId   String?
+    campaign     MarketingCampaign?      @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+    promotionId  String
+    promotion    Promotion               @relation(fields: [promotionId], references: [id])
+    redemptionId String?
+    redemption   Redemption?             @relation(fields: [redemptionId], references: [id], onDelete: SetNull)
+
+    userId            String
+    recipientEmail    String @db.VarChar(320)
+    recipientName     String? @db.VarChar(255)
+    subject           String @db.VarChar(255)
+    htmlContent       String @db.Text
+    providerMessageId String? @unique @db.VarChar(255)
+    errorMessage      String? @db.VarChar(2000)
+    attemptCount      Int @default(0)
+
+    sentAt      DateTime?
+    deliveredAt DateTime?
+    openedAt    DateTime?
+    clickedAt   DateTime?
+    bouncedAt   DateTime?
+    complainedAt DateTime?
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    events MarketingEvent[]
+
+    @@index([campaignId, status])
+    @@index([redemptionId])
+    @@index([userId, createdAt(sort: Desc)])
+}
+
+model MarketingEvent {
+    id              String   @id @default(uuid())
+    providerEventId String   @unique @db.VarChar(255)
+    deliveryId      String?
+    delivery        MarketingDelivery? @relation(fields: [deliveryId], references: [id], onDelete: SetNull)
+    type            String   @db.VarChar(100)
+    payload         Json
+    createdAt       DateTime @default(now())
+
+    @@index([deliveryId, createdAt(sort: Desc)])
 }
