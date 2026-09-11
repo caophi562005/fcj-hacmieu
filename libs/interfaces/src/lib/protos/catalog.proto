@@ -2,6 +2,11 @@ syntax = "proto3";
 
 package CATALOG_SERVICE;
 
+service SkuModule {
+  rpc GetSKU(GetSKURequest) returns (SKUResponse);
+  rpc RestoreStock(RestoreStockRequest) returns (RestoreStockResponse);
+}
+
 service ProductModule {
   rpc GetManyProducts(GetManyProductsRequest) returns (GetManyProductsResponse);
   rpc GetProduct(GetProductRequest) returns (ProductResponse);
@@ -424,6 +429,22 @@ message SKUResponse {
   string deletedAt = 11;
   string createdAt = 12;
   string updatedAt = 13;
+}
+
+message RestoreStockItem {
+  string skuId = 1;
+  string productId = 2;
+  int32 quantity = 3;
+}
+
+message RestoreStockRequest {
+  optional string processId = 1;
+  string orderId = 2;
+  repeated RestoreStockItem items = 3;
+}
+
+message RestoreStockResponse {
+  bool success = 1;
 }
 
 

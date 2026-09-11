@@ -68,5 +68,9 @@ export async function updateSellerOrderStatus(
 ): Promise<void> {
   const api = await createServerApi();
   // shopId sẽ được BFF inject từ token; truyền chuỗi rỗng để vượt qua zod validation
-  await api.put('/order/order/status', { id: orderId, status, shopId: '' });
+  await api.put(
+    '/order/order/status',
+    { id: orderId, status, shopId: '' },
+    { timeout: 30_000 },
+  );
 }

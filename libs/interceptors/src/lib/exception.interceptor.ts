@@ -23,7 +23,7 @@ export interface StandardResponse<T = any> {
 export class ExceptionInterceptor implements NestInterceptor {
   intercept(
     context: ExecutionContext,
-    next: CallHandler<any>
+    next: CallHandler<any>,
   ): Observable<any> | Promise<Observable<any>> {
     const ctx = context.switchToHttp();
     const request: Request & {
@@ -86,7 +86,7 @@ export class ExceptionInterceptor implements NestInterceptor {
           Logger.error(
             `ZodSerializationException in process '${processId}': ${
               zodError?.message || 'Unknown error'
-            }`
+            }`,
           );
           Logger.error('Zod validation errors:', zodError?.errors);
 
@@ -104,7 +104,7 @@ export class ExceptionInterceptor implements NestInterceptor {
               duration: `${durationMs} ms`,
               processId,
             },
-            HttpStatus.INTERNAL_SERVER_ERROR
+            HttpStatus.INTERNAL_SERVER_ERROR,
           );
         }
 
@@ -133,6 +133,9 @@ export class ExceptionInterceptor implements NestInterceptor {
             case 7: // PERMISSION_DENIED
               code = HttpStatus.FORBIDDEN;
               break;
+            case 10: // ABORTED (transaction conflict/deadlock)
+              code = HttpStatus.CONFLICT;
+              break;
             case 16: // UNAUTHENTICATED
               code = HttpStatus.UNAUTHORIZED;
               break;
@@ -152,7 +155,7 @@ export class ExceptionInterceptor implements NestInterceptor {
         }
 
         Logger.error(
-          `HTTP >> Error process '${processId}' >> message: '${message}' >> code: '${code}'`
+          `HTTP >> Error process '${processId}' >> message: '${message}' >> code: '${code}'`,
         );
         throw new HttpException(
           {
@@ -162,9 +165,9 @@ export class ExceptionInterceptor implements NestInterceptor {
             duration: `${durationMs} ms`,
             processId,
           },
-          code
+          code,
         );
-      })
+      }),
     );
   }
 

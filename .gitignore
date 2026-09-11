@@ -83,3 +83,9 @@ design_stitch
 tools
 
 sql
+
+*.docx
+
+pdf
+
+.pnpm-store

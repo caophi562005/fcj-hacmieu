@@ -10,6 +10,8 @@ export const GetSKURequestSchema = SKUSchema.pick({
   .strict();
 
 export const IncreaseStockRequestSchema = z.object({
+  processId: z.uuid().optional(),
+  orderId: z.uuid(),
   items: z.array(
     z.object({
       skuId: z.uuid(),

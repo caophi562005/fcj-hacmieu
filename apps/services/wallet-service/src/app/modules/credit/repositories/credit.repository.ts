@@ -134,22 +134,18 @@ export class CreditRepository {
     start.setHours(0, 0, 0, 0);
     start.setDate(start.getDate() - (days - 1));
 
-    const transactions = await this.prismaService.creditTransaction.findMany({
-      where: {
-        shopId: data.shopId,
-        source: CreditTransactionSourceValues.ORDER_REVENUE,
-        type: CreditTransactionTypeValues.CREDIT,
-        createdAt: {
-          gte: start,
-          lte: endOfToday,
-        },
-      },
-      select: {
-        amount: true,
-        createdAt: true,
-      },
-      orderBy: { createdAt: 'asc' },
-    });
+    const revenueRows = await this.prismaService.$queryRaw<
+      Array<{
+        revenueDate: Date | string;
+        creditedRevenue: bigint | number;
+      }>
+    >`
+      SELECT revenueDate, creditedRevenue
+        FROM vw_shop_credit_revenue
+       WHERE shopId = ${data.shopId}
+         AND revenueDate BETWEEN DATE(${start}) AND DATE(${endOfToday})
+       ORDER BY revenueDate ASC
+    `;
 
     const formatDateLocal = (d: Date) => {
       const y = d.getFullYear();
@@ -169,11 +165,14 @@ export class CreditRepository {
 
     const pointMap = new Map(points.map((p) => [p.date, p]));
 
-    for (const tx of transactions) {
-      const date = formatDateLocal(tx.createdAt);
+    for (const row of revenueRows) {
+      const date =
+        row.revenueDate instanceof Date
+          ? formatDateLocal(row.revenueDate)
+          : String(row.revenueDate).slice(0, 10);
       const point = pointMap.get(date);
       if (point) {
-        point.amount += tx.amount;
+        point.amount += Number(row.creditedRevenue);
       }
     }
 

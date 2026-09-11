@@ -138,71 +138,53 @@ export class ReviewRepository {
   }
 
   async recalculateRatingAggregate(productId: string) {
-    const [ratingStats, groupedByRating] = await Promise.all([
-      this.prismaService.review.aggregate({
-        where: {
-          productId,
-          deletedAt: null,
-        },
-        _avg: {
-          rating: true,
-        },
-        _count: {
-          _all: true,
-        },
-      }),
-      this.prismaService.review.groupBy({
-        by: ['rating'],
-        where: {
-          productId,
-          deletedAt: null,
-        },
-        _count: {
-          _all: true,
-        },
-      }),
-    ]);
+    await this.prismaService.$executeRaw`
+      INSERT INTO RatingAggregate (
+        id, productId, averageRating, totalReviews,
+        star1Count, star2Count, star3Count, star4Count, star5Count, updatedAt
+      )
+      SELECT
+        UUID(), ${productId},
+        fn_average_rating(COALESCE(SUM(rating), 0), COUNT(*)),
+        COUNT(*),
+        COALESCE(SUM(CASE WHEN rating = 1 THEN 1 ELSE 0 END), 0),
+        COALESCE(SUM(CASE WHEN rating = 2 THEN 1 ELSE 0 END), 0),
+        COALESCE(SUM(CASE WHEN rating = 3 THEN 1 ELSE 0 END), 0),
+        COALESCE(SUM(CASE WHEN rating = 4 THEN 1 ELSE 0 END), 0),
+        COALESCE(SUM(CASE WHEN rating = 5 THEN 1 ELSE 0 END), 0),
+        NOW(3)
+      FROM Review
+      WHERE productId = ${productId} AND deletedAt IS NULL
+      ON DUPLICATE KEY UPDATE
+        averageRating = VALUES(averageRating),
+        totalReviews = VALUES(totalReviews),
+        star1Count = VALUES(star1Count),
+        star2Count = VALUES(star2Count),
+        star3Count = VALUES(star3Count),
+        star4Count = VALUES(star4Count),
+        star5Count = VALUES(star5Count),
+        updatedAt = VALUES(updatedAt)
+    `;
 
-    let star1Count = 0;
-    let star2Count = 0;
-    let star3Count = 0;
-    let star4Count = 0;
-    let star5Count = 0;
+    const [aggregate] = await this.prismaService.$queryRaw<
+      Array<{
+        id: string;
+        productId: string;
+        averageRating: number;
+        totalReviews: number;
+        star1Count: number;
+        star2Count: number;
+        star3Count: number;
+        star4Count: number;
+        star5Count: number;
+        updatedAt: Date;
+      }>
+    >`
+      SELECT *
+        FROM vw_product_rating_summary
+       WHERE productId = ${productId}
+    `;
 
-    for (const item of groupedByRating) {
-      if (item.rating === 1) star1Count = item._count._all;
-      if (item.rating === 2) star2Count = item._count._all;
-      if (item.rating === 3) star3Count = item._count._all;
-      if (item.rating === 4) star4Count = item._count._all;
-      if (item.rating === 5) star5Count = item._count._all;
-    }
-
-    const totalReviews = ratingStats._count._all;
-    const averageRating = ratingStats._avg.rating ?? 0;
-
-    return this.prismaService.ratingAggregate.upsert({
-      where: {
-        productId,
-      },
-      create: {
-        productId,
-        averageRating,
-        totalReviews,
-        star1Count,
-        star2Count,
-        star3Count,
-        star4Count,
-        star5Count,
-      },
-      update: {
-        averageRating,
-        totalReviews,
-        star1Count,
-        star2Count,
-        star3Count,
-        star4Count,
-        star5Count,
-      },
-    });
+    return aggregate;
   }
 }

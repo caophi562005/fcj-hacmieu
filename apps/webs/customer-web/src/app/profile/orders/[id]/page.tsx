@@ -20,6 +20,7 @@ import { ReportButton } from '../../../../components/ReportButton';
 import { getMyOrderById } from '../../../../lib/order';
 import { getMyReviewByOrderItemId } from '../../../../lib/review';
 import { OrderReviews } from './OrderReviews';
+import { CancelOrderButton } from './CancelOrderButton';
 
 function statusLabel(
   status: string,
@@ -365,6 +366,10 @@ export default async function OrderDetailPage({
           />
         </dl>
         <div className="flex flex-wrap gap-2 mt-5">
+          {(order.status === OrderStatusValues.PENDING ||
+            order.status === OrderStatusValues.CONFIRMED) && (
+            <CancelOrderButton orderId={order.id} />
+          )}
           <button className="btn-outline btn-md cursor-pointer">
             Liên hệ shop
           </button>

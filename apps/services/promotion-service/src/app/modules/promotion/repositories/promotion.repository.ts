@@ -1,5 +1,4 @@
 import { PaginationConfiguration } from '@common/configurations/pagination.config';
-import { PromotionStatusValues } from '@common/constants/promotion.constant';
 import {
   CheckPromotionRequest,
   GetManyPromotionsRequest,
@@ -149,15 +148,31 @@ export class PromotionRepository {
       throw new BadRequestException('Error.PromotionAlreadyUsing');
     }
 
-    // Check promotion có hoạt động không
-    if (promotion.status !== PromotionStatusValues.ACTIVE) {
+    // Function gom trạng thái, thời gian và hạn mức vào cùng một phép kiểm tra
+    // tại Promotion database.
+    const [activeRow] = await this.prismaService.$queryRaw<
+      Array<{ isActive: boolean | bigint | number }>
+    >`
+      SELECT fn_is_promotion_active(${promotion.id}, ${new Date()}) AS isActive
+    `;
+    if (!Boolean(Number(activeRow?.isActive ?? 0))) {
+      const now = new Date();
+      if (promotion.status !== 'ACTIVE') {
+        throw new BadRequestException('Error.PromotionInactive');
+      }
+      if (
+        (promotion.startsAt && promotion.startsAt > now) ||
+        (promotion.endsAt && promotion.endsAt < now)
+      ) {
+        throw new BadRequestException('Error.PromotionNotInValidTime');
+      }
+      if (
+        promotion.totalLimit !== null &&
+        promotion.usedCount >= promotion.totalLimit
+      ) {
+        throw new BadRequestException('Error.PromotionOutOfStock');
+      }
       throw new BadRequestException('Error.PromotionInactive');
-    }
-
-    // Check thời gian áp dụng khuyến mãi
-    const now = new Date();
-    if (promotion.startsAt > now || promotion.endsAt < now) {
-      throw new BadRequestException('Error.PromotionNotInValidTime');
     }
 
     return promotion;

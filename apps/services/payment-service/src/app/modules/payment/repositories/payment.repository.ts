@@ -1,4 +1,5 @@
 import { PaginationConfiguration } from '@common/configurations/pagination.config';
+import { isDatabaseDemoActive } from '@common/configurations/database-demo.config';
 import { PaymentStatusValues } from '@common/constants/payment.constant';
 import {
   GetManyPaymentsRequest,
@@ -69,12 +70,41 @@ export class PaymentRepository {
   }
 
   async getOne(data: GetPaymentRequest) {
-    const row = await this.prismaService.payment.findUnique({
-      where: {
-        id: data.id,
-        userId: data?.userId ?? undefined,
+    if (isDatabaseDemoActive('5.2')) {
+      // DEMO LỖI 5.2 - DIRTY READ:
+      // Trong 5 giây chờ, UPDATE Payment ở session MySQL khác nhưng chưa COMMIT.
+      const row = await this.prismaService.$transaction(
+        async (tx) => {
+          await tx.$queryRaw(Prisma.sql`SELECT SLEEP(5)`);
+          return tx.payment.findUnique({
+            where: {
+              id: data.id,
+              userId: data?.userId ?? undefined,
+            },
+          });
+        },
+        {
+          isolationLevel: Prisma.TransactionIsolationLevel.ReadUncommitted,
+          timeout: 20_000,
+        },
+      );
+      return row ? toPaymentRow(row) : null;
+    }
+
+    // BẢN ĐÚNG 5.2
+    const row = await this.prismaService.$transaction(
+      (tx) =>
+        tx.payment.findUnique({
+          where: {
+            id: data.id,
+            userId: data?.userId ?? undefined,
+          },
+        }),
+      {
+        isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted,
+        timeout: 10_000,
       },
-    });
+    );
     return row ? toPaymentRow(row) : null;
   }
 

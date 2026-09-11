@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { createServerApi } from '../../../../lib/api';
 import { getCurrentUser } from '../../../../lib/iam';
 import { createMyReview } from '../../../../lib/review';
 
@@ -8,6 +9,44 @@ export type CreateReviewState = {
   ok: boolean;
   message: string;
 };
+
+export type CancelOrderResult = {
+  ok: boolean;
+  message: string;
+};
+
+export async function cancelOrderAction(
+  orderId: string,
+): Promise<CancelOrderResult> {
+  try {
+    const api = await createServerApi();
+    await api.delete(`/order/order/${orderId}`, { timeout: 30_000 });
+    revalidatePath('/profile/orders');
+    revalidatePath(`/profile/orders/${orderId}`);
+    return { ok: true, message: 'Hủy đơn hàng thành công.' };
+  } catch (error: unknown) {
+    const message = (error as { response?: { data?: { message?: unknown } } })
+      ?.response?.data?.message;
+
+    if (message === 'Error.InventoryRestoreDeadlock') {
+      return {
+        ok: false,
+        message: 'Có lỗi xung đột khi hoàn tồn kho. Vui lòng thử hủy đơn lại.',
+      };
+    }
+    if (message === 'Error.InventoryRestoreFailed') {
+      return {
+        ok: false,
+        message: 'Có lỗi khi hoàn tồn kho. Đơn hàng chưa được hủy.',
+      };
+    }
+
+    return {
+      ok: false,
+      message: 'Có lỗi khi hủy đơn hàng. Vui lòng thử lại.',
+    };
+  }
+}
 
 export async function createReviewAction(
   _prev: CreateReviewState,
@@ -49,7 +88,8 @@ export async function createReviewAction(
     revalidatePath(`/profile/orders/${orderId}`);
     return { ok: true, message: 'Đánh giá thành công.' };
   } catch (error: unknown) {
-    const status = (error as { response?: { status?: number } })?.response?.status;
+    const status = (error as { response?: { status?: number } })?.response
+      ?.status;
     const apiMessage = (error as { response?: { data?: { message?: string } } })
       ?.response?.data?.message;
 

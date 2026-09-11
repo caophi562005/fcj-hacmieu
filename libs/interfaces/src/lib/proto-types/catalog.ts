@@ -388,6 +388,22 @@ export interface SKUResponse {
   updatedAt: string;
 }
 
+export interface RestoreStockItem {
+  skuId: string;
+  productId: string;
+  quantity: number;
+}
+
+export interface RestoreStockRequest {
+  processId?: string | undefined;
+  orderId: string;
+  items: RestoreStockItem[];
+}
+
+export interface RestoreStockResponse {
+  success: boolean;
+}
+
 /** ==================== ValidateProductsRequest ====================// */
 export interface ValidateItems {
   productId: string;
@@ -433,6 +449,37 @@ export interface DashboardSellerResponse {
 }
 
 export const CATALOG_SERVICE_PACKAGE_NAME = "CATALOG_SERVICE";
+
+export interface SkuModuleClient {
+  getSKU(request: GetSKURequest): Observable<SKUResponse>;
+
+  restoreStock(request: RestoreStockRequest): Observable<RestoreStockResponse>;
+}
+
+export interface SkuModuleController {
+  getSKU(request: GetSKURequest): Promise<SKUResponse> | Observable<SKUResponse> | SKUResponse;
+
+  restoreStock(
+    request: RestoreStockRequest,
+  ): Promise<RestoreStockResponse> | Observable<RestoreStockResponse> | RestoreStockResponse;
+}
+
+export function SkuModuleControllerMethods() {
+  return function (constructor: Function) {
+    const grpcMethods: string[] = ["getSKU", "restoreStock"];
+    for (const method of grpcMethods) {
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcMethod("SkuModule", method)(constructor.prototype[method], method, descriptor);
+    }
+    const grpcStreamMethods: string[] = [];
+    for (const method of grpcStreamMethods) {
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcStreamMethod("SkuModule", method)(constructor.prototype[method], method, descriptor);
+    }
+  };
+}
+
+export const SKU_MODULE_SERVICE_NAME = "SkuModule";
 
 export interface ProductModuleClient {
   getManyProducts(request: GetManyProductsRequest): Observable<GetManyProductsResponse>;

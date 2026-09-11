@@ -31,6 +31,8 @@ import {
   CATALOG_SERVICE_PACKAGE_NAME,
   PRODUCT_MODULE_SERVICE_NAME,
   ProductModuleClient,
+  SKU_MODULE_SERVICE_NAME,
+  SkuModuleClient,
 } from '@common/interfaces/proto-types/catalog';
 import {
   PROMOTION_MODULE_SERVICE_NAME,
@@ -57,7 +59,9 @@ import {
   OnModuleInit,
 } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
+import { RpcException } from '@nestjs/microservices';
 import { SqsService } from '@ssut/nestjs-sqs';
+import { status } from '@grpc/grpc-js';
 import { firstValueFrom } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 import { CartItemService } from '../../cart/services/cart-item.service';
@@ -66,6 +70,7 @@ import { OrderRepository } from '../repositories/order.repository';
 @Injectable()
 export class OrderService implements OnModuleInit {
   private productModule!: ProductModuleClient;
+  private skuModule!: SkuModuleClient;
   private promotionModule!: PromotionModuleClient;
   private walletModule!: WalletModuleClient;
   private notificationModule!: NotificationServiceClient;
@@ -93,6 +98,9 @@ export class OrderService implements OnModuleInit {
     this.productModule = this.catalogClient.getService<ProductModuleClient>(
       PRODUCT_MODULE_SERVICE_NAME,
     );
+    this.skuModule = this.catalogClient.getService<SkuModuleClient>(
+      SKU_MODULE_SERVICE_NAME,
+    );
     this.promotionModule =
       this.promotionClient.getService<PromotionModuleClient>(
         PROMOTION_MODULE_SERVICE_NAME,
@@ -100,9 +108,10 @@ export class OrderService implements OnModuleInit {
     this.walletModule = this.walletClient.getService<WalletModuleClient>(
       WALLET_MODULE_SERVICE_NAME,
     );
-    this.notificationModule = this.utilityClient.getService<NotificationServiceClient>(
-      NOTIFICATION_SERVICE_NAME,
-    );
+    this.notificationModule =
+      this.utilityClient.getService<NotificationServiceClient>(
+        NOTIFICATION_SERVICE_NAME,
+      );
   }
 
   private async sendQueueMessage<T>(queueName: string, body: T) {
@@ -240,21 +249,14 @@ export class OrderService implements OnModuleInit {
         );
       }
 
-      // Tính discount value
-      let discountAmount = 0;
-      if (promotion.discountType === DiscountTypeValues.PERCENT) {
-        // basis points: 1000 = 10%
-        discountAmount = Math.floor(
-          (totalSubtotal * promotion.discountValue) / 10000,
-        );
-        // Apply maxDiscount nếu có
-        if (promotion.maxDiscount && discountAmount > promotion.maxDiscount) {
-          discountAmount = promotion.maxDiscount;
-        }
-      } else {
-        // AMOUNT
-        discountAmount = promotion.discountValue;
-      }
+      // Hàm MySQL giữ công thức giảm giá ở một nơi và được gọi an toàn qua
+      // tagged $queryRaw trong OrderRepository.
+      const discountAmount = await this.orderRepository.calculateDiscount({
+        type: promotion.discountType,
+        value: promotion.discountValue,
+        subtotal: totalSubtotal,
+        maxDiscount: promotion.maxDiscount,
+      });
 
       // Phân bổ discount theo thứ tự ưu tiên (giảm order nhỏ trước)
       const sortedOrders = [...ordersWithTotal].sort(
@@ -425,6 +427,10 @@ export class OrderService implements OnModuleInit {
     const orderIds = orders.map((order) => order.id);
     const userId = orders[0].userId;
 
+    for (const order of orders) {
+      await this.restoreOrderStock(order, undefined);
+    }
+
     const cancelledOrders = await this.orderRepository.cancel(orderIds, userId);
 
     // await Promise.all(
@@ -444,7 +450,18 @@ export class OrderService implements OnModuleInit {
   }
 
   async cancelOrder({ processId, ...data }: CancelOrderRequest) {
-    const orderIds = [data.orderId];
+    const order = await this.orderRepository.findCancellable(
+      data.orderId,
+      data.userId,
+      data.shopId,
+    );
+    if (!order) {
+      throw new NotFoundException('Error.OrderNotFound');
+    }
+
+    await this.restoreOrderStock(order, processId);
+
+    const orderIds = [order.id];
     const userId = data.userId || undefined;
     const shopId = data.shopId || undefined;
     const cancelledOrders = await this.orderRepository.cancel(
@@ -485,6 +502,15 @@ export class OrderService implements OnModuleInit {
 
   async updateStatus({ processId, ...data }: UpdateStatusOrderRequest) {
     try {
+      if (data.status === OrderStatusValues.CANCELLED) {
+        const result = await this.cancelOrder({
+          processId,
+          orderId: data.id,
+          shopId: data.shopId,
+        });
+        return result.orders[0];
+      }
+
       const order = await this.orderRepository.updateStatus(data);
 
       if (order.status === OrderStatusValues.COMPLETED) {
@@ -546,6 +572,41 @@ export class OrderService implements OnModuleInit {
         throw new NotFoundException('Error.OrderNotFound');
       }
       throw error;
+    }
+  }
+
+  private async restoreOrderStock(
+    order: {
+      id: string;
+      items: Array<{ skuId: string; productId: string; quantity: number }>;
+    },
+    processId?: string,
+  ) {
+    try {
+      await firstValueFrom(
+        this.skuModule.restoreStock({
+          processId,
+          orderId: order.id,
+          items: order.items,
+        }),
+      );
+    } catch (error) {
+      const grpcError = error as {
+        code?: number;
+        details?: string;
+        message?: string;
+      };
+      const message = grpcError.details || grpcError.message || '';
+      const isDeadlock =
+        grpcError.code === status.ABORTED ||
+        message.includes('Error.InventoryRestoreDeadlock');
+
+      throw new RpcException({
+        code: status.ABORTED,
+        message: isDeadlock
+          ? 'Error.InventoryRestoreDeadlock'
+          : 'Error.InventoryRestoreFailed',
+      });
     }
   }
 }

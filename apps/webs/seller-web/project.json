@@ -7,9 +7,10 @@
   "// targets": "to see all targets run: nx show project seller-web --web",
   "targets": {
     "serve": {
+      "dependsOn": ["build"],
       "executor": "nx:run-commands",
       "options": {
-        "command": "pnpm nx dev seller-web"
+        "command": "pnpm nx start seller-web --port=4000"
       }
     }
   }

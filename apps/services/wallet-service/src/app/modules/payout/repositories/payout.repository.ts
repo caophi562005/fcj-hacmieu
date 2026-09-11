@@ -21,6 +21,8 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { Prisma } from '@prisma-client/wallet-service';
+import { randomUUID } from 'node:crypto';
 import { PrismaService } from '../../../prisma/prisma.service';
 
 @Injectable()
@@ -28,53 +30,26 @@ export class PayoutRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
   async create(data: CreateShopPayoutRequest): Promise<ShopPayoutResponse> {
-    return this.prismaService.$transaction(async (tx) => {
-      const credit = await tx.credit.upsert({
-        where: { shopId: data.shopId },
-        update: {},
-        create: { shopId: data.shopId, balance: 0 },
-      });
-
-      if (credit.balance < data.amount) {
+    const payoutId = randomUUID();
+    try {
+      await this.prismaService.$queryRaw`
+        CALL sp_create_payout_request(
+          ${payoutId}, ${data.shopId}, ${data.amount}, ${data.bankName},
+          ${data.accountNumber}, ${data.accountHolder}, ${data.note ?? null}
+        )
+      `;
+    } catch (error) {
+      if (String(error).includes('CREDIT_INSUFFICIENT_BALANCE')) {
         throw new BadRequestException('Error.CreditInsufficientBalance');
       }
+      if (String(error).includes('CREDIT_NOT_FOUND')) {
+        throw new NotFoundException('Error.CreditNotFound');
+      }
+      throw error;
+    }
 
-      const payout = await tx.payoutRequest.create({
-        data: {
-          creditId: credit.id,
-          shopId: data.shopId,
-          amount: data.amount,
-          bankName: data.bankName,
-          accountNumber: data.accountNumber,
-          accountHolder: data.accountHolder,
-          note: data.note ?? null,
-          status: PayoutStatusValues.PENDING,
-        },
-      });
-
-      const newBalance = credit.balance - data.amount;
-
-      const updateCredit$ = tx.credit.update({
-        where: { id: credit.id },
-        data: { balance: newBalance },
-      });
-
-      const creditTransaction$ = tx.creditTransaction.create({
-        data: {
-          creditId: credit.id,
-          shopId: data.shopId,
-          type: CreditTransactionTypeValues.DEBIT,
-          source: CreditTransactionSourceValues.WITHDRAWAL,
-          referenceId: payout.id,
-          amount: data.amount,
-          balanceAfter: newBalance,
-          description: `Tạo yêu cầu rút tiền #${payout.id.slice(-8).toUpperCase()}`,
-        },
-      });
-
-      await Promise.all([updateCredit$, creditTransaction$]);
-
-      return payout;
+    return this.prismaService.payoutRequest.findUniqueOrThrow({
+      where: { id: payoutId },
     });
   }
 
@@ -107,6 +82,35 @@ export class PayoutRepository {
     };
     if (data.status) {
       where.status = data.status;
+    }
+
+    if (where.status === PayoutStatusValues.PENDING) {
+      const filters = [Prisma.sql`status = 'PENDING'`];
+      if (where.shopId) filters.push(Prisma.sql`shopId = ${where.shopId}`);
+      const sqlWhere = Prisma.join(filters, ' AND ');
+      const [payouts, countRows] = await Promise.all([
+        this.prismaService.$queryRaw<ShopPayoutResponse[]>(Prisma.sql`
+          SELECT * FROM vw_pending_payouts
+           WHERE ${sqlWhere}
+           ORDER BY createdAt DESC
+           LIMIT ${limit} OFFSET ${skip}
+        `),
+        this.prismaService.$queryRaw<Array<{ totalItems: bigint | number }>>(
+          Prisma.sql`
+            SELECT COUNT(*) AS totalItems
+              FROM vw_pending_payouts
+             WHERE ${sqlWhere}
+          `,
+        ),
+      ]);
+      const totalItems = Number(countRows[0]?.totalItems ?? 0);
+      return {
+        page,
+        limit,
+        totalItems,
+        totalPages: Math.ceil(totalItems / limit),
+        payouts,
+      };
     }
 
     const [payouts, totalItems] = await Promise.all([

@@ -10,6 +10,7 @@ import {
 } from '@common/interfaces/models/catalog';
 import { readStringList } from '@common/utils/scalar-list.util';
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma-client/catalog-service';
 import { PrismaService } from '../../../prisma/prisma.service';
 
 interface AttributeInputItem {
@@ -291,16 +292,28 @@ export class ProductRepository {
     const results: ValidateItemResult[] = [];
 
     const skuIds = data.productIds.map((item) => item.skuId);
-    const skus = await this.prismaService.sKU.findMany({
-      where: {
-        id: { in: skuIds },
-      },
-      include: {
-        product: true,
-      },
-    });
+    const [skus, activeProductRows] = await Promise.all([
+      this.prismaService.sKU.findMany({
+        where: {
+          id: { in: skuIds },
+        },
+        include: {
+          product: true,
+        },
+      }),
+      skuIds.length === 0
+        ? Promise.resolve([] as Array<{ id: string }>)
+        : this.prismaService.$queryRaw<Array<{ id: string }>>(Prisma.sql`
+            SELECT DISTINCT p.id
+              FROM vw_active_products p
+              INNER JOIN SKU s ON s.productId = p.id
+             WHERE s.id IN (${Prisma.join(skuIds)})
+               AND s.deletedAt IS NULL
+          `),
+    ]);
 
     const skuMap = new Map(skus.map((s) => [s.id, s]));
+    const activeProductIds = new Set(activeProductRows.map((row) => row.id));
     const cartItemMap = new Map(
       data.productIds.map((item) => [item.skuId, item.cartItemId]),
     );
@@ -368,6 +381,25 @@ export class ProductRepository {
       // Check 4: Product bị xóa
 
       if (product.deletedAt !== null) {
+        results.push({
+          productId: product.id,
+          skuId: sku.id,
+          cartItemId,
+          isValid: false,
+          quantity: req.quantity,
+          price: sku.price,
+          productName: product.name,
+          productImage: sku.image,
+          skuValue: sku.value,
+          shopId: product.shopId,
+          error: 'PRODUCT_UNAVAILABLE',
+        });
+        continue;
+      }
+
+      // View gom toàn bộ điều kiện sản phẩm được phép bán (duyệt, không ẩn,
+      // không xóa và đang ACTIVE) để checkout và catalog dùng cùng quy tắc.
+      if (!activeProductIds.has(product.id) || sku.deletedAt !== null) {
         results.push({
           productId: product.id,
           skuId: sku.id,

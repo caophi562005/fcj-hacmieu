@@ -10,6 +10,9 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { SqsService } from '@ssut/nestjs-sqs';
+import { status } from '@grpc/grpc-js';
+import { RpcException } from '@nestjs/microservices';
+import { Prisma } from '@prisma-client/catalog-service';
 import { v4 as uuidv4 } from 'uuid';
 import { SKURepository } from '../repositories/sku.repository';
 
@@ -71,16 +74,20 @@ export class SKUService {
   async increaseStock(data: IncreaseStockRequest) {
     try {
       await this.sKURepository.increaseStock(data);
-      await Promise.all(
-        data.items.map(async (item) => {
-          await this.sKURepository.updateProduct({
-            id: item.productId,
-            soldCount: -item.quantity,
-          });
-        }),
-      );
     } catch (error) {
-      console.log(error);
+      const isDeadlock =
+        (error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === 'P2034') ||
+        String(error).toLowerCase().includes('deadlock');
+
+      if (isDeadlock) {
+        throw new RpcException({
+          code: status.ABORTED,
+          message: 'Error.InventoryRestoreDeadlock',
+        });
+      }
+
+      throw error;
     }
   }
 }

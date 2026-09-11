@@ -14,6 +14,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma } from '../../../../generated/prisma-client/client';
+import { randomUUID } from 'node:crypto';
 import { PrismaService } from '../../../prisma/prisma.service';
 
 /**
@@ -37,100 +38,40 @@ export class RedemptionRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
   async createFromOrder(data: CreatePromotionRedemptionRequest) {
-    return this.prismaService.$transaction(async (tx) => {
-      const promotion = await tx.promotion.findUnique({
-        where: { id: data.promotionId, deletedAt: null },
-      });
-
-      if (!promotion) throw new NotFoundException('Error.PromotionNotFound');
-
-      const existing = await tx.redemption.findUnique({
-        where: {
-          code_userId: {
-            code: data.code,
-            userId: data.userId,
-          },
-        },
-      });
-
-      // `orderIds` là cột JSON trên MySQL nên Prisma trả JsonValue.
-      // Đọc về string[] trước khi so sánh tập hợp.
-      const existingOrderIds = readStringList(existing?.orderIds, {
-        model: 'Redemption',
-        field: 'orderIds',
-        key: existing?.id,
-      });
-
-      if (existing?.usedAt) {
-        const isSameOrderSet =
-          existingOrderIds.length === data.orderIds.length &&
-          data.orderIds.every((orderId) => existingOrderIds.includes(orderId));
-        if (isSameOrderSet) {
-          return toRedemptionRow(existing);
-        }
+    const redemptionId = randomUUID();
+    try {
+      await this.prismaService.$queryRaw`
+        CALL sp_use_promotion(
+          ${redemptionId}, ${data.promotionId}, ${data.userId},
+          ${JSON.stringify(data.orderIds)}
+        )
+      `;
+    } catch (error) {
+      const message = String(error);
+      if (message.includes('PROMOTION_NOT_FOUND')) {
+        throw new NotFoundException('Error.PromotionNotFound');
+      }
+      if (message.includes('PROMOTION_LIMIT_REACHED')) {
+        throw new BadRequestException('Error.PromotionOutOfStock');
+      }
+      if (message.includes('PROMOTION_ALREADY_USED')) {
         throw new BadRequestException('Error.PromotionAlreadyUsing');
       }
-
-      const now = new Date();
-      const mergedOrderIds = writeStringList(
-        existing
-          ? Array.from(new Set([...existingOrderIds, ...data.orderIds]))
-          : data.orderIds,
-      );
-
-      if (!existing) {
-        if (
-          promotion.totalLimit != null &&
-          promotion.usedCount >= promotion.totalLimit
-        ) {
-          throw new BadRequestException('Error.PromotionOutOfStock');
-        }
-        await tx.promotion.update({
-          where: { id: promotion.id },
-          data: {
-            usedCount: {
-              increment: 1,
-            },
-          },
-        });
-
-        const created = await tx.redemption.create({
-          data: {
-            promotionId: data.promotionId,
-            userId: data.userId,
-            orderIds: mergedOrderIds,
-            code: data.code,
-            discountType: data.discountType,
-            discountValue: data.discountValue,
-            minOrderSubtotal: data.minOrderSubtotal,
-            maxDiscount: data.maxDiscount,
-            usedAt: now,
-          },
-        });
-
-        return toRedemptionRow(created);
+      if (message.includes('PROMOTION_NOT_ACTIVE')) {
+        throw new BadRequestException('Error.PromotionNotActive');
       }
+      throw error;
+    }
 
-      await tx.promotion.update({
-        where: { id: promotion.id },
-        data: {
-          usedCount: {
-            increment: 1,
-          },
+    const redemption = await this.prismaService.redemption.findUniqueOrThrow({
+      where: {
+        promotionId_userId: {
+          promotionId: data.promotionId,
+          userId: data.userId,
         },
-      });
-
-      const updated = await tx.redemption.update({
-        where: { id: existing.id },
-        data: {
-          orderIds: mergedOrderIds,
-          usedAt: now,
-          cancelledAt: null,
-        },
-      });
-
-      return toRedemptionRow(updated);
+      },
     });
+    return toRedemptionRow(redemption);
   }
 
   async claim(data: ClaimPromotionRequest) {

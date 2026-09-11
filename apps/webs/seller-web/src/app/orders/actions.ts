@@ -14,6 +14,12 @@ function extractErrorMessage(err: unknown): string {
     ?.response?.data;
   const m = data?.message;
   if (Array.isArray(m)) return m.join(', ');
+  if (m === 'Error.InventoryRestoreDeadlock') {
+    return 'Có lỗi xung đột khi hoàn tồn kho. Vui lòng thử hủy đơn lại.';
+  }
+  if (m === 'Error.InventoryRestoreFailed') {
+    return 'Có lỗi khi hoàn tồn kho. Đơn hàng chưa được hủy.';
+  }
   if (typeof m === 'string') return m;
   return 'Đã xảy ra lỗi, vui lòng thử lại.';
 }
