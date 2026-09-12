@@ -1,7 +1,14 @@
 const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 const { join } = require('path');
+const nodeExternals = require('webpack-node-externals');
 
 module.exports = {
+  externals: [
+    nodeExternals({
+      modulesDir: join(__dirname, '../../../node_modules'),
+      allowlist: [/^@prisma\/client(?:\/.*)?$/],
+    }),
+  ],
   output: {
     path: join(__dirname, '../../../dist/apps/services/iam-service'),
     clean: true,
@@ -25,6 +32,8 @@ module.exports = {
       ],
       outputHashing: 'none',
       generatePackageJson: true,
+      externalDependencies: 'none',
+      mergeExternals: true,
       sourceMap: true,
     }),
   ],
