@@ -35,7 +35,7 @@ ENV NODE_ENV=production
 COPY --from=builder /workspace/dist/apps/services/wallet-service/package.json ./package.json
 
 RUN pnpm install --prod --no-frozen-lockfile \
-	&& pnpm add tslib @prisma/client --prod
+	&& pnpm add tslib @prisma/client@7.6.0 --prod
 
 COPY --from=builder /workspace/dist/apps/services/wallet-service ./dist/apps/services/wallet-service
 
