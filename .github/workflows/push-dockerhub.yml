@@ -179,6 +179,13 @@ jobs:
       - name: Update kubeconfig for EKS
         run: aws eks update-kubeconfig --region ${{ secrets.AWS_REGION }} --name ${{ secrets.EKS_CLUSTER_NAME }}
 
+      - name: Verify EKS access
+        shell: bash
+        run: |
+          set -euo pipefail
+          aws sts get-caller-identity
+          kubectl auth can-i patch deployments.apps --all-namespaces | grep -qx 'yes'
+
       - name: Deploy Docker Hub images to affected deployments
         shell: bash
         env:
