@@ -24,6 +24,8 @@ export const OrderPaymentStatusValues = {
   PENDING: 'PENDING',
   SUCCESS: 'SUCCESS',
   FAILED: 'FAILED',
+  CANCELLED: 'CANCELLED',
+  REFUND_PENDING: 'REFUND_PENDING',
   REFUNDED: 'REFUNDED',
 } as const;
 
@@ -31,6 +33,8 @@ export const OrderPaymentStatusEnums = z.enum([
   OrderPaymentStatusValues.PENDING,
   OrderPaymentStatusValues.SUCCESS,
   OrderPaymentStatusValues.FAILED,
+  OrderPaymentStatusValues.CANCELLED,
+  OrderPaymentStatusValues.REFUND_PENDING,
   OrderPaymentStatusValues.REFUNDED,
 ]);
 

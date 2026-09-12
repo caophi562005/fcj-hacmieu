@@ -5,8 +5,9 @@ import {
   GetPaymentRequest,
 } from '@common/interfaces/models/payment';
 import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma-client/payment-service';
+import { Prisma } from '../../../../generated/prisma-client/client';
 import { PrismaService } from '../../../prisma/prisma.service';
+import { classifyPaymentCancellation } from '../services/payment-cancellation.policy';
 
 @Injectable()
 export class PaymentRepository {
@@ -58,10 +59,121 @@ export class PaymentRepository {
     });
   }
 
-  create(data: Prisma.PaymentCreateInput) {
-    return this.prismaService.payment.create({
-      data,
+  async create(
+    data: Prisma.PaymentUncheckedCreateInput & {
+      allocations?: Array<{ orderId: string; amount: number }>;
+    },
+  ) {
+    const { allocations = [], ...paymentData } = data;
+    return this.prismaService.$transaction(async (tx) => {
+      const existing = await tx.payment.findUnique({ where: { id: data.id } });
+      if (existing) return existing;
+      const cancelled = await tx.paymentCancellationCommand.findMany({
+        where: { orderId: { in: allocations.map((item) => item.orderId) } },
+        select: { orderId: true },
+      });
+      const cancelledIds = new Set(cancelled.map((item) => item.orderId));
+      const allCancelled =
+        allocations.length > 0 &&
+        allocations.every((item) => cancelledIds.has(item.orderId));
+      return tx.payment.create({
+        data: {
+          ...paymentData,
+          status: allCancelled ? PaymentStatusValues.CANCELLED : paymentData.status,
+          allocations: {
+            create: allocations.map((item) => ({
+              ...item,
+              status: cancelledIds.has(item.orderId) ? 'CANCELLED' : 'PENDING',
+            })),
+          },
+        },
+      });
     });
+  }
+
+  async cancelOrderPayment(data: {
+    eventId: string;
+    cancellationId: string;
+    orderId: string;
+    paymentId: string;
+    userId: string;
+    amount: number;
+    reasonCode: string;
+  }): Promise<'CANCELLED' | 'REFUND_PENDING' | 'REFUNDED'> {
+    return this.prismaService.$transaction(
+      async (tx) => {
+        await tx.paymentCancellationCommand.upsert({
+          where: { orderId: data.orderId },
+          update: {},
+          create: data,
+        });
+        const payment = await tx.payment.findUnique({
+          where: { id: data.paymentId },
+          include: { allocations: true },
+        });
+        if (!payment) return 'CANCELLED';
+
+        const allocation = payment.allocations.find(
+          (item) => item.orderId === data.orderId,
+        );
+        const currentStatus = allocation?.status ?? payment.status;
+        if (currentStatus === 'REFUNDED') return 'REFUNDED';
+        if (currentStatus === 'REFUND_PENDING') return 'REFUND_PENDING';
+
+        const target = classifyPaymentCancellation(currentStatus, payment.method);
+        if (allocation) {
+          await tx.paymentAllocation.updateMany({
+            where: {
+              id: allocation.id,
+              status: { in: ['PENDING', 'SUCCESS'] },
+            },
+            data: { status: target },
+          });
+        } else {
+          await tx.paymentAllocation.create({
+            data: {
+              paymentId: payment.id,
+              orderId: data.orderId,
+              amount: data.amount,
+              status: target,
+            },
+          });
+        }
+        if (target === 'REFUND_PENDING') {
+          await tx.refund.upsert({
+            where: { orderId: data.orderId },
+            update: {},
+            create: {
+              orderId: data.orderId,
+              userId: data.userId,
+              amount: allocation?.amount ?? data.amount,
+              status: 'PENDING',
+              reason: data.reasonCode,
+            },
+          });
+        }
+
+        const active = await tx.paymentAllocation.count({
+          where: {
+            paymentId: payment.id,
+            status: { in: ['PENDING', 'SUCCESS'] },
+          },
+        });
+        if (active === 0) {
+          const refundPending = await tx.paymentAllocation.count({
+            where: { paymentId: payment.id, status: 'REFUND_PENDING' },
+          });
+          await tx.payment.updateMany({
+            where: { id: payment.id },
+            data: {
+              status: refundPending > 0 ? 'REFUND_PENDING' : 'CANCELLED',
+            },
+          });
+        }
+        return target;
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+    );
   }
 
   update(data: Prisma.PaymentUpdateInput) {

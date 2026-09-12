@@ -5,7 +5,7 @@ import {
   ReadNotificationRequest,
 } from '@common/interfaces/models/utility';
 import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma-client/utility-service';
+import { Prisma } from '../../../../generated/prisma-client/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 
 @Injectable()
@@ -76,6 +76,14 @@ export class NotificationRepository {
   create(data: Prisma.NotificationCreateInput) {
     return this.prismaService.notification.create({
       data,
+    });
+  }
+
+  createIdempotent(data: Prisma.NotificationCreateInput & { dedupeKey: string }) {
+    return this.prismaService.notification.upsert({
+      where: { dedupeKey: data.dedupeKey },
+      update: {},
+      create: data,
     });
   }
 

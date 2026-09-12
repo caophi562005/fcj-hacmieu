@@ -17,6 +17,8 @@ export const PaymentStatusValues = {
   SUCCESS: 'SUCCESS',
   FAILED: 'FAILED',
   CANCELLED: 'CANCELLED',
+  REFUND_PENDING: 'REFUND_PENDING',
+  REFUNDED: 'REFUNDED',
 } as const;
 
 export const PaymentStatusEnums = z.enum([
@@ -24,6 +26,8 @@ export const PaymentStatusEnums = z.enum([
   PaymentStatusValues.SUCCESS,
   PaymentStatusValues.FAILED,
   PaymentStatusValues.CANCELLED,
+  PaymentStatusValues.REFUND_PENDING,
+  PaymentStatusValues.REFUNDED,
 ]);
 
 export const RefundStatusValues = {

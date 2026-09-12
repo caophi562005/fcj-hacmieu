@@ -53,3 +53,15 @@ export const getMyOrderById = cache(
     return res.data?.data ?? null;
   },
 );
+
+export async function cancelMyOrder(
+  orderId: string,
+  reasonCode: string,
+  reasonNote?: string,
+): Promise<void> {
+  const api = await createServerApi();
+  await api.post(`/order/order/${orderId}/cancel`, {
+    reasonCode,
+    ...(reasonNote ? { reasonNote } : {}),
+  });
+}

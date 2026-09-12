@@ -33,7 +33,32 @@ enum PaymentStatus {
   PENDING
   SUCCESS
   FAILED
+  CANCELLED
+  REFUND_PENDING
   REFUNDED
+}
+
+enum CancellationActorType {
+  CUSTOMER
+  SELLER
+  ADMIN
+  SYSTEM
+}
+
+enum CancellationStepEffect {
+  INVENTORY
+  PAYMENT
+  WALLET
+  PROMOTION
+  NOTIFICATION
+  SHIPMENT
+}
+
+enum CancellationStepStatus {
+  PENDING
+  COMPLETED
+  NOT_REQUIRED
+  FAILED
 }
 
 enum OutboxEventStatus {
@@ -73,11 +98,14 @@ model Order {
 
   userId String
   shopId String
+  sellerId String?
   status OrderStatus
 
   itemTotal   Int @default(0) // tổng tiền hàng
   shippingFee Int @default(0)
   discount    Int @default(0)
+  voucherDiscount Int @default(0)
+  coinApplied Int @default(0)
   grandTotal  Int @default(0) // phải trả
 
   // Snapshot user nhận hàng
@@ -100,6 +128,7 @@ model Order {
   timeline Json?
 
   items OrderItem[]
+  cancellation OrderCancellation?
 
   createdById String?
   updatedById String?
@@ -111,8 +140,38 @@ model Order {
 
   @@index([userId])
   @@index([shopId])
+  @@index([sellerId])
   @@index([status, deletedAt])
   @@index([deletedAt])
+}
+
+model OrderCancellation {
+  id          String                @id @default(uuid())
+  orderId     String                @unique
+  order       Order                 @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  processId   String
+  actorType   CancellationActorType
+  actorId     String
+  reasonCode  String                @db.VarChar(64)
+  reasonNote  String?               @db.VarChar(500)
+  cancelledAt DateTime              @default(now())
+  steps       OrderCancellationStep[]
+
+  @@index([actorId, cancelledAt])
+  @@index([processId])
+}
+
+model OrderCancellationStep {
+  id             String                 @id @default(uuid())
+  cancellationId String
+  cancellation   OrderCancellation      @relation(fields: [cancellationId], references: [id], onDelete: Cascade)
+  effect         CancellationStepEffect
+  status         CancellationStepStatus @default(PENDING)
+  detail         String?
+  completedAt    DateTime?
+  updatedAt      DateTime               @updatedAt
+
+  @@unique([cancellationId, effect])
 }
 
 model OutboxEvent {

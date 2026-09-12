@@ -67,7 +67,10 @@ export class TransactionService implements OnModuleInit {
       return transaction;
     }
 
-    if ((payment.orderId?.length ?? 0) > 0) {
+    if (
+      transaction.shouldConfirmOrder &&
+      (payment.orderId?.length ?? 0) > 0
+    ) {
       await firstValueFrom(
         this.orderModule.paidOrderByPayment({
           paymentId: payment.id,

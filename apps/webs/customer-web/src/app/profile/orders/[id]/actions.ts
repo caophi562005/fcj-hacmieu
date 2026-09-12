@@ -3,11 +3,29 @@
 import { revalidatePath } from 'next/cache';
 import { getCurrentUser } from '../../../../lib/iam';
 import { createMyReview } from '../../../../lib/review';
+import { cancelMyOrder } from '../../../../lib/order';
 
 export type CreateReviewState = {
   ok: boolean;
   message: string;
 };
+
+export async function cancelOrderAction(
+  orderId: string,
+  reasonCode: string,
+  reasonNote?: string,
+) {
+  try {
+    await cancelMyOrder(orderId, reasonCode, reasonNote?.trim() || undefined);
+    revalidatePath('/profile/orders');
+    revalidatePath(`/profile/orders/${orderId}`);
+    return { ok: true as const };
+  } catch (error: unknown) {
+    const message = (error as { response?: { data?: { message?: string } } })
+      ?.response?.data?.message;
+    return { ok: false as const, message: message ?? 'Không thể hủy đơn hàng.' };
+  }
+}
 
 export async function createReviewAction(
   _prev: CreateReviewState,

@@ -1,6 +1,6 @@
 import { PaymentMethodEnums } from '@common/constants/payment.constant';
 import { ShippingMethodEnums } from '@common/constants/order.constant';
-import { ValidateItemResultSchema } from '@common/interfaces/models/catalog/product/product-response.model';
+import { ValidateItemResultSchema } from '../catalog/product/product-response.model';
 import {
   OrderSchema,
   ReceiverSchema,
@@ -41,8 +41,11 @@ export const CreateOrderRepositorySchema = z.object({
     z.object({
       itemTotal: z.number().optional(),
       discount: z.number(),
+      voucherDiscount: z.number().int().nonnegative(),
+      coinApplied: z.number().int().nonnegative(),
       shippingFee: z.number().int().nonnegative(),
       shopId: z.uuid(),
+      sellerId: z.uuid().optional(),
       items: z.array(ValidateItemResultSchema),
       shippingOrigin: ShippingLocationSchema,
       shippingDestination: ShippingLocationSchema,
@@ -50,12 +53,22 @@ export const CreateOrderRepositorySchema = z.object({
   ),
 });
 
+export const CancelOrderBodySchema = z
+  .object({
+    reasonCode: z.string().trim().min(1).max(64),
+    reasonNote: z.string().trim().min(1).max(500).optional(),
+  })
+  .strict();
+
 export const CancelOrderRequestSchema = z
   .object({
     orderId: z.uuid(),
-    userId: z.uuid().optional(),
-    processId: z.uuid().optional(),
+    processId: z.uuid(),
+    actorType: z.enum(['CUSTOMER', 'SELLER', 'ADMIN', 'SYSTEM']),
+    actorId: z.uuid(),
     shopId: z.uuid().optional(),
+    reasonCode: CancelOrderBodySchema.shape.reasonCode,
+    reasonNote: CancelOrderBodySchema.shape.reasonNote,
   })
   .strict();
 
@@ -84,6 +97,8 @@ export const UpdateStatusOrderRequestSchema = OrderSchema.pick({
 })
   .extend({
     processId: z.uuid().optional(),
+    actorType: z.enum(['SELLER', 'ADMIN', 'SYSTEM']),
+    actorId: z.uuid(),
   })
   .strict();
 
@@ -99,6 +114,7 @@ export const DashboardSellerRequestSchema = OrderSchema.pick({
 export type CreateOrderRequest = z.infer<typeof CreateOrderRequestSchema>;
 export type CreateOrderRepository = z.infer<typeof CreateOrderRepositorySchema>;
 export type CancelOrderRequest = z.infer<typeof CancelOrderRequestSchema>;
+export type CancelOrderBody = z.infer<typeof CancelOrderBodySchema>;
 export type GetManyOrdersRequest = z.infer<typeof GetManyOrdersRequestSchema>;
 export type GetOrderRequest = z.infer<typeof GetOrderRequestSchema>;
 export type UpdateStatusOrderRequest = z.infer<

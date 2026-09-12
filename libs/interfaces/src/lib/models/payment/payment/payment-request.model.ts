@@ -13,6 +13,14 @@ export const GetManyPaymentsRequestSchema = PaymentSchema.pick({
   .partial()
   .extend({
     processId: z.uuid().optional(),
+    allocations: z
+      .array(
+        z.object({
+          orderId: z.uuid(),
+          amount: z.number().int().nonnegative(),
+        }),
+      )
+      .optional(),
     page: PaginationQueryRequestSchema.shape.page,
     limit: PaginationQueryRequestSchema.shape.limit,
   })

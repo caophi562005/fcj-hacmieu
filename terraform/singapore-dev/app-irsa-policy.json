@@ -21,6 +21,12 @@
         "arn:aws:sqs:ap-southeast-1:491333778094:create_user_hacmieu",
         "arn:aws:sqs:ap-southeast-1:491333778094:settel_order_revenue_hacmieu",
         "arn:aws:sqs:ap-southeast-1:491333778094:update_video_status_hacmieu"
+        ,"arn:aws:sqs:ap-southeast-1:491333778094:inventory_command_hacmieu"
+        ,"arn:aws:sqs:ap-southeast-1:491333778094:payment_command_hacmieu"
+        ,"arn:aws:sqs:ap-southeast-1:491333778094:wallet_command_hacmieu"
+        ,"arn:aws:sqs:ap-southeast-1:491333778094:promotion_command_hacmieu"
+        ,"arn:aws:sqs:ap-southeast-1:491333778094:notification_command_hacmieu"
+        ,"arn:aws:sqs:ap-southeast-1:491333778094:cancellation_result_hacmieu"
       ]
     },
     {

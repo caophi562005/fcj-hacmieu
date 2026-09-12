@@ -120,6 +120,26 @@ export class NotificationService {
     };
   }
 
+  async createIdempotent(data: {
+    dedupeKey: string;
+    userId: string;
+    type: 'ORDER_UPDATE';
+    title: string;
+    description: string;
+    metadata: { orderId: string };
+  }) {
+    const notification = await this.notificationRepository.createIdempotent({
+      ...data,
+      metadata: data.metadata,
+    });
+    const unreadCount = await this.notificationRepository.getUnreadCount(data.userId);
+    await this.sendQueueMessage(SqsConfiguration.SEND_NOTIFICATION_QUEUE_NAME, {
+      userId: data.userId,
+      unreadCount,
+    });
+    return notification;
+  }
+
   async delete(data: DeleteNotificationRequest): Promise<NotificationResponse> {
     try {
       const deletedNotification = await this.notificationRepository.delete(

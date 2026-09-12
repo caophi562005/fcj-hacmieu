@@ -8,7 +8,7 @@ import { CheckCircle2, Truck, XCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useTransition } from 'react';
 import { toast } from 'react-toastify';
-import { updateOrderStatusAction } from '../actions';
+import { cancelOrderAction, updateOrderStatusAction } from '../actions';
 
 type Action = {
   status: OrderStatus;
@@ -71,9 +71,16 @@ export function OrderStatusActions({
   if (actions.length === 0) return null;
 
   const handle = (a: Action) => {
-    if (a.confirm && !window.confirm(a.confirm)) return;
+    const reason =
+      a.status === OrderStatusValues.CANCELLED
+        ? window.prompt('Lý do hủy đơn hàng?')
+        : undefined;
+    if (reason === null) return;
     startTransition(async () => {
-      const res = await updateOrderStatusAction(orderId, a.status);
+      const res =
+        a.status === OrderStatusValues.CANCELLED
+          ? await cancelOrderAction(orderId, reason ?? '')
+          : await updateOrderStatusAction(orderId, a.status);
       if (res.ok) {
         toast.success(`Đã cập nhật: ${a.label}`);
         router.refresh();

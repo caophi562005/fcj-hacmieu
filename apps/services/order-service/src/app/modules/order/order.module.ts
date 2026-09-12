@@ -10,6 +10,7 @@ import { OrderGrpcController } from './controllers/order-grpc.controller';
 import { OrderRepository } from './repositories/order.repository';
 import { OrderService } from './services/order.service';
 import { OrderOutboxPublisherService } from './services/order-outbox-publisher.service';
+import { CancellationResultConsumerService } from './services/cancellation-result-consumer.service';
 
 @Module({
   imports: [
@@ -34,19 +35,51 @@ import { OrderOutboxPublisherService } from './services/order-outbox-publisher.s
           region: BaseConfiguration.AWS_REGION,
         },
         {
-          name: SqsConfiguration.CREATE_ORDER_QUEUE_NAME,
-          queueUrl: SqsConfiguration.CREATE_ORDER_QUEUE_URL,
+          name: SqsConfiguration.SETTLE_ORDER_REVENUE_QUEUE_NAME,
+          queueUrl: SqsConfiguration.SETTLE_ORDER_REVENUE_QUEUE_URL,
           region: BaseConfiguration.AWS_REGION,
         },
         {
-          name: SqsConfiguration.SETTLE_ORDER_REVENUE_QUEUE_NAME,
-          queueUrl: SqsConfiguration.SETTLE_ORDER_REVENUE_QUEUE_URL,
+          name: SqsConfiguration.INVENTORY_COMMAND_QUEUE_NAME,
+          queueUrl: SqsConfiguration.INVENTORY_COMMAND_QUEUE_URL,
+          region: BaseConfiguration.AWS_REGION,
+        },
+        {
+          name: SqsConfiguration.PAYMENT_COMMAND_QUEUE_NAME,
+          queueUrl: SqsConfiguration.PAYMENT_COMMAND_QUEUE_URL,
+          region: BaseConfiguration.AWS_REGION,
+        },
+        {
+          name: SqsConfiguration.WALLET_COMMAND_QUEUE_NAME,
+          queueUrl: SqsConfiguration.WALLET_COMMAND_QUEUE_URL,
+          region: BaseConfiguration.AWS_REGION,
+        },
+        {
+          name: SqsConfiguration.PROMOTION_COMMAND_QUEUE_NAME,
+          queueUrl: SqsConfiguration.PROMOTION_COMMAND_QUEUE_URL,
+          region: BaseConfiguration.AWS_REGION,
+        },
+        {
+          name: SqsConfiguration.NOTIFICATION_COMMAND_QUEUE_NAME,
+          queueUrl: SqsConfiguration.NOTIFICATION_COMMAND_QUEUE_URL,
+          region: BaseConfiguration.AWS_REGION,
+        },
+      ],
+      consumers: [
+        {
+          name: SqsConfiguration.CANCELLATION_RESULT_QUEUE_NAME,
+          queueUrl: SqsConfiguration.CANCELLATION_RESULT_QUEUE_URL,
           region: BaseConfiguration.AWS_REGION,
         },
       ],
     }),
   ],
   controllers: [OrderGrpcController],
-  providers: [OrderRepository, OrderService, OrderOutboxPublisherService],
+  providers: [
+    OrderRepository,
+    OrderService,
+    OrderOutboxPublisherService,
+    CancellationResultConsumerService,
+  ],
 })
 export class OrderModule {}

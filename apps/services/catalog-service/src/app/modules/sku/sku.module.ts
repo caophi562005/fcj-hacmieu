@@ -12,8 +12,8 @@ import { SKUService } from './services/sku.service';
     SqsModule.register({
       consumers: [
         {
-          name: SqsConfiguration.CREATE_ORDER_QUEUE_NAME,
-          queueUrl: SqsConfiguration.CREATE_ORDER_QUEUE_URL,
+          name: SqsConfiguration.INVENTORY_COMMAND_QUEUE_NAME,
+          queueUrl: SqsConfiguration.INVENTORY_COMMAND_QUEUE_URL,
           region: BaseConfiguration.AWS_REGION,
         },
       ],
@@ -21,6 +21,11 @@ import { SKUService } from './services/sku.service';
         {
           name: SqsConfiguration.DELETE_CART_ITEM_QUEUE_NAME,
           queueUrl: SqsConfiguration.DELETE_CART_ITEM_QUEUE_URL,
+          region: BaseConfiguration.AWS_REGION,
+        },
+        {
+          name: SqsConfiguration.CANCELLATION_RESULT_QUEUE_NAME,
+          queueUrl: SqsConfiguration.CANCELLATION_RESULT_QUEUE_URL,
           region: BaseConfiguration.AWS_REGION,
         },
       ],

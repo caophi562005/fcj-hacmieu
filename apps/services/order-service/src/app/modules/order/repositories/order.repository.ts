@@ -2,6 +2,7 @@ import { PaginationConfiguration } from '@common/configurations/pagination.confi
 import { OrderStatusValues } from '@common/constants/order.constant';
 import { PaymentStatusValues } from '@common/constants/payment.constant';
 import {
+  CancelOrderRequest,
   CreateOrderRepository,
   GetManyOrdersRequest,
   GetOrderRequest,
@@ -10,11 +11,19 @@ import {
 import { generateCode } from '@common/utils/order-code.util';
 import { Injectable } from '@nestjs/common';
 import {
+  CancellationActorType,
+  CancellationStepEffect,
+  CancellationStepStatus,
   OrderStatus,
   OutboxEventStatus,
   Prisma,
 } from '../../../../generated/prisma-client/client';
 import { PrismaService } from '../../../prisma/prisma.service';
+import {
+  assertCancellationAuthorized,
+  canCancelOrder,
+  isGenericTransitionAllowed,
+} from '../services/order-cancellation.policy';
 
 @Injectable()
 export class OrderRepository {
@@ -49,6 +58,7 @@ export class OrderRepository {
           createdAt: 'desc',
         },
         include: {
+          cancellation: { include: { steps: true } },
           items: {
             select: {
               productName: true,
@@ -75,6 +85,8 @@ export class OrderRepository {
         paymentStatus: order.paymentStatus,
         itemTotal: order.itemTotal,
         discount: order.discount,
+        voucherDiscount: order.voucherDiscount,
+        coinApplied: order.coinApplied,
         grandTotal: order.grandTotal,
         firstProductImage: order.items[0]?.productImage || '',
         firstProductName: order.items[0]?.productName || '',
@@ -92,6 +104,7 @@ export class OrderRepository {
         deletedAt: null,
       },
       include: {
+        cancellation: { include: { steps: true } },
         items: {
           select: {
             id: true,
@@ -140,6 +153,8 @@ export class OrderRepository {
       itemTotal: order.itemTotal,
       shippingFee: order.shippingFee,
       discount: order.discount,
+      voucherDiscount: order.voucherDiscount,
+      coinApplied: order.coinApplied,
       grandTotal: order.grandTotal,
       receiver,
       shippingOrigin: order.shippingOrigin ?? null,
@@ -150,13 +165,14 @@ export class OrderRepository {
       firstProductImage: order.items[0]?.productImage || '',
       createdAt: order.createdAt,
       updatedAt: order.updatedAt,
+      cancellation: order.cancellation,
     };
   }
 
   async create(data: CreateOrderRepository) {
     const orders = await this.prismaService.$transaction(async (tx) => {
       return Promise.all(
-        data.orders.map((shopOrder) => {
+        data.orders.map(async (shopOrder) => {
           const itemTotal =
             shopOrder.itemTotal ||
             shopOrder.items.reduce(
@@ -169,11 +185,12 @@ export class OrderRepository {
             itemTotal + shopOrder.shippingFee + discount,
           );
 
-          return tx.order.create({
+          const order = await tx.order.create({
             data: {
               code: generateCode('ORDER'),
               userId: data.userId,
               shopId: shopOrder.shopId,
+              sellerId: shopOrder.sellerId,
               status: OrderStatus.PENDING,
 
               itemTotal: itemTotal,
@@ -181,6 +198,8 @@ export class OrderRepository {
               shippingFee: shopOrder.shippingFee,
 
               discount: discount,
+              voucherDiscount: shopOrder.voucherDiscount,
+              coinApplied: shopOrder.coinApplied,
 
               grandTotal,
 
@@ -211,53 +230,216 @@ export class OrderRepository {
               items: true,
             },
           });
+
+          await tx.outboxEvent.create({
+            data: {
+              eventType: 'INVENTORY_RESERVE',
+              aggregateId: order.id,
+              payload: {
+                orderId: order.id,
+                userId: order.userId,
+                items: order.items.map((item) => ({
+                  skuId: item.skuId,
+                  quantity: item.quantity,
+                  productId: item.productId,
+                })),
+              },
+            },
+          });
+          return order;
         }),
       );
     });
     return orders;
   }
 
-  async cancel(orderIds: string[], userId?: string, shopId?: string) {
-    const orders = await this.prismaService.$transaction(async (tx) => {
-      const existingOrders = await tx.order.findMany({
-        where: {
-          id: { in: orderIds },
-          userId: userId ? userId : undefined,
-          shopId: shopId ? shopId : undefined,
-          status: {
-            in: [OrderStatus.PENDING, OrderStatus.CONFIRMED],
+  async cancel(data: CancelOrderRequest) {
+    const maxAttempts = 3;
+    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+      try {
+        return await this.prismaService.$transaction(
+          async (tx) => {
+            const order = await tx.order.findFirst({
+              where: { id: data.orderId, deletedAt: null },
+              include: {
+                items: true,
+                cancellation: { include: { steps: true } },
+              },
+            });
+            if (!order) throw new Error('ORDER_NOT_FOUND');
+
+            assertCancellationAuthorized(
+              {
+                actorType: data.actorType,
+                actorId: data.actorId,
+                shopId: data.shopId,
+              },
+              order,
+            );
+
+            if (order.cancellation) return order;
+            if (!canCancelOrder(order.status)) {
+              throw new Error(`ORDER_NOT_CANCELLABLE:${order.status}`);
+            }
+
+            const cancelledAt = new Date();
+            const changed = await tx.order.updateMany({
+              where: {
+                id: order.id,
+                status: order.status,
+                deletedAt: null,
+              },
+              data: {
+                status: OrderStatus.CANCELLED,
+                paymentStatus:
+                  order.paymentMethod === 'COD'
+                    ? 'CANCELLED'
+                    : order.paymentStatus,
+                timeline: [
+                  ...(Array.isArray(order.timeline) ? order.timeline : []),
+                  { status: OrderStatus.CANCELLED, at: cancelledAt },
+                ],
+                updatedById: data.actorId,
+              },
+            });
+            if (changed.count !== 1) throw new Error('ORDER_CANCEL_CONFLICT');
+
+            const cancellation = await tx.orderCancellation.create({
+              data: {
+                orderId: order.id,
+                processId: data.processId,
+                actorType: data.actorType as CancellationActorType,
+                actorId: data.actorId,
+                reasonCode: data.reasonCode,
+                reasonNote: data.reasonNote,
+                cancelledAt,
+                steps: {
+                  create: [
+                    { effect: CancellationStepEffect.INVENTORY },
+                    { effect: CancellationStepEffect.PAYMENT },
+                    {
+                      effect: CancellationStepEffect.WALLET,
+                      status:
+                        order.coinApplied > 0
+                          ? CancellationStepStatus.PENDING
+                          : CancellationStepStatus.NOT_REQUIRED,
+                    },
+                    {
+                      effect: CancellationStepEffect.PROMOTION,
+                      status:
+                        order.voucherDiscount > 0
+                          ? CancellationStepStatus.PENDING
+                          : CancellationStepStatus.NOT_REQUIRED,
+                    },
+                    { effect: CancellationStepEffect.NOTIFICATION },
+                    {
+                      effect: CancellationStepEffect.SHIPMENT,
+                      status: CancellationStepStatus.NOT_REQUIRED,
+                      detail: 'Shipment creation is not implemented; GHN is fee-only.',
+                    },
+                  ],
+                },
+              },
+            });
+
+            const basePayload = {
+              cancellationId: cancellation.id,
+              orderId: order.id,
+              processId: data.processId,
+              userId: order.userId,
+              shopId: order.shopId,
+              sellerUserId: order.sellerId ?? order.shopId,
+              reasonCode: data.reasonCode,
+              reasonNote: data.reasonNote,
+            };
+            const events: Array<{ eventType: string; payload: Prisma.InputJsonObject }> = [
+              {
+                eventType: 'INVENTORY_RELEASE',
+                payload: {
+                  ...basePayload,
+                  items: order.items.map((item) => ({
+                    skuId: item.skuId,
+                    quantity: item.quantity,
+                  })),
+                },
+              },
+              {
+                eventType: 'PAYMENT_CANCEL',
+                payload: {
+                  ...basePayload,
+                  paymentId: order.paymentId,
+                  paymentMethod: order.paymentMethod,
+                  amount: order.grandTotal,
+                },
+              },
+              {
+                eventType: 'ORDER_CANCELLED_NOTIFICATION',
+                payload: basePayload,
+              },
+            ];
+            if (order.coinApplied > 0) {
+              events.push({
+                eventType: 'WALLET_REFUND',
+                payload: { ...basePayload, amount: order.coinApplied },
+              });
+            }
+            if (order.voucherDiscount > 0) {
+              events.push({
+                eventType: 'PROMOTION_RELEASE',
+                payload: basePayload,
+              });
+            }
+            await tx.outboxEvent.createMany({
+              data: events.map((event) => ({
+                eventType: event.eventType,
+                aggregateId: order.id,
+                payload: event.payload,
+              })),
+              skipDuplicates: true,
+            });
+
+            return tx.order.findUniqueOrThrow({
+              where: { id: order.id },
+              include: {
+                items: true,
+                cancellation: { include: { steps: true } },
+              },
+            });
           },
-          deletedAt: null,
-        },
-      });
-
-      if (existingOrders.length === 0) {
-        throw new Error('No valid orders found to cancel');
+          { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+        );
+      } catch (error: unknown) {
+        const code =
+          typeof error === 'object' && error !== null && 'code' in error
+            ? String(error.code)
+            : undefined;
+        const message = error instanceof Error ? error.message : '';
+        if (
+          (code === 'P2002' ||
+            code === 'P2034' ||
+            message === 'ORDER_CANCEL_CONFLICT') &&
+          attempt < maxAttempts
+        ) {
+          continue;
+        }
+        if (code === 'P2002') {
+          const existing = await this.prismaService.order.findUnique({
+            where: { id: data.orderId },
+            include: { items: true, cancellation: { include: { steps: true } } },
+          });
+          if (existing?.cancellation) return existing;
+        }
+        if (message === 'ORDER_CANCEL_CONFLICT') {
+          const existing = await this.prismaService.order.findUnique({
+            where: { id: data.orderId },
+            include: { items: true, cancellation: { include: { steps: true } } },
+          });
+          if (existing?.cancellation) return existing;
+        }
+        throw error;
       }
-
-      const updatedOrders = await Promise.all(
-        existingOrders.map((order) =>
-          tx.order.update({
-            where: { id: order.id },
-            data: {
-              status: OrderStatus.CANCELLED,
-              timeline: [
-                ...(Array.isArray(order.timeline) ? order.timeline : []),
-                { status: OrderStatus.CANCELLED, at: new Date() },
-              ],
-              updatedById: userId,
-            },
-            include: {
-              items: true,
-            },
-          }),
-        ),
-      );
-
-      return updatedOrders;
-    });
-
-    return orders;
+    }
+    throw new Error('ORDER_CANCEL_RETRY_EXHAUSTED');
   }
 
   async listCancel(data: { paymentId?: string }) {
@@ -279,21 +461,31 @@ export class OrderRepository {
       },
     });
 
-    return this.prismaService.$transaction(
-      orders.map((order) =>
-        this.prismaService.order.update({
-          where: { id: order.id },
+    return this.prismaService.$transaction(async (tx) => {
+      const paidOrders = [];
+      for (const order of orders) {
+        const changed = await tx.order.updateMany({
+          where: {
+            id: order.id,
+            status: { in: [OrderStatus.PENDING, OrderStatus.CONFIRMED] },
+            paymentStatus: PaymentStatusValues.PENDING,
+            cancellation: null,
+          },
           data: {
-            status: OrderStatusValues.CONFIRMED,
+            status: OrderStatus.CONFIRMED,
             timeline: [
               ...(Array.isArray(order.timeline) ? order.timeline : []),
-              { status: OrderStatusValues.CONFIRMED, at: new Date() },
+              { status: OrderStatus.CONFIRMED, at: new Date() },
             ],
             paymentStatus: PaymentStatusValues.SUCCESS,
           },
-        }),
-      ),
-    );
+        });
+        if (changed.count === 1) {
+          paidOrders.push(await tx.order.findUniqueOrThrow({ where: { id: order.id } }));
+        }
+      }
+      return paidOrders;
+    });
   }
 
   async updateStatus(
@@ -304,16 +496,22 @@ export class OrderRepository {
       const order = await tx.order.findUniqueOrThrow({
         where: { id: data.id },
       });
-      const updated = await tx.order.update({
-        where: { id: data.id, shopId: data.shopId ? data.shopId : undefined },
+      if (data.shopId && order.shopId !== data.shopId) throw new Error('ORDER_NOT_AUTHORIZED');
+      if (!isGenericTransitionAllowed(order.status, data.status)) {
+        throw new Error(`ORDER_TRANSITION_NOT_ALLOWED:${order.status}:${data.status}`);
+      }
+      const changed = await tx.order.updateMany({
+        where: { id: data.id, status: order.status, cancellation: null },
         data: {
-          status: data.status,
+          status: data.status as OrderStatus,
           timeline: [
             ...(Array.isArray(order.timeline) ? order.timeline : []),
             { status: data.status, at: new Date() },
           ],
         },
       });
+      if (changed.count !== 1) throw new Error('ORDER_STATUS_CONFLICT');
+      const updated = await tx.order.findUniqueOrThrow({ where: { id: data.id } });
 
       if (updated.status === OrderStatus.COMPLETED) {
         const commissionFee = Math.floor(
@@ -453,6 +651,35 @@ export class OrderRepository {
         processingStartedAt: null,
         lastError: message.slice(0, 1000),
       },
+    });
+  }
+
+  async recordCancellationResult(data: {
+    cancellationId: string;
+    effect: string;
+    status: 'COMPLETED' | 'FAILED';
+    detail?: string;
+    paymentStatus?: 'CANCELLED' | 'REFUND_PENDING' | 'REFUNDED';
+  }) {
+    return this.prismaService.$transaction(async (tx) => {
+      const result = await tx.orderCancellationStep.updateMany({
+        where: {
+          cancellationId: data.cancellationId,
+          effect: data.effect as CancellationStepEffect,
+        },
+        data: {
+          status: data.status as CancellationStepStatus,
+          detail: data.detail,
+          completedAt: data.status === 'COMPLETED' ? new Date() : null,
+        },
+      });
+      if (data.paymentStatus) {
+        await tx.order.updateMany({
+          where: { cancellation: { id: data.cancellationId } },
+          data: { paymentStatus: data.paymentStatus },
+        });
+      }
+      return result;
     });
   }
 }

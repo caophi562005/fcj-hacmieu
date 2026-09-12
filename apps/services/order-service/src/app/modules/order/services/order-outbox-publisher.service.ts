@@ -6,8 +6,8 @@ import {
   OnApplicationShutdown,
 } from '@nestjs/common';
 import { SqsService } from '@ssut/nestjs-sqs';
-import { v4 as uuidv4 } from 'uuid';
 import { OrderRepository } from '../repositories/order.repository';
+import { getOutboxQueueKey } from './order-outbox-routing';
 
 @Injectable()
 export class OrderOutboxPublisherService
@@ -39,9 +39,29 @@ export class OrderOutboxPublisherService
       const events = await this.repository.claimOutboxEvents(100);
       for (const event of events) {
         try {
+          const queueKey = getOutboxQueueKey(event.eventType);
+          const queues = {
+            INVENTORY_COMMAND: SqsConfiguration.INVENTORY_COMMAND_QUEUE_NAME,
+            PAYMENT_COMMAND: SqsConfiguration.PAYMENT_COMMAND_QUEUE_NAME,
+            WALLET_COMMAND: SqsConfiguration.WALLET_COMMAND_QUEUE_NAME,
+            PROMOTION_COMMAND: SqsConfiguration.PROMOTION_COMMAND_QUEUE_NAME,
+            NOTIFICATION_COMMAND:
+              SqsConfiguration.NOTIFICATION_COMMAND_QUEUE_NAME,
+            SETTLEMENT: SqsConfiguration.SETTLE_ORDER_REVENUE_QUEUE_NAME,
+          } as const;
           await this.sqsService.send(
-            SqsConfiguration.SETTLE_ORDER_REVENUE_QUEUE_NAME,
-            { id: uuidv4(), body: event.payload, delaySeconds: 0 },
+            queues[queueKey],
+            {
+              id: event.id,
+              body: {
+                version: 1,
+                eventId: event.id,
+                eventType: event.eventType,
+                occurredAt: event.createdAt.toISOString(),
+                payload: event.payload,
+              },
+              delaySeconds: 0,
+            },
           );
           await this.repository.markOutboxPublished(event.id);
         } catch (error) {

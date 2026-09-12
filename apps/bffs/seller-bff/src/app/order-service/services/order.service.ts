@@ -37,4 +37,8 @@ export class OrderService implements OnModuleInit {
   async updateStatusOrder(data: UpdateStatusOrderRequest): Promise<any> {
     return firstValueFrom(this.orderModule.updateStatusOrder(data));
   }
+
+  async cancelOrder(data: CancelOrderRequest): Promise<any> {
+    return firstValueFrom(this.orderModule.cancelOrder(data));
+  }
 }

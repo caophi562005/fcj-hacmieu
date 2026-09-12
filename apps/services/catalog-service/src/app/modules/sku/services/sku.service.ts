@@ -41,33 +41,43 @@ export class SKUService {
     return sku;
   }
 
-  async decreaseStock(data: { items: OrderItemResponse[]; userId: string }) {
-    try {
+  async reserveStock(data: {
+    orderId: string;
+    items: Array<Pick<OrderItemResponse, 'skuId' | 'productId' | 'quantity'>>;
+    userId: string;
+  }) {
+    const reservation = await this.sKURepository.reserve(data);
+    if (reservation.status === 'RESERVED') {
       await Promise.all(
-        data.items.map(async (item) => {
-          await this.sKURepository.decreaseStock({
-            productId: item.productId,
-            value: item.skuValue,
-            quantity: item.quantity,
-          });
-
+        data.items.map((item) =>
           this.sendQueueMessage(SqsConfiguration.DELETE_CART_ITEM_QUEUE_NAME, {
             productId: item.productId,
             skuId: item.skuId,
             userId: data.userId,
-          });
-        }),
+          }),
+        ),
       );
-    } catch (error) {
-      console.log(error);
     }
+    return reservation;
+  }
+
+  decreaseStock(data: {
+    orderId: string;
+    items: Array<Pick<OrderItemResponse, 'skuId' | 'productId' | 'quantity'>>;
+    userId: string;
+  }) {
+    return this.reserveStock(data);
+  }
+
+  releaseStock(data: {
+    orderId: string;
+    userId: string;
+    items: Array<{ skuId: string; quantity: number }>;
+  }) {
+    return this.sKURepository.release(data);
   }
 
   async increaseStock(data: IncreaseStockRequest) {
-    try {
-      await this.sKURepository.increaseStock(data);
-    } catch (error) {
-      console.log(error);
-    }
+    await this.sKURepository.increaseStock(data);
   }
 }

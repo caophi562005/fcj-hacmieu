@@ -41,6 +41,8 @@ export const OrderSchema = BaseSchema.extend({
   itemTotal: z.number().min(0).default(0),
   shippingFee: z.number().min(0).default(0),
   discount: z.number().min(0).default(0),
+  voucherDiscount: z.number().int().nonnegative().default(0),
+  coinApplied: z.number().int().nonnegative().default(0),
   grandTotal: z.number().min(0).default(0),
 
   receiver: ReceiverSchema,

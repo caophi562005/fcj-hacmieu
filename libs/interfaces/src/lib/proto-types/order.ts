@@ -99,6 +99,8 @@ export interface OrderSummary {
   createdAt: string;
   paymentMethod: string;
   paymentStatus: string;
+  voucherDiscount: number;
+  coinApplied: number;
 }
 
 export interface OrderItem {
@@ -146,6 +148,8 @@ export interface Order {
   updatedAt: string;
   shippingOrigin?: ShippingLocation | undefined;
   shippingDestination?: ShippingLocation | undefined;
+  voucherDiscount: number;
+  coinApplied: number;
 }
 
 export interface GetOrderResponse {
@@ -170,6 +174,22 @@ export interface GetOrderResponse {
   updatedAt: string;
   shippingOrigin?: ShippingLocation | undefined;
   shippingDestination?: ShippingLocation | undefined;
+  voucherDiscount: number;
+  coinApplied: number;
+  cancellation?: OrderCancellation | undefined;
+}
+
+export interface OrderCancellationStep {
+  effect: string;
+  status: string;
+}
+
+export interface OrderCancellation {
+  reasonCode: string;
+  reasonNote?: string | undefined;
+  actorType: string;
+  cancelledAt: string;
+  steps: OrderCancellationStep[];
 }
 
 export interface OrderItemSnapshot {
@@ -189,14 +209,19 @@ export interface UpdateStatusOrderRequest {
   userId?: string | undefined;
   shopId?: string | undefined;
   status: string;
+  actorType: string;
+  actorId: string;
 }
 
 /** ================================= Cancel order =================================== */
 export interface CancelOrderRequest {
   processId?: string | undefined;
   orderId: string;
-  userId?: string | undefined;
+  actorId: string;
   shopId?: string | undefined;
+  actorType: string;
+  reasonCode: string;
+  reasonNote?: string | undefined;
 }
 
 export interface CancelOrderResponse {

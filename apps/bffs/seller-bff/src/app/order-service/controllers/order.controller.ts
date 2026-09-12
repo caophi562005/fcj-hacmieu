@@ -1,6 +1,8 @@
 import { ProcessId } from '@common/decorators/process-id.decorator';
 import { UserData } from '@common/decorators/user-data.decorator';
 import {
+  CancelOrderBodyDto,
+  CancelOrderParamsDto,
   GetManyOrdersRequestDto,
   GetManyOrdersResponseDto,
   GetOrderRequestDto,
@@ -8,7 +10,17 @@ import {
   UpdateOrderStatusRequestDto,
 } from '@common/interfaces/dtos/order/order.dto';
 import { OrderStatusValues } from '@common/constants/order.constant';
-import { BadRequestException, Body, Controller, Get, Param, Put, Query } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+} from '@nestjs/common';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { OrderService } from '../services/order.service';
 
@@ -54,6 +66,7 @@ export class OrderController {
     @Body() body: UpdateOrderStatusRequestDto,
     @ProcessId() processId: string,
     @UserData('shopId') shopId: string,
+    @UserData('userId') actorId: string,
   ) {
     if (body.status === OrderStatusValues.COMPLETED) {
       throw new BadRequestException('Seller cannot update order to COMPLETED');
@@ -62,6 +75,43 @@ export class OrderController {
       ...body,
       shopId,
       processId,
+      actorType: 'SELLER',
+      actorId,
+    });
+  }
+
+  @Post(':orderId/cancel')
+  async cancelOrder(
+    @Param() params: CancelOrderParamsDto,
+    @Body() body: CancelOrderBodyDto,
+    @ProcessId() processId: string,
+    @UserData('shopId') shopId: string,
+    @UserData('userId') actorId: string,
+  ) {
+    return this.orderService.cancelOrder({
+      ...params,
+      ...body,
+      processId,
+      shopId,
+      actorType: 'SELLER',
+      actorId,
+    });
+  }
+
+  @Delete(':orderId')
+  async cancelOrderLegacy(
+    @Param() params: CancelOrderParamsDto,
+    @ProcessId() processId: string,
+    @UserData('shopId') shopId: string,
+    @UserData('userId') actorId: string,
+  ) {
+    return this.orderService.cancelOrder({
+      ...params,
+      processId,
+      shopId,
+      actorType: 'SELLER',
+      actorId,
+      reasonCode: 'LEGACY_REQUEST',
     });
   }
 }

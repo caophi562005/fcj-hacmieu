@@ -23,13 +23,14 @@ type PaymentSseEnvelope = {
 export function QrPaymentClient({ payment }: Props) {
   const [status, setStatus] = useState(payment.status);
   const isPaid = status === 'SUCCESS';
+  const isTerminalFailure = status === 'FAILED' || status === 'CANCELLED';
 
   const orderDetailHref = payment.orderId?.[0]
     ? `/profile/orders/${payment.orderId[0]}`
     : '/profile/orders';
 
   useEffect(() => {
-    if (isPaid) return;
+    if (isPaid || isTerminalFailure) return;
 
     const es = new EventSource('/api/payment/sse');
     const onMessage = (event: MessageEvent<string>) => {
@@ -48,7 +49,7 @@ export function QrPaymentClient({ payment }: Props) {
       es.removeEventListener('message', onMessage as EventListener);
       es.close();
     };
-  }, [isPaid, payment.id]);
+  }, [isPaid, isTerminalFailure, payment.id]);
 
   const isTopup = payment.code?.startsWith('TOPUP');
 
@@ -93,6 +94,20 @@ export function QrPaymentClient({ payment }: Props) {
     );
   }
 
+  if (isTerminalFailure) {
+    return (
+      <div className="card p-8 text-center max-w-xl mx-auto">
+        <h1 className="text-xl font-semibold mb-2">Thanh toán đã dừng</h1>
+        <p className="text-sm text-ink-muted mb-6">
+          Giao dịch ở trạng thái {status}. Mã QR không còn được theo dõi.
+        </p>
+        <Link href={orderDetailHref} className="btn-primary btn-lg w-full">
+          Xem đơn hàng
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-xl mx-auto space-y-4">
       <div className="card p-6 text-center">
@@ -111,7 +126,6 @@ export function QrPaymentClient({ payment }: Props) {
 
       <div className="card p-6 text-center">
         {payment.qrCode ? (
-          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={payment.qrCode}
             alt="QR thanh toán"

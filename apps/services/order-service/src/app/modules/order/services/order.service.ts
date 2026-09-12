@@ -50,6 +50,8 @@ import {
 import { generatePaymentCode } from '@common/utils/payment-code.util';
 import {
   BadRequestException,
+  ConflictException,
+  ForbiddenException,
   Inject,
   Injectable,
   InternalServerErrorException,
@@ -63,6 +65,7 @@ import { firstValueFrom } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 import { CartItemService } from '../../cart/services/cart-item.service';
 import { OrderRepository } from '../repositories/order.repository';
+import { allocateOrderDiscounts } from './order-allocation';
 
 @Injectable()
 export class OrderService implements OnModuleInit {
@@ -275,6 +278,7 @@ export class OrderService implements OnModuleInit {
         );
         return {
           shopId: order.shopId,
+          sellerId: shop.userId,
           items: orderItems,
           itemTotal,
           shippingFee: await this.calculateShippingFee(
@@ -326,6 +330,7 @@ export class OrderService implements OnModuleInit {
       minOrderSubtotal: number;
       maxDiscount?: number;
     } | null = null;
+    let voucherAmount = 0;
     if (data.discountCode) {
       const promotion = await firstValueFrom(
         this.promotionModule.checkPromotion({
@@ -363,34 +368,7 @@ export class OrderService implements OnModuleInit {
         discountAmount = promotion.discountValue;
       }
 
-      // Phân bổ discount theo thứ tự ưu tiên (giảm order nhỏ trước)
-      const sortedOrders = [...ordersWithTotal].sort(
-        (a, b) => a.itemTotal - b.itemTotal,
-      );
-      let remainingDiscount = discountAmount;
-
-      sortedOrders.forEach((order) => {
-        const orderTotal = order.itemTotal + order.shippingFee;
-        if (remainingDiscount >= orderTotal) {
-          // Giảm hết order này
-          order.discount = -orderTotal;
-          remainingDiscount -= orderTotal;
-        } else if (remainingDiscount > 0) {
-          // Giảm 1 phần
-          order.discount = -remainingDiscount;
-          remainingDiscount = 0;
-        }
-      });
-
-      // Cập nhật lại ordersWithTotal với discount đã phân bổ
-      ordersWithTotal.forEach((order) => {
-        const sortedOrder = sortedOrders.find(
-          (so) => so.shopId === order.shopId,
-        );
-        if (sortedOrder) {
-          order.discount = sortedOrder.discount;
-        }
-      });
+      voucherAmount = discountAmount;
 
       promotionData = {
         id: promotion.id,
@@ -402,36 +380,24 @@ export class OrderService implements OnModuleInit {
       };
     }
 
-    if (requestedCoin > 0) {
-      let remainingCoin = requestedCoin;
-      const sortedOrders = [...ordersWithTotal].sort(
-        (a, b) => a.itemTotal - b.itemTotal,
-      );
-
-      sortedOrders.forEach((order) => {
-        if (remainingCoin <= 0) return;
-
-        const orderPayableAfterDiscount = Math.max(
-          0,
-          order.itemTotal + order.shippingFee + order.discount,
-        );
-
-        if (orderPayableAfterDiscount <= 0) return;
-
-        const applied = Math.min(remainingCoin, orderPayableAfterDiscount);
-        order.discount -= applied;
-        remainingCoin -= applied;
-      });
-
-      ordersWithTotal.forEach((order) => {
-        const sortedOrder = sortedOrders.find(
-          (so) => so.shopId === order.shopId,
-        );
-        if (sortedOrder) {
-          order.discount = sortedOrder.discount;
-        }
-      });
-    }
+    const allocations = allocateOrderDiscounts(
+      ordersWithTotal.map((order) => ({
+        key: order.shopId,
+        itemTotal: order.itemTotal,
+        shippingFee: order.shippingFee,
+      })),
+      voucherAmount,
+      requestedCoin,
+    );
+    const allocatedOrders = ordersWithTotal.map((order) => {
+      const allocation = allocations.find((item) => item.key === order.shopId)!;
+      return {
+        ...order,
+        discount: allocation.discount,
+        voucherDiscount: allocation.voucherDiscount,
+        coinApplied: allocation.coinApplied,
+      };
+    });
 
     const paymentId = uuidv4();
     const paymentCode = generatePaymentCode();
@@ -441,38 +407,27 @@ export class OrderService implements OnModuleInit {
       receiver: data.receiver,
       paymentMethod: data.paymentMethod,
       paymentId,
-      orders: ordersWithTotal,
+      orders: allocatedOrders,
     };
 
     const createdOrders = await this.orderRepository.create(mergedData);
 
     if (requestedCoin > 0 && createdOrders.length > 0) {
-      const actuallyAppliedCoin = Math.max(
-        0,
-        Math.floor(
-          createdOrders.reduce(
-            (sum, order) => sum + Math.max(0, -(order.discount ?? 0)),
-            0,
-          ),
-        ),
-      );
-
-      if (actuallyAppliedCoin > 0) {
+      await Promise.all(
+        createdOrders.map(async (order) => {
+          if (order.coinApplied <= 0) return;
         const debitPayload: AdjustWalletRequest = {
           processId,
           userId,
           type: WalletTransactionTypeValues.DEBIT,
           source: WalletTransactionSourceValues.ORDER_PAYMENT,
-          referenceId: createdOrders.map((order) => order.id).join(','),
-          amount: actuallyAppliedCoin,
-          description:
-            createdOrders.length === 1
-              ? `Thanh toán đơn hàng ${createdOrders[0].code} bằng V-Xu`
-              : `Thanh toán ${createdOrders.length} đơn hàng bằng V-Xu`,
+          referenceId: order.id,
+          amount: order.coinApplied,
+          description: `Thanh toán đơn hàng ${order.code} bằng V-Xu`,
         };
-
         await firstValueFrom(this.walletModule.adjustWallet(debitPayload));
-      }
+        }),
+      );
     }
 
     // Tạo PromotionRedemption nếu có promotion
@@ -504,22 +459,16 @@ export class OrderService implements OnModuleInit {
       method: data.paymentMethod,
       status: PaymentStatusValues.PENDING,
       amount: createdOrders.reduce((sum, order) => sum + order.grandTotal, 0),
+      allocations: createdOrders.map((order) => ({
+        orderId: order.id,
+        amount: order.grandTotal,
+      })),
     });
-
-    await Promise.all(
-      createdOrders.map((order) =>
-        this.sendQueueMessage(SqsConfiguration.CREATE_ORDER_QUEUE_NAME, {
-          processId,
-          userId: order.userId,
-          items: order.items,
-        }),
-      ),
-    );
 
     return { orders: createdOrders };
   }
 
-  async cancelOrdersByPayment(data: { paymentId: string }) {
+  async cancelOrdersByPayment(data: { processId?: string; paymentId: string }) {
     const orders = await this.orderRepository.listCancel({
       paymentId: data.paymentId,
     });
@@ -528,25 +477,38 @@ export class OrderService implements OnModuleInit {
       throw new NotFoundException('Error.OrdersNotFound');
     }
 
-    const orderIds = orders.map((order) => order.id);
-    const userId = orders[0].userId;
-
-    const cancelledOrders = await this.orderRepository.cancel(orderIds, userId);
+    const cancelledOrders = await Promise.all(
+      orders.map((order) =>
+        this.orderRepository.cancel({
+          orderId: order.id,
+          processId: data.processId ?? uuidv4(),
+          actorType: 'SYSTEM',
+          actorId: order.userId,
+          reasonCode: 'PAYMENT_CANCELLED',
+        }),
+      ),
+    );
 
     return { orders: cancelledOrders };
   }
 
-  async cancelOrder({ processId, ...data }: CancelOrderRequest) {
-    const orderIds = [data.orderId];
-    const userId = data.userId || undefined;
-    const shopId = data.shopId || undefined;
-    const cancelledOrders = await this.orderRepository.cancel(
-      orderIds,
-      userId,
-      shopId,
-    );
-
-    return { orders: cancelledOrders };
+  async cancelOrder(data: CancelOrderRequest) {
+    try {
+      const cancelledOrder = await this.orderRepository.cancel(data);
+      return { orders: [cancelledOrder] };
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : '';
+      if (message === 'ORDER_NOT_FOUND') {
+        throw new NotFoundException('Error.OrderNotFound');
+      }
+      if (message.includes('not authorized')) {
+        throw new ForbiddenException('Error.OrderCancellationForbidden');
+      }
+      if (message.startsWith('ORDER_NOT_CANCELLABLE')) {
+        throw new ConflictException('Error.OrderNotCancellable');
+      }
+      throw error;
+    }
   }
 
   async paid(data: { paymentId: string }) {
@@ -641,6 +603,16 @@ export class OrderService implements OnModuleInit {
     } catch (error) {
       if (error.code === PrismaErrorValues.RECORD_NOT_FOUND) {
         throw new NotFoundException('Error.OrderNotFound');
+      }
+      if (
+        error instanceof Error &&
+        (error.message.startsWith('ORDER_TRANSITION_NOT_ALLOWED') ||
+          error.message === 'ORDER_STATUS_CONFLICT')
+      ) {
+        throw new ConflictException('Error.OrderStatusTransitionNotAllowed');
+      }
+      if (error instanceof Error && error.message === 'ORDER_NOT_AUTHORIZED') {
+        throw new ForbiddenException('Error.OrderStatusForbidden');
       }
       throw error;
     }

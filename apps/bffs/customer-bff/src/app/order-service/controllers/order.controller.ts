@@ -1,7 +1,8 @@
 import { ProcessId } from '@common/decorators/process-id.decorator';
 import { UserData } from '@common/decorators/user-data.decorator';
 import {
-  CancelOrderRequestDto,
+  CancelOrderBodyDto,
+  CancelOrderParamsDto,
   CreateOrderRequestDto,
   CreateOrderResponseDto,
   GetManyOrdersRequestDto,
@@ -74,16 +75,34 @@ export class OrderController {
     });
   }
 
-  @Delete(':orderId')
+  @Post(':orderId/cancel')
   async cancelOrder(
-    @Param() params: CancelOrderRequestDto,
+    @Param() params: CancelOrderParamsDto,
+    @Body() body: CancelOrderBodyDto,
+    @ProcessId() processId: string,
+    @UserData('userId') userId: string,
+  ) {
+    return this.orderService.cancelOrder({
+      ...params,
+      ...body,
+      processId,
+      actorType: 'CUSTOMER',
+      actorId: userId,
+    });
+  }
+
+  @Delete(':orderId')
+  async cancelOrderLegacy(
+    @Param() params: CancelOrderParamsDto,
     @ProcessId() processId: string,
     @UserData('userId') userId: string,
   ) {
     return this.orderService.cancelOrder({
       ...params,
       processId,
-      userId,
+      actorType: 'CUSTOMER',
+      actorId: userId,
+      reasonCode: 'LEGACY_REQUEST',
     });
   }
 }

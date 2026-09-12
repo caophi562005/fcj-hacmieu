@@ -12,13 +12,11 @@ import { PrismaService } from '../../../prisma/prisma.service';
 export class TransactionRepository {
   constructor(private readonly prismaService: PrismaService) {}
   async receiver(data: WebhookTransactionRequest) {
-    let amountIn = 0;
-    let amountOut = 0;
-    if (data.transferType === 'in') {
-      amountIn = data.transferAmount;
-    } else if (data.transferType === 'out') {
-      amountOut = data.transferAmount;
+    if (data.transferType !== 'in') {
+      throw new BadRequestException('Error.InvalidInboundTransferDirection');
     }
+    const amountIn = data.transferAmount;
+    const amountOut = 0;
 
     const transaction = await this.prismaService.transaction.findUnique({
       where: {
@@ -27,31 +25,23 @@ export class TransactionRepository {
     });
 
     if (transaction) {
-      throw new NotFoundException('Error.TransactionAlreadyExists');
+      if (!transaction.paymentId) {
+        throw new NotFoundException('Error.PaymentNotFound');
+      }
+      const duplicatePayment = await this.prismaService.payment.findUnique({
+        where: { id: transaction.paymentId },
+      });
+      if (!duplicatePayment) throw new NotFoundException('Error.PaymentNotFound');
+      return {
+        paymentCode: duplicatePayment.code,
+        paymentId: duplicatePayment.id,
+        userId: duplicatePayment.userId,
+        shouldConfirmOrder: false,
+        message: 'Message.ReceivedSuccessfully',
+      };
     }
 
     const result = await this.prismaService.$transaction(async (tx) => {
-      await tx.transaction.create({
-        data: {
-          id: data.id,
-          gateway: data.gateway,
-          transactionDate: parse(
-            data.transactionDate,
-            'yyyy-MM-dd HH:mm:ss',
-            new Date(),
-          ),
-          accountNumber: data.accountNumber,
-          subAccount: data.subAccount,
-          amountIn,
-          amountOut,
-          accumulated: data.accumulated,
-          code: data.code,
-          transactionContent: data.content,
-          referenceNumber: data.referenceCode,
-          body: data.description,
-        },
-      });
-
       // Kiểm tra nội dung chuyển tiền và tổng số tiền có khớp không
       // data.code là mã SePay gán, data.content là nội dung chuyển khoản
       // Ưu tiên tìm payment code (dạng PREFIX + YYMMDD + 6 chars) trong content
@@ -72,12 +62,39 @@ export class TransactionRepository {
         throw new BadRequestException('Error.AmountPriceMismatch');
       }
 
-      await tx.payment.update({
-        where: {
-          id: payment.id,
-        },
+      const paid = await tx.payment.updateMany({
+        where: { id: payment.id, status: PaymentStatusValues.PENDING },
         data: {
           status: PaymentStatusValues.SUCCESS,
+        },
+      });
+      if (paid.count === 1) {
+        await tx.paymentAllocation.updateMany({
+          where: { paymentId: payment.id, status: 'PENDING' },
+          data: { status: 'SUCCESS' },
+        });
+      }
+
+      await tx.transaction.create({
+        data: {
+          id: data.id,
+          gateway: data.gateway,
+          transactionDate: parse(
+            data.transactionDate,
+            'yyyy-MM-dd HH:mm:ss',
+            new Date(),
+          ),
+          accountNumber: data.accountNumber,
+          subAccount: data.subAccount,
+          amountIn,
+          amountOut,
+          accumulated: data.accumulated,
+          code: data.code,
+          transactionContent: data.content,
+          referenceNumber: data.referenceCode,
+          body: data.description,
+          paymentId: payment.id,
+          eligibleForOrderConfirmation: paid.count === 1,
         },
       });
 
@@ -85,6 +102,7 @@ export class TransactionRepository {
         paymentCode,
         paymentId: payment.id,
         userId: payment.userId,
+        shouldConfirmOrder: paid.count === 1,
         message: 'Message.ReceivedSuccessfully',
       };
     });

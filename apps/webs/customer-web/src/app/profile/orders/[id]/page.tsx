@@ -21,6 +21,8 @@ import { getMyOrderById } from '../../../../lib/order';
 import { getMyReviewByOrderItemId } from '../../../../lib/review';
 import { OrderReviews } from './OrderReviews';
 import { OrderRouteButton } from './OrderRouteButton';
+import { CancelOrderButton } from './CancelOrderButton';
+import { getCustomerCancelReasonLabel } from './cancel-reasons';
 
 function statusLabel(
   status: string,
@@ -45,6 +47,9 @@ function statusLabel(
     case OrderStatusValues.COMPLETED:
       return 'Hoàn thành';
     case OrderStatusValues.CANCELLED:
+      if (paymentStatus === PaymentStatusValues.REFUND_PENDING) {
+        return 'Đã hủy · chờ hoàn tiền';
+      }
       return 'Đã hủy';
     case OrderStatusValues.REFUNDED:
       return 'Đã hoàn tiền';
@@ -63,6 +68,10 @@ function paymentStatusLabel(status: string): string {
       return 'Thanh toán thất bại';
     case PaymentStatusValues.CANCELLED:
       return 'Đã hủy thanh toán';
+    case PaymentStatusValues.REFUND_PENDING:
+      return 'Đang chờ hoàn tiền';
+    case PaymentStatusValues.REFUNDED:
+      return 'Đã hoàn tiền';
     default:
       return status;
   }
@@ -159,6 +168,9 @@ export default async function OrderDetailPage({
   const discountValue = Math.abs(order.discount || 0);
   const hasDiscount = discountValue > 0;
   const canReview = order.status === OrderStatusValues.COMPLETED;
+  const canCancel =
+    order.status === OrderStatusValues.PENDING ||
+    order.status === OrderStatusValues.CONFIRMED;
 
   const reviewItems = canReview
     ? order.itemsSnapshot.map((it) => ({
@@ -297,6 +309,16 @@ export default async function OrderDetailPage({
         </div>
       </div>
 
+      {order.cancellation ? (
+        <div className="card p-4 mb-4">
+          <h3 className="font-semibold text-sm">Lý do hủy đơn</h3>
+          <p className="text-sm text-ink-muted mt-1">
+            {order.cancellation.reasonNote ||
+              getCustomerCancelReasonLabel(order.cancellation.reasonCode)}
+          </p>
+        </div>
+      ) : null}
+
       <div className="card mb-4">
         <div className="px-4 py-3 border-b border-border-subtle font-semibold">
           Sản phẩm ({order.itemsSnapshot.length})
@@ -310,7 +332,6 @@ export default async function OrderDetailPage({
               href={`/product/${it.productId}`}
               className="block cursor-pointer"
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={it.productImage || '/placeholder.png'}
                 alt={it.productName}
@@ -383,6 +404,7 @@ export default async function OrderDetailPage({
           />
         </dl>
         <div className="flex flex-wrap gap-2 mt-5">
+          {canCancel ? <CancelOrderButton orderId={order.id} /> : null}
           <button className="btn-outline btn-md cursor-pointer">
             Liên hệ shop
           </button>

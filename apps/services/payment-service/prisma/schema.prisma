@@ -18,6 +18,16 @@ enum PaymentStatus {
     SUCCESS
     FAILED
     CANCELLED
+    REFUND_PENDING
+    REFUNDED
+}
+
+enum PaymentAllocationStatus {
+    PENDING
+    SUCCESS
+    CANCELLED
+    REFUND_PENDING
+    REFUNDED
 }
 
 enum PaymentMethod {
@@ -41,6 +51,7 @@ model Payment {
     status  PaymentStatus @default(PENDING)
 
     amount Int
+    allocations PaymentAllocation[]
 
     createdById String?
     updatedById String?
@@ -56,6 +67,19 @@ model Payment {
     @@index([status])
 }
 
+model PaymentAllocation {
+    id        String                  @id @default(uuid())
+    paymentId String
+    payment   Payment                 @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+    orderId   String                  @unique
+    amount    Int
+    status    PaymentAllocationStatus @default(PENDING)
+    createdAt DateTime                @default(now())
+    updatedAt DateTime                @updatedAt
+
+    @@index([paymentId, status])
+}
+
 model Transaction {
     id                 Int      @id @default(autoincrement())
     gateway            String   @db.VarChar(100)
@@ -69,7 +93,21 @@ model Transaction {
     transactionContent String?  @db.Text
     referenceNumber    String?  @db.VarChar(255)
     body               String?  @db.Text
+    paymentId          String?
+    eligibleForOrderConfirmation Boolean @default(false)
     createdAt          DateTime @default(now())
+}
+
+model PaymentCancellationCommand {
+    id             String   @id @default(uuid())
+    orderId        String   @unique
+    eventId        String   @unique
+    paymentId      String
+    userId         String
+    amount         Int
+    reasonCode     String
+    cancellationId String
+    createdAt      DateTime @default(now())
 }
 
 model Refund {
@@ -89,6 +127,6 @@ model Refund {
     updatedAt DateTime  @updatedAt
 
     @@index([userId])
-    @@index([orderId])
+    @@unique([orderId])
     @@index([status])
 }

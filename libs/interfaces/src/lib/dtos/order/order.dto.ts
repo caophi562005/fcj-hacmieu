@@ -1,6 +1,7 @@
-import { ResponseSchema } from '@common/interfaces/models/common/response.model';
+import { ResponseSchema } from '../../models/common/response.model';
 import {
   CancelOrderRequestSchema,
+  CancelOrderBodySchema,
   CreateOrderRequestSchema,
   CreateOrderResponseSchema,
   DashboardSellerRequestSchema,
@@ -10,7 +11,7 @@ import {
   GetOrderRequestSchema,
   GetOrderResponseSchema,
   UpdateStatusOrderRequestSchema,
-} from '@common/interfaces/models/order';
+} from '../../models/order';
 import { createZodDto } from 'nestjs-zod';
 
 export class GetManyOrdersRequestDto extends createZodDto(
@@ -26,16 +27,22 @@ export class CreateOrderRequestDto extends createZodDto(
 ) {}
 
 export class UpdateOrderStatusRequestDto extends createZodDto(
-  UpdateStatusOrderRequestSchema.omit({ processId: true, shopId: true }),
-) {}
-
-export class CancelOrderRequestDto extends createZodDto(
-  CancelOrderRequestSchema.omit({
+  UpdateStatusOrderRequestSchema.omit({
     processId: true,
-    userId: true,
     shopId: true,
+    actorType: true,
+    actorId: true,
   }),
 ) {}
+
+export class CancelOrderParamsDto extends createZodDto(
+  CancelOrderRequestSchema.pick({ orderId: true }),
+) {}
+
+export class CancelOrderBodyDto extends createZodDto(CancelOrderBodySchema) {}
+
+/** @deprecated Use CancelOrderParamsDto. */
+export class CancelOrderRequestDto extends CancelOrderParamsDto {}
 
 export class DashboardSellerRequestDto extends createZodDto(
   DashboardSellerRequestSchema.omit({ processId: true, userId: true }),

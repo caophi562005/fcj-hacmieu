@@ -17,6 +17,18 @@ import { RedemptionService } from './services/redemption.service';
           queueUrl: SqsConfiguration.CREATE_REDEMPTION_QUEUE_URL,
           region: BaseConfiguration.AWS_REGION,
         },
+        {
+          name: SqsConfiguration.PROMOTION_COMMAND_QUEUE_NAME,
+          queueUrl: SqsConfiguration.PROMOTION_COMMAND_QUEUE_URL,
+          region: BaseConfiguration.AWS_REGION,
+        },
+      ],
+      producers: [
+        {
+          name: SqsConfiguration.CANCELLATION_RESULT_QUEUE_NAME,
+          queueUrl: SqsConfiguration.CANCELLATION_RESULT_QUEUE_URL,
+          region: BaseConfiguration.AWS_REGION,
+        },
       ],
     }),
   ],

@@ -21,10 +21,40 @@ export class PaymentConsumerService {
       ? JSON.parse(message.Body)
       : null;
 
-    this.paymentService.create(body);
+    await this.paymentService.create(body);
 
     this.logger.log(
       `Received message from ${SqsConfiguration.CREATE_PAYMENT_QUEUE_NAME}: ${message.MessageId ?? 'unknown-id'}`,
     );
+  }
+
+  @SqsMessageHandler(SqsConfiguration.PAYMENT_COMMAND_QUEUE_NAME, false)
+  async handlePaymentCommand(message: SqsMessage) {
+    if (!message.Body) throw new Error('Empty payment command');
+    const envelope = JSON.parse(message.Body) as {
+      version: 1;
+      eventId: string;
+      eventType: 'PAYMENT_CANCEL';
+      payload: {
+        cancellationId: string;
+        orderId: string;
+        paymentId: string;
+        userId: string;
+        amount: number;
+        reasonCode: string;
+      };
+    };
+    if (envelope.eventType !== 'PAYMENT_CANCEL') {
+      throw new Error(`Unsupported payment command: ${envelope.eventType}`);
+    }
+    const result = await this.paymentService.cancelOrderPayment({
+      eventId: envelope.eventId,
+      ...envelope.payload,
+    });
+    await this.paymentService.sendCancellationResult({
+      eventId: envelope.eventId,
+      cancellationId: envelope.payload.cancellationId,
+      paymentStatus: result,
+    });
   }
 }

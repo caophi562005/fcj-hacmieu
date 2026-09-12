@@ -24,6 +24,14 @@ export class RedemptionRepository {
 
       if (!promotion) throw new NotFoundException('Error.PromotionNotFound');
 
+      const cancelled = await tx.redemptionCancellation.findMany({
+        where: { orderId: { in: data.orderIds } },
+        select: { orderId: true },
+      });
+      const cancelledIds = new Set(cancelled.map((item) => item.orderId));
+      const activeOrderIds = data.orderIds.filter(
+        (orderId) => !cancelledIds.has(orderId),
+      );
       const existing = await tx.redemption.findUnique({
         where: {
           code_userId: {
@@ -35,8 +43,8 @@ export class RedemptionRepository {
 
       if (existing?.usedAt) {
         const isSameOrderSet =
-          existing.orderIds.length === data.orderIds.length &&
-          data.orderIds.every((orderId) => existing.orderIds.includes(orderId));
+          existing.orderIds.length === activeOrderIds.length &&
+          activeOrderIds.every((orderId) => existing.orderIds.includes(orderId));
         if (isSameOrderSet) {
           return existing;
         }
@@ -45,10 +53,24 @@ export class RedemptionRepository {
 
       const now = new Date();
       const mergedOrderIds = existing
-        ? Array.from(new Set([...existing.orderIds, ...data.orderIds]))
-        : data.orderIds;
+        ? Array.from(new Set([...existing.orderIds, ...activeOrderIds]))
+        : activeOrderIds;
 
       if (!existing) {
+        if (mergedOrderIds.length === 0) {
+          return tx.redemption.create({
+            data: {
+              promotionId: data.promotionId,
+              userId: data.userId,
+              orderIds: [],
+              code: data.code,
+              discountType: data.discountType,
+              discountValue: data.discountValue,
+              minOrderSubtotal: data.minOrderSubtotal,
+              maxDiscount: data.maxDiscount,
+            },
+          });
+        }
         if (
           promotion.totalLimit != null &&
           promotion.usedCount >= promotion.totalLimit
@@ -97,6 +119,46 @@ export class RedemptionRepository {
         },
       });
     });
+  }
+
+  async releaseOrder(data: { orderId: string; eventId: string }) {
+    return this.prismaService.$transaction(
+      async (tx) => {
+        await tx.redemptionCancellation.upsert({
+          where: { orderId: data.orderId },
+          update: {},
+          create: data,
+        });
+        const redemption = await tx.redemption.findFirst({
+          where: { orderIds: { has: data.orderId } },
+        });
+        if (!redemption) return { releasedUsage: false };
+
+        const remainingOrderIds = redemption.orderIds.filter(
+          (orderId) => orderId !== data.orderId,
+        );
+        if (remainingOrderIds.length > 0) {
+          await tx.redemption.update({
+            where: { id: redemption.id },
+            data: { orderIds: remainingOrderIds },
+          });
+          return { releasedUsage: false };
+        }
+
+        await tx.redemption.update({
+          where: { id: redemption.id },
+          data: { orderIds: [], usedAt: null, cancelledAt: null },
+        });
+        if (redemption.usedAt) {
+          await tx.promotion.updateMany({
+            where: { id: redemption.promotionId, usedCount: { gt: 0 } },
+            data: { usedCount: { decrement: 1 } },
+          });
+        }
+        return { releasedUsage: Boolean(redemption.usedAt) };
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+    );
   }
 
   async claim(data: ClaimPromotionRequest) {

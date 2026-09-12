@@ -2,7 +2,7 @@
 
 import type { OrderStatus } from '@common/constants/order.constant';
 import { revalidatePath } from 'next/cache';
-import { updateSellerOrderStatus } from '../../../lib/order';
+import { cancelSellerOrder, updateSellerOrderStatus } from '../../../lib/order';
 
 export type OrderMutationResult = {
   ok: boolean;
@@ -16,6 +16,17 @@ function extractErrorMessage(err: unknown): string {
   if (Array.isArray(m)) return m.join(', ');
   if (typeof m === 'string') return m;
   return 'Đã xảy ra lỗi, vui lòng thử lại.';
+}
+
+export async function cancelOrderAction(orderId: string, reasonNote: string) {
+  try {
+    await cancelSellerOrder(orderId, reasonNote.trim() || undefined);
+    revalidatePath('/orders');
+    revalidatePath(`/orders/${orderId}`);
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, message: extractErrorMessage(err) };
+  }
 }
 
 export async function updateOrderStatusAction(

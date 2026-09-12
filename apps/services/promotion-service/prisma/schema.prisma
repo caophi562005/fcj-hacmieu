@@ -132,6 +132,13 @@ model Redemption {
     @@unique([code, userId])
 }
 
+model RedemptionCancellation {
+    id          String   @id @default(uuid())
+    orderId     String   @unique
+    eventId     String   @unique
+    cancelledAt DateTime @default(now())
+}
+
 model MarketingCampaign {
     id          String                  @id @default(uuid())
     name        String                  @db.VarChar(255)

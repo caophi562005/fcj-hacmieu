@@ -29,6 +29,8 @@ export const GetOrderResponseSchema = OrderSchema.pick({
   itemTotal: true,
   shippingFee: true,
   discount: true,
+  voucherDiscount: true,
+  coinApplied: true,
   grandTotal: true,
 
   receiver: true,
@@ -52,6 +54,16 @@ export const GetOrderResponseSchema = OrderSchema.pick({
   firstProductImage: z.string(),
   shippingOrigin: ShippingLocationSchema.nullable(),
   shippingDestination: ShippingLocationSchema.nullable(),
+  cancellation: z
+    .object({
+      reasonCode: z.string(),
+      reasonNote: z.string().nullable().optional(),
+      actorType: z.string(),
+      cancelledAt: z.any(),
+      steps: z.array(z.object({ effect: z.string(), status: z.string() })),
+    })
+    .nullable()
+    .optional(),
 });
 
 export const GetManyOrdersResponseSchema = PaginationQueryResponseSchema.extend(
@@ -66,6 +78,8 @@ export const GetManyOrdersResponseSchema = PaginationQueryResponseSchema.extend(
         paymentStatus: z.string(),
         itemTotal: z.number(),
         discount: z.number(),
+        voucherDiscount: z.number().optional(),
+        coinApplied: z.number().optional(),
         grandTotal: z.number(),
         firstProductImage: z.string(),
         firstProductName: z.string(),

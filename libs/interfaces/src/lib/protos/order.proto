@@ -112,6 +112,8 @@ message OrderSummary {
   string createdAt = 10;
   string paymentMethod = 11;
   string paymentStatus = 12;
+  double voucherDiscount = 13;
+  double coinApplied = 14;
 }
 
 message OrderItem {
@@ -159,6 +161,8 @@ message Order {
   string updatedAt = 21;
   optional ShippingLocation shippingOrigin = 22;
   optional ShippingLocation shippingDestination = 23;
+  double voucherDiscount = 24;
+  double coinApplied = 25;
 }
 
 message GetOrderResponse {
@@ -186,6 +190,22 @@ message GetOrderResponse {
   string updatedAt = 19;
   optional ShippingLocation shippingOrigin = 20;
   optional ShippingLocation shippingDestination = 21;
+  double voucherDiscount = 22;
+  double coinApplied = 23;
+  optional OrderCancellation cancellation = 24;
+}
+
+message OrderCancellationStep {
+  string effect = 1;
+  string status = 2;
+}
+
+message OrderCancellation {
+  string reasonCode = 1;
+  optional string reasonNote = 2;
+  string actorType = 3;
+  string cancelledAt = 4;
+  repeated OrderCancellationStep steps = 5;
 }
 
 message OrderItemSnapshot {
@@ -205,14 +225,19 @@ message UpdateStatusOrderRequest {
   optional string userId = 3;
   optional string shopId = 4;
   string status = 5;
+  string actorType = 6;
+  string actorId = 7;
 }
 
 // ================================= Cancel order ===================================
 message CancelOrderRequest {
   optional string processId = 1;
   string orderId = 2;
-  optional string userId = 3;
+  string actorId = 3;
   optional string shopId = 4;
+  string actorType = 5;
+  string reasonCode = 6;
+  optional string reasonNote = 7;
 }
 
 message CancelOrderResponse {

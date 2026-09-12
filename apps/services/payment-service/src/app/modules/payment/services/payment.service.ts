@@ -12,11 +12,16 @@ import {
   UpdatePaymentStatusRequest,
 } from '@common/interfaces/models/payment';
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { SqsService } from '@ssut/nestjs-sqs';
+import { SqsConfiguration } from '@common/configurations/sqs.config';
 import { PaymentRepository } from '../repositories/payment.repository';
 
 @Injectable()
 export class PaymentService {
-  constructor(private readonly paymentRepository: PaymentRepository) {}
+  constructor(
+    private readonly paymentRepository: PaymentRepository,
+    private readonly sqsService: SqsService,
+  ) {}
 
   async list(data: GetManyPaymentsRequest): Promise<GetManyPaymentsResponse> {
     const payments = await this.paymentRepository.list(data);
@@ -74,5 +79,38 @@ export class PaymentService {
       }
       throw error;
     }
+  }
+
+  cancelOrderPayment(data: {
+    eventId: string;
+    cancellationId: string;
+    orderId: string;
+    paymentId: string;
+    userId: string;
+    amount: number;
+    reasonCode: string;
+  }) {
+    return this.paymentRepository.cancelOrderPayment(data);
+  }
+
+  async sendCancellationResult(data: {
+    eventId: string;
+    cancellationId: string;
+    paymentStatus: 'CANCELLED' | 'REFUND_PENDING' | 'REFUNDED';
+  }) {
+    await this.sqsService.send(SqsConfiguration.CANCELLATION_RESULT_QUEUE_NAME, {
+      id: `${data.eventId}:result`,
+      body: {
+        version: 1,
+        eventId: `${data.eventId}:result`,
+        eventType: 'CANCELLATION_EFFECT_COMPLETED',
+        payload: {
+          cancellationId: data.cancellationId,
+          effect: 'PAYMENT',
+          paymentStatus: data.paymentStatus,
+        },
+      },
+      delaySeconds: 0,
+    });
   }
 }

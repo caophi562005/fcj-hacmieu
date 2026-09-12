@@ -20,6 +20,18 @@ import { PaymentService } from './services/payment.service';
           queueUrl: SqsConfiguration.CREATE_PAYMENT_QUEUE_URL,
           region: BaseConfiguration.AWS_REGION,
         },
+        {
+          name: SqsConfiguration.PAYMENT_COMMAND_QUEUE_NAME,
+          queueUrl: SqsConfiguration.PAYMENT_COMMAND_QUEUE_URL,
+          region: BaseConfiguration.AWS_REGION,
+        },
+      ],
+      producers: [
+        {
+          name: SqsConfiguration.CANCELLATION_RESULT_QUEUE_NAME,
+          queueUrl: SqsConfiguration.CANCELLATION_RESULT_QUEUE_URL,
+          region: BaseConfiguration.AWS_REGION,
+        },
       ],
     }),
   ],

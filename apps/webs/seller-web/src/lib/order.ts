@@ -68,5 +68,16 @@ export async function updateSellerOrderStatus(
 ): Promise<void> {
   const api = await createServerApi();
   // shopId sẽ được BFF inject từ token; truyền chuỗi rỗng để vượt qua zod validation
-  await api.put('/order/order/status', { id: orderId, status, shopId: '' });
+  await api.put('/order/order/status', { id: orderId, status });
+}
+
+export async function cancelSellerOrder(
+  orderId: string,
+  reasonNote?: string,
+): Promise<void> {
+  const api = await createServerApi();
+  await api.post(`/order/order/${orderId}/cancel`, {
+    reasonCode: 'SELLER_REQUEST',
+    ...(reasonNote ? { reasonNote } : {}),
+  });
 }

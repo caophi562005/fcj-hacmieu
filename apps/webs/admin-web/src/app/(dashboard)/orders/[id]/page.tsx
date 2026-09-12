@@ -83,6 +83,10 @@ function paymentStatusLabel(s: string): string {
       return 'Đã thanh toán';
     case 'FAILED':
       return 'Thất bại';
+    case 'CANCELLED':
+      return 'Đã hủy thanh toán';
+    case 'REFUND_PENDING':
+      return 'Đang chờ hoàn tiền';
     case 'REFUNDED':
       return 'Đã hoàn tiền';
     default:
@@ -284,7 +288,6 @@ export default async function OrderDetailPage({
             key={it.id}
             className="flex items-center gap-3 p-4 border-b border-slate-100 last:border-0"
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={it.productImage || '/placeholder.png'}
               alt={it.productName}
