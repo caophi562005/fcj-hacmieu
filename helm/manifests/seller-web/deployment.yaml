@@ -15,7 +15,7 @@ spec:
       serviceAccountName: hacmieu-sa
       containers:
         - name: seller-web
-          image: public.ecr.aws/h5u5b6t3/hacmieu/seller-web:latest
+          image: caophi562005/vshop-seller-web:latest
           imagePullPolicy: Always
           envFrom:
             - secretRef:

@@ -15,7 +15,7 @@ spec:
       serviceAccountName: hacmieu-sa
       containers:
         - name: utility-service
-          image: public.ecr.aws/h5u5b6t3/hacmieu/utility-service:latest
+          image: caophi562005/vshop-utility-service:latest
           imagePullPolicy: Always
           env:
             - name: UTILITY_SERVICE_GRPC_URL

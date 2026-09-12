@@ -15,7 +15,7 @@ spec:
       serviceAccountName: hacmieu-sa
       containers:
         - name: admin-bff
-          image: public.ecr.aws/h5u5b6t3/hacmieu/admin-bff:latest
+          image: caophi562005/vshop-admin-bff:latest
           imagePullPolicy: Always
           envFrom:
             - secretRef:

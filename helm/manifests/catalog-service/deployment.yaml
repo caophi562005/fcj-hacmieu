@@ -15,7 +15,7 @@ spec:
       serviceAccountName: hacmieu-sa
       containers:
         - name: catalog-service
-          image: public.ecr.aws/h5u5b6t3/hacmieu/catalog-service:latest
+          image: caophi562005/vshop-catalog-service:latest
           imagePullPolicy: Always
           env:
             - name: CATALOG_SERVICE_GRPC_URL

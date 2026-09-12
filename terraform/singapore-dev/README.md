@@ -50,11 +50,7 @@ kubectl get ingress -n default
 
 helm repo update
 
-#===Step 2: Chạy lệnh sau để update file config trong thư mục ~/.kube/config (Đối với windows là: C:\Users\{username}\.kube\config)
 aws eks update-kubeconfig --region ap-southeast-1 --name fcj-hacmieu
-
-#Check context
-kubectl config get-contexts #[Optional] Set context nếu có nhiều cluster và current context chưa đúng.
 kubectl config use-context arn:aws:eks:ap-southeast-1:491333778094:cluster/fcj-hacmieu
 
 #Get cluster info

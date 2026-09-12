@@ -15,7 +15,7 @@ spec:
       serviceAccountName: hacmieu-sa
       containers:
         - name: iam-service
-          image: public.ecr.aws/h5u5b6t3/hacmieu/iam-service:latest
+          image: caophi562005/vshop-iam-service:latest
           imagePullPolicy: Always
           env:
             - name: IAM_SERVICE_GRPC_URL

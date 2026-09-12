@@ -15,7 +15,7 @@ spec:
       serviceAccountName: hacmieu-sa
       containers:
         - name: wallet-service
-          image: public.ecr.aws/h5u5b6t3/hacmieu/wallet-service:latest
+          image: caophi562005/vshop-wallet-service:latest
           imagePullPolicy: Always
           env:
             - name: WALLET_SERVICE_GRPC_URL
