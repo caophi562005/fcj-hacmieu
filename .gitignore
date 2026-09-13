@@ -70,6 +70,7 @@ override.tf.json
 
 # Plan files
 *.tfplan
+tfplan-*
 
 secret.yaml
 

@@ -276,13 +276,7 @@ ADMIN_LOGOUT_URI=http://localhost:5000
 
 Các callback URL trên cũng phải được khai báo trong Cognito App Client tương ứng.
 
-### 3. Sinh Prisma Client
-
-```bash
-pnpm nx run-many -t generate-prisma --projects=iam-service,shop-service,catalog-service,order-service,payment-service,promotion-service,utility-service,wallet-service,ai-service
-```
-
-### 4. Sinh TypeScript từ proto khi cần
+### 3. Sinh TypeScript từ proto khi cần
 
 Các kiểu đã sinh nằm tại `libs/interfaces/src/lib/proto-types`. Chạy lại lệnh sau sau khi sửa file trong `libs/interfaces/src/lib/protos`:
 
@@ -290,13 +284,13 @@ Các kiểu đã sinh nằm tại `libs/interfaces/src/lib/proto-types`. Chạy 
 pnpm generate-ts-proto
 ```
 
-### 5. Chạy toàn bộ hệ thống
+### 4. Chạy toàn bộ hệ thống
 
 ```bash
 pnpm dev
 ```
 
-Lệnh trên reset Nx daemon rồi chạy 9 service, 3 BFF và 3 web app. Các database, Redis, AWS queues và dịch vụ ngoài phải truy cập được trước khi khởi động.
+Lệnh trên reset Nx daemon rồi chạy đầy đủ 9 service, 3 BFF và 3 web app. Mỗi service tự chạy target `build` trước khi `serve`; target `build` tiếp tục tự chạy `generate-prisma`, vì vậy không cần sinh Prisma Client thủ công sau khi cài đặt. Các database, Redis, AWS queues và dịch vụ ngoài phải truy cập được trước khi khởi động.
 
 ### Chạy từng project
 
@@ -409,7 +403,7 @@ Commit thay đổi proto và các kiểu TypeScript sinh ra trong cùng một th
 
 ## Kiểm tra chất lượng
 
-Build toàn bộ 15 application:
+Build đầy đủ 15 application gồm 9 service, 3 BFF và 3 web app. Target `build` của mỗi service tự sinh Prisma Client trước khi biên dịch:
 
 ```bash
 pnpm build
