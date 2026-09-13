@@ -1,11 +1,8 @@
 import { SqsConfiguration } from '@common/configurations/sqs.config';
-import {
-  CreateSellerSettlementRequest,
-  CreateSellerSettlementRequestSchema,
-} from '@common/interfaces/models/wallet';
 import { Injectable, Logger } from '@nestjs/common';
 import { SqsMessageHandler } from '@ssut/nestjs-sqs';
 import { SellerSettlementService } from './seller-settlement.service';
+import { parseSettlementMessageBody } from './settlement-message';
 
 type SqsMessage = {
   MessageId?: string;
@@ -27,9 +24,7 @@ export class CreditSettlementConsumerService {
       return;
     }
 
-    const body = CreateSellerSettlementRequestSchema.parse(
-      JSON.parse(message.Body),
-    ) as CreateSellerSettlementRequest;
+    const body = parseSettlementMessageBody(message.Body);
 
     await this.settlementService.create(body);
 

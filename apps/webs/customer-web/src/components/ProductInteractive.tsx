@@ -2,7 +2,7 @@
 
 import 'react-medium-image-zoom/dist/styles.css';
 
-import { Flag, Heart, ShieldCheck, ShoppingCart, Truck } from 'lucide-react';
+import { Flag, Heart, ShoppingCart, Truck } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState, useTransition } from 'react';
@@ -186,12 +186,7 @@ export function ProductInteractive(props: ProductInteractiveProps) {
           <dt className="text-ink-muted">Vận chuyển</dt>
           <dd className="flex items-center gap-2 text-ink">
             <Truck className="w-4 h-4 text-primary" />
-            <span>Giao trong 24h · Miễn phí ship</span>
-          </dd>
-          <dt className="text-ink-muted">Bảo hành</dt>
-          <dd className="flex items-center gap-2 text-ink">
-            <ShieldCheck className="w-4 h-4 text-success" />
-            <span>12 tháng chính hãng</span>
+            <span>Liên kết qua GHN</span>
           </dd>
 
           {variants.map((v, vIdx) => (

@@ -1,10 +1,4 @@
-import {
-  ChevronRight,
-  Headphones,
-  ShieldCheck,
-  Tag,
-  Truck,
-} from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { ProductStatusValues } from '@common/constants/product.constant';
 import Link from 'next/link';
 import { FeaturedCategoriesCarousel } from '../components/FeaturedCategoriesCarousel';
@@ -28,13 +22,6 @@ const BANNERS = [
   },
 ];
 
-const PERKS = [
-  { icon: Truck, label: 'Giao nhanh 2h' },
-  { icon: ShieldCheck, label: 'Chính hãng 100%' },
-  { icon: Tag, label: 'Giá tốt mỗi ngày' },
-  { icon: Headphones, label: 'Hỗ trợ 24/7' },
-];
-
 export default async function HomePage() {
   const [rootCategories, placementRes] = await Promise.all([
     getRootCategories(),
@@ -45,21 +32,27 @@ export default async function HomePage() {
       getProductById(placement.productId),
     ),
   );
-  const validPromotedProducts = promotedProducts
-    .filter(
-      (product): product is NonNullable<typeof product> =>
-        !!product &&
-        product.status === ProductStatusValues.ACTIVE &&
-        product.isApproved &&
-        !product.isHidden &&
-        !product.deletedAt,
-    );
+  const validPromotedProducts = promotedProducts.filter(
+    (product): product is NonNullable<typeof product> =>
+      !!product &&
+      product.status === ProductStatusValues.ACTIVE &&
+      product.isApproved &&
+      !product.isHidden &&
+      !product.deletedAt,
+  );
 
-  const slotCount = Math.max(placementRes.limit || 20, validPromotedProducts.length);
+  const slotCount = Math.max(
+    placementRes.limit || 20,
+    validPromotedProducts.length,
+  );
   const remainingSlots = Math.max(0, slotCount - validPromotedProducts.length);
-  const promotedIds = new Set(validPromotedProducts.map((product) => product.id));
+  const promotedIds = new Set(
+    validPromotedProducts.map((product) => product.id),
+  );
 
-  let fallbackProducts: Awaited<ReturnType<typeof getManyProducts>>['products'] = [];
+  let fallbackProducts: Awaited<
+    ReturnType<typeof getManyProducts>
+  >['products'] = [];
   if (remainingSlots > 0) {
     const candidates = await getManyProducts({ page: 1, limit: 100 });
     const eligible = candidates.products.filter(
@@ -111,23 +104,6 @@ export default async function HomePage() {
               </Link>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* Perks */}
-      <section className="container-page mt-4">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {PERKS.map((p) => (
-            <div
-              key={p.label}
-              className="card flex items-center gap-3 p-3 md:p-4"
-            >
-              <div className="w-10 h-10 rounded-md bg-primary-50 text-primary flex items-center justify-center">
-                <p.icon className="w-5 h-5" />
-              </div>
-              <div className="text-sm font-medium">{p.label}</div>
-            </div>
-          ))}
         </div>
       </section>
 
